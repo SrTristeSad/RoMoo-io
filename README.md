@@ -15,7 +15,8 @@ Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento 
 - **Construções** de parede de madeira, parede de pedra, espinhos e moinho.
 - **Moinhos** produzem ouro e XP a cada segundo enquanto estão ativos.
 - **PvP**, abates, reinício da progressão após a morte e dano validado no servidor.
-- **Mapa 3D** gerado automaticamente, com grade discreta, neve no norte, deserto no sul, árvores, pedras e arbustos.
+- **Fauna** com vacas e ovelhas que fogem e touros e lobos que perseguem e atacam; caça fornece comida e XP.
+- **Mapa 3D** gerado automaticamente, com grade discreta, neve no norte, deserto no sul, árvores, pedras e arbustos; **minimapa com jogadores**.
 - Controle por **toque**: joystick nativo Roblox, toque direito para mirar, botão USAR e botão COMER.
 
 ## Abrindo o projeto no Roblox Studio
@@ -53,6 +54,7 @@ Ações são enviadas ao servidor e verificadas contra inventário, alcance, coo
 - `src/shared/Config.luau` — regras, itens, custos, idades e balanceamento.
 - `src/server/World.luau` — geração do mapa e recursos.
 - `src/server/Avatar.luau` — avatares arredondados, ferramentas e barras de vida.
+- `src/server/Animals.luau` — animais, comportamento, dano, recompensa e respawn.
 - `src/server/Game.server.luau` — economia, combate, progresso, construções e rede.
 - `src/client/Client.client.luau` — câmera, controles e HUD.
 - `docs/CLASSIC_MECHANICS.md` — equivalência com a experiência de referência.

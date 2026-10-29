@@ -39,5 +39,8 @@
 - [ ] Monitorar uso de memória e número de partes.
 - [ ] Testar destruição, respawn e 2–10 moinhos ativos simultaneamente.
 - [ ] Testar entrada/saída de jogadores sem vazamento perceptível de conexões/eventos.
+- [ ] Testar vacas e ovelhas fugindo do jogador; touros e lobos perseguindo e causando dano.
+- [ ] Testar caça concedendo comida e XP; animal reaparecendo após o intervalo.
+- [ ] Verificar marcadores do minimapa se movendo e removendo jogadores desconectados.
 
 Preencha esta lista apenas com resultados reais do Studio; não considerar tudo aprovado por inspeção do código.

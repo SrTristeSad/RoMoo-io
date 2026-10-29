@@ -13,13 +13,15 @@
 - [x] Moinhos gerando ouro periodicamente
 - [x] Idades + opções de evolução no início da partida
 - [x] Paredes, espinhos e moinho posicionados em frente ao personagem
+- [x] Animais com perseguição/fuga e caça para obter comida
+- [x] Minimap básico com posição dos jogadores
 - [ ] Testes manuais PC/celular e correção de bugs
 
 ## 0.3 — Fidelidade de conteúdo
 - [ ] Desenhar personagens e armas .io em 3D autoral
-- [ ] Biomas, lago/rios, animais, IA e drops
+- [ ] Expandir biomas, lago/rios, comportamento animal, drops e encontros especiais
 - [ ] Catálogo completo de upgrades, itens e estruturas até idade 9
-- [ ] Placares, minimapa e mapa de jogadores
+- [ ] Placares avançados, marcadores no minimapa e mapa de equipes
 
 ## 0.4 — Multiplayer robusto
 - [ ] Equipas / clãs, chat com políticas do Roblox, proteção de spawn

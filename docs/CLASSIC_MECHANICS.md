@@ -30,12 +30,14 @@ Fontes de referência:
 - Moinhos geram ouro + XP por segundo, com limite de sete por jogador.
 - Construções, colisões, custo, limites e cooldown validados no servidor.
 - PvP com dano e abates, reinício de progressão após a morte.
+- Vaca, ovelha, touro e lobo com IA simples e respawn; loot de comida e XP.
+- Minimap básico de posição dos jogadores.
 
 ## Pendências de fidelidade (não confundir com concluído)
 - Modelos visuais do personagem e armas próximos da silhueta simples .io.
 - Escolhas até idade 9, com todas as alternativas do original.
-- Comportamento de animais (vacas, touros, lobos), dano, IA, drops.
-- Biomas de neve, rio, deserto e minimapa real.
+- Fidelidade avançada da IA animal, bosses e drops especializados.
+- Rio e efeitos de neve/deserto; minimapa completo com estruturas.
 - Arcos, flechas, efeitos de status, escudos, construções avançadas.
 - Clãs, chat, menus, loja de chapéus, acessórios e placar.
 - Layout e gestos móveis ajustados em aparelhos reais.

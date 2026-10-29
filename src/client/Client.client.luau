@@ -56,6 +56,53 @@ local function frame(parent, name, size, position, color, anchor)
     return object
 end
 
+
+
+-- Minimap 2D: escala do terreno 3D, marcadores de jogadores atualizados localmente.
+local minimap = frame(screen, "Minimap", UDim2.fromOffset(if isTouch then 108 else 142, if isTouch then 108 else 142),
+    UDim2.new(1, -14, 0, if isTouch then 110 else 14),
+    Color3.fromRGB(48, 110, 62), Vector2.new(1, 0))
+minimap.BorderSizePixel = 2
+minimap.BorderColor3 = Color3.fromRGB(34, 61, 45)
+round(minimap, 5)
+local mapLabel = label(minimap, "Title", "MAPA", Color3.fromRGB(238, 247, 226))
+mapLabel.Position = UDim2.new(.05, 0, 0, 4)
+mapLabel.Size = UDim2.new(.9, 0, 0, 15)
+local centerDot = frame(minimap, "Spawn", UDim2.fromOffset(5, 5), UDim2.fromScale(.5, .5),
+    Color3.fromRGB(104, 219, 255), Vector2.new(.5, .5))
+round(centerDot, 3)
+local markers = {}
+local function updateMinimap()
+    local present = {}
+    for _, other in ipairs(Players:GetPlayers()) do
+        local character = other.Character
+        local root = character and character:FindFirstChild("HumanoidRootPart")
+        if root then
+            present[other] = true
+            local dot = markers[other]
+            if not dot then
+                dot = frame(minimap, other.Name .. "Marker", UDim2.fromOffset(7, 7), UDim2.new(),
+                    if other == player then Color3.fromRGB(76, 181, 255) else Color3.fromRGB(245, 105, 91),
+                    Vector2.new(.5, .5))
+                round(dot, 5)
+                markers[other] = dot
+            end
+            dot.Position = UDim2.fromScale(
+                math.clamp(.5 + root.Position.X / Config.MapSize, .03, .97),
+                math.clamp(.5 + root.Position.Z / Config.MapSize, .03, .97))
+        end
+    end
+    for user, dot in pairs(markers) do
+        if not present[user] then dot:Destroy() markers[user] = nil end
+    end
+end
+task.spawn(function()
+    while screen.Parent do
+        updateMinimap()
+        task.wait(.4)
+    end
+end)
+
 local inventory = frame(screen, "Resources", UDim2.new(0.91, 0, 0, 50),
     UDim2.new(0.5, 0, 0, 12), Color3.fromRGB(34, 42, 36), Vector2.new(0.5, 0))
 round(inventory, 8)
