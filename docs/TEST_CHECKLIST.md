@@ -1,11 +1,14 @@
-# Checklist de validação da versão 0.2 no Roblox Studio
+# Checklist de validação da versão 0.3 no Roblox Studio
 
 **Status:** PENDENTE — não foi executado dentro do Studio nesta conversa.
 
 ## Inicialização
 - [ ] Abrir o Place construído pelo Rojo sem erro de sincronização.
 - [ ] Sem erros vermelhos na janela Output do cliente e do servidor.
-- [ ] O mapa inclui vegetação, rochas, ponto central, regiões de neve e deserto e grade.
+- [ ] O mapa inclui grama em tufos, flores, pedras, pinheiros e cactos; regiões de neve/deserto; a grade antiga fica oculta.
+- [ ] As árvores têm copas em camadas e usam paletas diferentes nos biomas.
+- [ ] A decoração não impede coletar, atacar ou construir e não bloqueia a passagem.
+- [ ] O minimapa diferencia visualmente as três regiões.
 - [ ] Avatares são arredondados e exibem nome, barra de vida e ferramenta.
 - [ ] HUD aparece corretamente no PC e emulação de celular.
 
@@ -36,7 +39,10 @@
 - [ ] Mira e câmera funcionam em tela 16:9 e 19.5:9.
 
 ## Performance
-- [ ] Monitorar uso de memória e número de partes.
+- [ ] Monitorar uso de memória e número de partes; comparar `Config.Decoration.Enabled = true/false`.
+- [ ] Testar diferentes quantidades de `GrassTufts` e `Flowers` sem travamento em celulares.
+- [ ] Executar `tests/StudioWorldSmokeTest.luau` no Command Bar em Play, e registrar a saída.
+- [ ] Verificar que a Baseplate padrão não se sobrepõe ao chão gerado.
 - [ ] Testar destruição, respawn e 2–10 moinhos ativos simultaneamente.
 - [ ] Testar entrada/saída de jogadores sem vazamento perceptível de conexões/eventos.
 - [ ] Testar vacas e ovelhas fugindo do jogador; touros e lobos perseguindo e causando dano.

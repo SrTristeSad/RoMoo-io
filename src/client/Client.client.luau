@@ -65,6 +65,11 @@ local minimap = frame(screen, "Minimap", UDim2.fromOffset(if isTouch then 108 el
 minimap.BorderSizePixel = 2
 minimap.BorderColor3 = Color3.fromRGB(34, 61, 45)
 round(minimap, 5)
+-- Mostrar os três biomas no minimapa, não um quadrado verde uniforme.
+local miniSnow = frame(minimap, "Snow", UDim2.fromScale(1, 88 / Config.MapSize),
+    UDim2.fromScale(0, 0), Color3.fromRGB(204, 228, 234))
+local miniDesert = frame(minimap, "Desert", UDim2.fromScale(1, 88 / Config.MapSize),
+    UDim2.fromScale(0, 1 - 88 / Config.MapSize), Color3.fromRGB(219, 193, 136))
 local mapLabel = label(minimap, "Title", "MAPA", Color3.fromRGB(238, 247, 226))
 mapLabel.Position = UDim2.new(.05, 0, 0, 4)
 mapLabel.Size = UDim2.new(.9, 0, 0, 15)

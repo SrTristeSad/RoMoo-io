@@ -3,6 +3,18 @@
 local Config = {
     MapSize = 520,
     ResourceCount = 90,
+    -- Cenário bonito sem exagerar no número de partes para celulares.
+    Decoration = {
+        Enabled = true,
+        GrassTufts = 160,
+        Flowers = 40,
+        MeadowPebbles = 40,
+        SnowPines = 16,
+        DesertCacti = 14,
+        DesertPebbles = 24,
+        SpawnClearRadius = 36,
+        ShowGrid = false,
+    },
     ResourceRespawnSeconds = 18,
     GatherRange = 15,
     AttackRange = 15,

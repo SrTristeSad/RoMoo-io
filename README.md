@@ -2,7 +2,7 @@
 
 Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento central de jogos de sobrevivência e construção no estilo do MooMoo.io. Projeto independente, com código, modelos e identidade próprios; não inclui código ou assets de terceiros.
 
-> **Versão de desenvolvimento 0.2**: mecânicas implementadas em scripts, **ainda não testadas em sessão do Roblox Studio**. Não é uma versão pronta para lançamento.
+> **Versão de desenvolvimento 0.3 (arte do terreno)**: mecânicas implementadas em scripts, **ainda não testadas em sessão do Roblox Studio**. Não é uma versão pronta para lançamento.
 
 ## O que já existe no código
 
@@ -17,7 +17,8 @@ Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento 
 - **PvP**, abates, reinício da progressão após a morte e dano validado no servidor.
 - **Fauna** com vacas e ovelhas que fogem e touros e lobos que perseguem e atacam; caça fornece comida e XP.
 - **Arquivos 3D CC0 incluídos:** vaca, touro e lobo em glTF; ovelha em FBX. O jogo usa automaticamente as versões importadas do Roblox quando encontradas em `ServerStorage/RoMooAnimalModels`. Veja `docs/IMPORTAR_ANIMAIS_3D.md`.
-- **Mapa 3D** gerado automaticamente, com grade discreta, neve no norte, deserto no sul, árvores, pedras e arbustos; **minimapa com jogadores**.
+- **Mapa 3D autoral**, com grama 3D, flores, pedrinhas, pinheiros de neve e cactos no deserto; árvores com copas em camadas e minimapa com os três biomas. A grade antiga fica desativada por padrão.
+- **Decoração limitada e sem colisão**, para não bloquear movimento, coleta, combate e construção. Quantidades ajustáveis em `Config.Decoration`.
 - Controle por **toque**: joystick nativo Roblox, toque direito para mirar, botão USAR e botão COMER.
 
 ## Abrindo o projeto no Roblox Studio
@@ -54,6 +55,9 @@ Ações são enviadas ao servidor e verificadas contra inventário, alcance, coo
 - `default.project.json` — sincronização do Rojo.
 - `src/shared/Config.luau` — regras, itens, custos, idades e balanceamento.
 - `src/server/World.luau` — geração do mapa e recursos.
+- `src/server/WorldDecor.luau` — decoração procedural 3D leve e determinística.
+- `docs/ART_DIRECTION.md` — referências de direção visual e limites de desempenho.
+- `tests/StudioWorldSmokeTest.luau` — verificação manual via Command Bar do Studio.
 - `src/server/Avatar.luau` — avatares arredondados, ferramentas e barras de vida.
 - `src/server/Animals.luau` — animais, comportamento, dano, recompensa e respawn, com suporte aos modelos importados.
 - `assets/animals/` — malhas de quatro animais CC0 prontas para importar no Studio.
@@ -66,6 +70,6 @@ Ações são enviadas ao servidor e verificadas contra inventário, alcance, coo
 
 ## Próximas etapas
 
-Animais e IA, mais armas, upgrades até idade 9, rios e efeitos de bioma, clãs e minimapa; depois desempenho, segurança, testes mobile e cosméticos.
+Testar o mapa decorado e os animais no Studio, importar modelos CC0 e corrigir possíveis problemas em dispositivos móveis. Depois: rios, mais armas e upgrades até idade 9, clãs e cosméticos.
 
 **Importante:** código presente no GitHub não significa que a experiência foi compilada e testada. Antes de publicar ou ativar monetização, conclua a checklist de validação.

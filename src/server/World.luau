@@ -2,6 +2,7 @@
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
+local WorldDecor = require(script.Parent:WaitForChild("WorldDecor"))
 
 local World = {}
 local random = Random.new(20261029)
@@ -17,6 +18,9 @@ local function part(name, size, position, color, material, parent, shape, collid
     p.TopSurface = Enum.SurfaceType.Smooth
     p.BottomSurface = Enum.SurfaceType.Smooth
     p.CanCollide = collidable ~= false
+    p.CanTouch = collidable ~= false
+    p.CanQuery = true
+    if collidable == false then p.CastShadow = false end
     if shape then
         p.Shape = shape
     end
@@ -35,10 +39,27 @@ function World.spawnNode(kind, position, parent)
 
     local center
     if kind == "Tree" then
-        center = part("Core", Vector3.new(3.8, 10, 3.8), position + Vector3.new(0, 5, 0), Color3.fromRGB(115, 79, 49), Enum.Material.Wood, model, Enum.PartType.Cylinder, true)
-        part("Folhas", Vector3.new(13, 13, 13), position + Vector3.new(0, 12, 0), Color3.fromRGB(55, 147, 65), Enum.Material.Grass, model, Enum.PartType.Ball, false)
+        local half = Config.MapSize / 2
+        local leafA = Color3.fromRGB(59, 147, 71)
+        local leafB = Color3.fromRGB(75, 165, 74)
+        if position.Z < -half + 96 then
+            leafA = Color3.fromRGB(61, 118, 106)
+            leafB = Color3.fromRGB(84, 146, 126)
+        elseif position.Z > half - 96 then
+            leafA = Color3.fromRGB(110, 138, 83)
+            leafB = Color3.fromRGB(139, 155, 88)
+        end
+        center = part("Core", Vector3.new(3.8, 10, 3.8), position + Vector3.new(0, 5, 0),
+            Color3.fromRGB(115, 79, 49), Enum.Material.Wood, model, Enum.PartType.Cylinder, true)
+        part("CopaBaixa", Vector3.new(12, 9, 12), position + Vector3.new(0, 10.5, 0),
+            leafA, Enum.Material.Grass, model, Enum.PartType.Ball, false)
+        part("CopaAlta", Vector3.new(9, 7, 9), position + Vector3.new(0, 15.2, 0),
+            leafB, Enum.Material.Grass, model, Enum.PartType.Ball, false)
     elseif kind == "Rock" then
-        center = part("Core", Vector3.new(8, 6, 8), position + Vector3.new(0, 3, 0), Color3.fromRGB(128, 136, 141), Enum.Material.Slate, model, Enum.PartType.Ball, true)
+        center = part("Core", Vector3.new(8, 6, 8), position + Vector3.new(0, 3, 0),
+            Color3.fromRGB(128, 136, 141), Enum.Material.Slate, model, Enum.PartType.Ball, true)
+        part("Fragmento", Vector3.new(4, 3, 5), position + Vector3.new(3, 1.5, 1),
+            Color3.fromRGB(153, 158, 156), Enum.Material.Slate, model, Enum.PartType.Ball, false)
     elseif kind == "Gold" then
         center = part("Core", Vector3.new(7, 6, 7), position + Vector3.new(0, 3, 0), Color3.fromRGB(114, 118, 123), Enum.Material.Slate, model, Enum.PartType.Ball, true)
         part("VeioDeOuro", Vector3.new(4, 3, 4), position + Vector3.new(1, 5, 1), Color3.fromRGB(255, 194, 46), Enum.Material.Metal, model, Enum.PartType.Ball, false)
@@ -56,6 +77,14 @@ function World.create()
     local old = workspace:FindFirstChild("RoMooWorld")
     if old then old:Destroy() end
 
+    -- Remove apenas a Baseplate grande do template, evitando z-fighting.
+    local defaultBaseplate = workspace:FindFirstChild("Baseplate")
+    if defaultBaseplate and defaultBaseplate:IsA("BasePart")
+        and defaultBaseplate.Anchored and defaultBaseplate.Size.X >= 500
+        and defaultBaseplate.Size.Z >= 500 then
+        defaultBaseplate:Destroy()
+    end
+
     local folder = Instance.new("Folder")
     folder.Name = "RoMooWorld"
     folder.Parent = workspace
@@ -69,18 +98,35 @@ function World.create()
         Vector3.new(0, 0.05, half - 50), Color3.fromRGB(216, 189, 129), Enum.Material.Sand, folder, nil, false)
     snow.CastShadow = false
     desert.CastShadow = false
-    -- Grade discreta que preserva a leitura do mapa visto de cima.
-    for x = -240, 240, 24 do
-        local line = part("GradeX", Vector3.new(0.09, 0.02, Config.MapSize),
-            Vector3.new(x, 0.12, 0), Color3.fromRGB(102, 133, 104), Enum.Material.SmoothPlastic, folder, nil, false)
-        line.Transparency = 0.55
-        line.CastShadow = false
+    -- Faixas suaves entre campo, gelo e areia, sem barreiras físicas.
+    for i = 1, 5 do
+        local opacity = i / 6
+        local dist = (i - .5) * 6
+        local snowFade = part("TransicaoNeve", Vector3.new(Config.MapSize - 18, 0.04, 6),
+            Vector3.new(0, .12, -half + 94 + dist),
+            Color3.fromRGB(217, 232, 229), Enum.Material.Snow, folder, nil, false)
+        snowFade.Transparency = opacity
+        local sandFade = part("TransicaoAreia", Vector3.new(Config.MapSize - 18, 0.04, 6),
+            Vector3.new(0, .12, half - 94 - dist),
+            Color3.fromRGB(223, 193, 135), Enum.Material.Sand, folder, nil, false)
+        sandFade.Transparency = opacity
     end
-    for z = -240, 240, 24 do
-        local line = part("GradeZ", Vector3.new(Config.MapSize, 0.02, 0.09),
-            Vector3.new(0, 0.12, z), Color3.fromRGB(102, 133, 104), Enum.Material.SmoothPlastic, folder, nil, false)
-        line.Transparency = 0.55
-        line.CastShadow = false
+    -- Grade antiga opcional; visual padrão usa vegetação 3D autoral.
+    if Config.Decoration.ShowGrid then
+        -- Grade discreta que preserva a leitura do mapa visto de cima.
+        for x = -240, 240, 24 do
+            local line = part("GradeX", Vector3.new(0.09, 0.02, Config.MapSize),
+                Vector3.new(x, 0.12, 0), Color3.fromRGB(102, 133, 104), Enum.Material.SmoothPlastic, folder, nil, false)
+            line.Transparency = 0.55
+            line.CastShadow = false
+        end
+        for z = -240, 240, 24 do
+            local line = part("GradeZ", Vector3.new(Config.MapSize, 0.02, 0.09),
+                Vector3.new(0, 0.12, z), Color3.fromRGB(102, 133, 104), Enum.Material.SmoothPlastic, folder, nil, false)
+            line.Transparency = 0.55
+            line.CastShadow = false
+        end
+    
     end
 
     for _, wallData in ipairs({
@@ -134,9 +180,26 @@ function World.create()
         end
     end
 
-    Lighting.ClockTime = 14
-    Lighting.Brightness = 2
-    Lighting.Ambient = Color3.fromRGB(150, 156, 155)
+    -- Plantas e detalhes ficam separados dos recursos (não dão materiais).
+    WorldDecor.generate(folder, Config.MapSize, positions, Config.Decoration)
+
+    Lighting.ClockTime = 13.8
+    Lighting.Brightness = 2.4
+    Lighting.Ambient = Color3.fromRGB(165, 174, 161)
+    Lighting.OutdoorAmbient = Color3.fromRGB(162, 171, 163)
+    Lighting.GlobalShadows = true
+    local atmosphere = Lighting:FindFirstChild("RoMooAtmosphere")
+    if not atmosphere then
+        atmosphere = Instance.new("Atmosphere")
+        atmosphere.Name = "RoMooAtmosphere"
+        atmosphere.Parent = Lighting
+    end
+    atmosphere.Density = 0.14
+    atmosphere.Offset = 0.2
+    atmosphere.Haze = 0.65
+    atmosphere.Glare = 0
+    atmosphere.Color = Color3.fromRGB(213, 231, 225)
+
     return nodes, buildings
 end
 

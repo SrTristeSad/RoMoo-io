@@ -17,7 +17,12 @@
 - [x] Minimap básico com posição dos jogadores
 - [ ] Testes manuais PC/celular e correção de bugs
 
-## 0.3 — Fidelidade de conteúdo
+## 0.3 — Cenário autoral e fidelidade de conteúdo
+- [x] Tufos de grama, flores, pedras decorativas, pinheiros de neve e cactos, sem colisão
+- [x] Árvore com copas em camadas e coloração adaptada aos biomas
+- [x] Minimap diferenciando neve, campo verde e deserto
+- [x] Grade antiga opcional/desativada; densidade de decoração configurável
+- [ ] Testes de FPS e legibilidade no Roblox Studio em celular
 - [ ] Desenhar personagens e armas .io em 3D autoral
 - [ ] Expandir biomas, lago/rios, comportamento animal, drops e encontros especiais
 - [ ] Catálogo completo de upgrades, itens e estruturas até idade 9
