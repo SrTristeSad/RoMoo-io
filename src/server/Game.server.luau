@@ -5,7 +5,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local World = require(script.Parent:WaitForChild("World"))
 local Avatar = require(script.Parent:WaitForChild("Avatar"))
+local Animals = require(script.Parent:WaitForChild("Animals"))
 local nodes, buildings = World.create()
+local creatures = Animals.create(workspace:WaitForChild("RoMooWorld"), Config.MapSize)
 local rootFolder = ReplicatedStorage:WaitForChild("RoMoo")
 local oldRemotes = rootFolder:FindFirstChild("Remotes")
 if oldRemotes then oldRemotes:Destroy() end
@@ -133,6 +135,15 @@ local function nearestTarget(player, root, direction, range)
             end
         end
     end
+    for _, model in ipairs(creatures:GetChildren()) do
+        if model:IsA("Model") and model.PrimaryPart then
+            local dist = horizontalDistance(pos, model.PrimaryPart.Position)
+            if dist < best and isAimed(pos, model.PrimaryPart.Position, direction, range) then
+                target = {kind = "Animal", instance = model}
+                best = dist
+            end
+        end
+    end
     for _, other in ipairs(Players:GetPlayers()) do
         if other ~= player then
             local char, hum, otherRoot = alive(other)
@@ -178,6 +189,13 @@ local function swing(player, root, itemName, direction)
             task.delay(Config.ResourceRespawnSeconds, function()
                 if nodes.Parent then World.spawnNode(kind, origin, nodes) end
             end)
+        end
+    elseif target.kind == "Animal" then
+        local food, xp, killed = Animals.hit(target.instance, weapon.damage)
+        if killed then
+            changeResource(player, "Food", food)
+            awardXP(player, xp)
+            notice(player, "Animal abatido! +" .. food .. " comida")
         end
     elseif target.kind == "Player" then
         local hum = target.instance
