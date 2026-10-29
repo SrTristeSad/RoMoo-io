@@ -94,6 +94,10 @@ local function updateMinimap()
                 round(dot, 5)
                 markers[other] = dot
             end
+            local allyCode = player:GetAttribute("ClanCode")
+            dot.BackgroundColor3 = if other == player then Color3.fromRGB(76, 181, 255)
+                else if allyCode and allyCode ~= "" and other:GetAttribute("ClanCode") == allyCode
+                    then Color3.fromRGB(100, 236, 128) else Color3.fromRGB(245, 105, 91)
             dot.Position = UDim2.fromScale(
                 math.clamp(.5 + root.Position.X / Config.MapSize, .03, .97),
                 math.clamp(.5 + root.Position.Z / Config.MapSize, .03, .97))
@@ -163,6 +167,91 @@ noticeRemote.OnClientEvent:Connect(function(msg)
         if current == noticeNumber then notification.Text = "" end
     end)
 end)
+
+-- Painel recolhível de clãs (não ocupa espaço durante o combate).
+local clanToggle = Instance.new("TextButton")
+clanToggle.Name = "ClanToggle"
+clanToggle.Position = UDim2.fromOffset(12, if isTouch then 112 else 112)
+clanToggle.Size = UDim2.fromOffset(140, 35)
+clanToggle.Text = "CLÃ: SOLO"
+clanToggle.TextColor3 = Color3.fromRGB(252, 252, 243)
+clanToggle.TextScaled = true
+clanToggle.Font = Enum.Font.GothamBold
+clanToggle.BorderSizePixel = 0
+clanToggle.BackgroundColor3 = Color3.fromRGB(46, 84, 59)
+clanToggle.Parent = screen
+round(clanToggle, 8)
+
+local clanPanel = frame(screen, "ClanPanel", UDim2.fromOffset(248, 160),
+    UDim2.fromOffset(12, 153), Color3.fromRGB(29, 44, 36))
+clanPanel.Visible = false
+round(clanPanel, 8)
+local clanStatus = label(clanPanel, "Status", "Você está sozinho", Color3.fromRGB(231, 239, 226))
+clanStatus.Size = UDim2.new(1, -14, 0, 33)
+clanStatus.Position = UDim2.fromOffset(7, 6)
+
+local clanInput = Instance.new("TextBox")
+clanInput.Name = "ClanCodeInput"
+clanInput.Position = UDim2.fromOffset(10, 42)
+clanInput.Size = UDim2.new(1, -20, 0, 35)
+clanInput.PlaceholderText = "CÓDIGO NUMÉRICO (6 DÍGITOS)"
+clanInput.Text = ""
+clanInput.ClearTextOnFocus = false
+clanInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+clanInput.PlaceholderColor3 = Color3.fromRGB(181, 201, 186)
+clanInput.BackgroundColor3 = Color3.fromRGB(57, 76, 62)
+clanInput.TextScaled = true
+clanInput.Font = Enum.Font.Gotham
+clanInput.Parent = clanPanel
+round(clanInput, 6)
+
+local clanActions = {
+    {text = "CRIAR", action = "ClanCreate"},
+    {text = "ENTRAR", action = "ClanJoin"},
+    {text = "SAIR", action = "ClanLeave"},
+}
+for i, spec in ipairs(clanActions) do
+    local button = Instance.new("TextButton")
+    button.Name = spec.action
+    button.Size = UDim2.fromOffset(72, 40)
+    button.Position = UDim2.fromOffset(9 + (i - 1) * 79, 92)
+    button.BorderSizePixel = 0
+    button.BackgroundColor3 = if i == 3 then Color3.fromRGB(130, 73, 71)
+        else Color3.fromRGB(76, 133, 86)
+    button.Text = spec.text
+    button.Font = Enum.Font.GothamBold
+    button.TextScaled = true
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.Parent = clanPanel
+    round(button, 5)
+    button.Activated:Connect(function()
+        actionRemote:FireServer(spec.action, clanInput.Text)
+    end)
+end
+local clanHint = label(clanPanel, "Hint", "Compartilhe o código com os amigos",
+    Color3.fromRGB(172, 193, 168))
+clanHint.Size = UDim2.new(1, -14, 0, 20)
+clanHint.Position = UDim2.fromOffset(7, 137)
+
+clanToggle.Activated:Connect(function()
+    clanPanel.Visible = not clanPanel.Visible
+end)
+local function refreshClan()
+    local code = player:GetAttribute("ClanCode")
+    local count = player:GetAttribute("ClanMembers") or 0
+    if typeof(code) == "string" and code ~= "" then
+        clanToggle.Text = "CLÃ: " .. code
+        clanStatus.Text = code .. " | " .. count .. "/8 jogadores" ..
+            (if player:GetAttribute("ClanLeader") then " | LÍDER" else "")
+    else
+        clanToggle.Text = "CLÃ: SOLO"
+        clanStatus.Text = "Sem clã nesta partida"
+    end
+end
+for _, attribute in ipairs({"ClanCode", "ClanMembers", "ClanLeader"}) do
+    player:GetAttributeChangedSignal(attribute):Connect(refreshClan)
+end
+refreshClan()
 
 -- Itens obtidos permanecem visíveis; a barra ganha linhas, não cria um menu oculto.
 local hotbar = frame(screen, "Hotbar", UDim2.new(.96, 0, 0, 60),

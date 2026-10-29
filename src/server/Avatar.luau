@@ -119,6 +119,16 @@ function Avatar.attach(player, character, humanoid)
     name.Size = UDim2.fromOffset(128, 19)
     name.BackgroundTransparency = 1
     name.Text = player.DisplayName
+    local function refreshName()
+        local code = player:GetAttribute("ClanCode")
+        name.Text = if typeof(code) == "string" and code ~= ""
+            then "[" .. code .. "] " .. player.DisplayName else player.DisplayName
+    end
+    local clanConnection = player:GetAttributeChangedSignal("ClanCode"):Connect(refreshName)
+    character.Destroying:Connect(function()
+        clanConnection:Disconnect()
+    end)
+    refreshName()
     name.TextScaled = true
     name.TextStrokeTransparency = .25
     name.Font = Enum.Font.GothamBold

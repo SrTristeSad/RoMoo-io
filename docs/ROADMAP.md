@@ -47,12 +47,22 @@
 - [x] Proteção contra escolhas forjadas e itens não desbloqueados
 - [ ] Testar evolução, uso e interface no Studio (PC e mobile)
 
-## 0.6 — Multiplayer robusto
-- [ ] Equipas / clãs, chat com políticas do Roblox, proteção de spawn
+## 0.6 — Clãs e PvP protegido (código implementado; teste pendente)
+- [x] Clãs temporários por código de seis dígitos, gerado pelo servidor
+- [x] Até oito membros, liderança transferida ao sair, clãs removidos quando vazios
+- [x] Painel recolhível no cliente e indicação no minimapa e nome
+- [x] Sem PvP e ataques a construções de aliados; armadilhas não atingem aliados
+- [x] Plataforma de cura atende aliados do proprietário
+- [x] Bloqueio de golpes através das paredes
+- [x] Armadilhas de lentidão renovam o efeito preservando a velocidade original
+- [ ] Testes de dois clientes, colisões, segurança, clãs e reconexão no Roblox Studio
+
+## 0.7 — Multiplayer robusto
+- [ ] Integração de chat com políticas do Roblox, proteção de spawn
 - [ ] Exploits, colisões, ping e resistência a ataques automatizados
 - [ ] Otimizações de dispositivos móveis / limite de construções
 
-## 0.7 — Lançamento
+## 0.8 — Lançamento
 - [ ] Teste com jogadores, arte original e UX final
 - [ ] Monetização preferencialmente cosmética, sem vantagem competitiva
 - [ ] DataStore para cosméticos/metaprogressão, não para runs temporárias

@@ -6,6 +6,7 @@ local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Sha
 local World = require(script.Parent:WaitForChild("World"))
 local Avatar = require(script.Parent:WaitForChild("Avatar"))
 local Animals = require(script.Parent:WaitForChild("Animals"))
+local Clans = require(script.Parent:WaitForChild("Clans"))
 local nodes, buildings = World.create()
 local creatures = Animals.create(workspace:WaitForChild("RoMooWorld"), Config.MapSize)
 local rootFolder = ReplicatedStorage:WaitForChild("RoMoo")
@@ -28,6 +29,26 @@ fxRemote.Parent = remotes
 local profiles = {}
 local recentDamage = {}
 local spikeCooldown = {}
+local slowStates = setmetatable({}, {__mode = "k"})
+
+-- Efeito temporário não cumulativo: renovar a duração sem perder a velocidade original.
+local function applySlow(hum, duration)
+    local now = os.clock()
+    local record = slowStates[hum]
+    if not record then
+        record = {original = hum.WalkSpeed, expires = 0}
+        slowStates[hum] = record
+    end
+    record.expires = math.max(record.expires, now + duration)
+    hum.WalkSpeed = math.min(hum.WalkSpeed, 10)
+    task.delay(duration + .12, function()
+        if slowStates[hum] ~= record or os.clock() < record.expires then return end
+        slowStates[hum] = nil
+        if hum.Parent and hum.Health > 0 and hum.WalkSpeed <= 10 then
+            hum.WalkSpeed = record.original
+        end
+    end)
+end
 
 local function notice(player, msg)
     noticeRemote:FireClient(player, msg)
@@ -67,6 +88,27 @@ local function directionFor(root, supplied)
     local v = Vector3.new(supplied.X, 0, supplied.Z)
     if v.Magnitude < 0.05 then return root.CFrame.LookVector end
     return v.Unit
+end
+
+-- Apenas estruturas físicas bloqueiam os golpes; folhagens decorativas não.
+local solidBuildings = {"WoodWall", "StoneWall", "CastleWall"}
+local function blockedByCover(from, to)
+    local origin = Vector3.new(from.X, 4.5, from.Z)
+    local target = Vector3.new(to.X, 4.5, to.Z)
+    local delta = target - origin
+    if delta.Magnitude < 2 then return false end
+    local obstacles = {}
+    for _, model in ipairs(buildings:GetChildren()) do
+        if table.find(solidBuildings, model.Name) then
+            table.insert(obstacles, model)
+        end
+    end
+    if #obstacles == 0 then return false end
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Include
+    params.FilterDescendantsInstances = obstacles
+    local hit = workspace:Raycast(origin, delta, params)
+    return hit ~= nil
 end
 
 local function isAimed(from, at, dir, maxDistance)
@@ -152,7 +194,8 @@ local function nearestTarget(player, root, direction, range)
     for _, model in ipairs(nodes:GetChildren()) do
         if model:IsA("Model") and model.PrimaryPart then
             local dist = horizontalDistance(pos, model.PrimaryPart.Position)
-            if dist < best and isAimed(pos, model.PrimaryPart.Position, direction, range) then
+            if dist < best and isAimed(pos, model.PrimaryPart.Position, direction, range)
+                and not blockedByCover(pos, model.PrimaryPart.Position) then
                 target = {kind = "Resource", instance = model}
                 best = dist
             end
@@ -161,7 +204,8 @@ local function nearestTarget(player, root, direction, range)
     for _, model in ipairs(creatures:GetChildren()) do
         if model:IsA("Model") and model.PrimaryPart then
             local dist = horizontalDistance(pos, model.PrimaryPart.Position)
-            if dist < best and isAimed(pos, model.PrimaryPart.Position, direction, range) then
+            if dist < best and isAimed(pos, model.PrimaryPart.Position, direction, range)
+                and not blockedByCover(pos, model.PrimaryPart.Position) then
                 target = {kind = "Animal", instance = model}
                 best = dist
             end
@@ -170,9 +214,11 @@ local function nearestTarget(player, root, direction, range)
     for _, other in ipairs(Players:GetPlayers()) do
         if other ~= player then
             local char, hum, otherRoot = alive(other)
-            if char and hum and otherRoot and not char:FindFirstChildOfClass("ForceField") then
+            if char and hum and otherRoot and not char:FindFirstChildOfClass("ForceField")
+                and not Clans.allies(player, other) then
                 local dist = horizontalDistance(pos, otherRoot.Position)
-                if dist < best and isAimed(pos, otherRoot.Position, direction, range) then
+                if dist < best and isAimed(pos, otherRoot.Position, direction, range)
+                    and not blockedByCover(pos, otherRoot.Position) then
                     target = {kind = "Player", instance = hum}
                     best = dist
                 end
@@ -181,6 +227,8 @@ local function nearestTarget(player, root, direction, range)
     end
     for _, model in ipairs(buildings:GetChildren()) do
         if model:IsA("Model") and model.PrimaryPart and model:GetAttribute("OwnerUserId") ~= player.UserId then
+            local owner = Players:GetPlayerByUserId(model:GetAttribute("OwnerUserId"))
+            if owner and Clans.allies(player, owner) then continue end
             local dist = horizontalDistance(pos, model.PrimaryPart.Position)
             if dist < best and isAimed(pos, model.PrimaryPart.Position, direction, range) then
                 target = {kind = "Building", instance = model}
@@ -307,20 +355,12 @@ local function createBuilding(player, itemName, position, direction)
             local hum = character:FindFirstChildOfClass("Humanoid")
             if not hum or hum.Health <= 0 or character:FindFirstChildOfClass("ForceField") then return end
             local now = os.clock()
+            if Clans.allies(player, victim) then return end
             if (spikeCooldown[hum] or 0) + 1.3 > now then return end
             spikeCooldown[hum] = now
             recentDamage[hum] = {attacker = player, at = now}
             hum:TakeDamage(item.trapDamage or 18)
-            if pit then
-                local previousSpeed = hum.WalkSpeed
-                local slowedSpeed = math.min(previousSpeed, 10)
-                hum.WalkSpeed = slowedSpeed
-                task.delay(item.slowSeconds or 2, function()
-                    if hum.Parent and hum.Health > 0 and hum.WalkSpeed == slowedSpeed then
-                        hum.WalkSpeed = previousSpeed
-                    end
-                end)
-            end
+            if pit then applySlow(hum, item.slowSeconds or 2) end
         end)
     elseif itemName == "Windmill" or itemName == "FastWindmill" or itemName == "GoldMill" then
         local topTier = itemName == "GoldMill"
@@ -446,6 +486,21 @@ end
 
 actionRemote.OnServerEvent:Connect(function(player, action, itemName, suppliedDirection)
     if typeof(action) ~= "string" then return end
+    if action == "ClanCreate" or action == "ClanJoin" or action == "ClanLeave" then
+        local profile = profiles[player]
+        if not profile or os.clock() - (profile.lastClanAction or -1e8) < 1 then return end
+        profile.lastClanAction = os.clock()
+        local ok, message
+        if action == "ClanCreate" then
+            ok, message = Clans.create(player, itemName)
+        elseif action == "ClanJoin" then
+            ok, message = Clans.join(player, itemName)
+        else
+            ok, message = Clans.leave(player)
+        end
+        notice(player, message)
+        return
+    end
     if action == "Upgrade" then
         chooseUpgrade(player, itemName)
         return
@@ -488,7 +543,10 @@ local function addPlayer(player)
     kills.Name = "Abates"
     kills.Parent = stats
     profiles[player] = {stock = {}, xp = 0, age = 1, chosen = {},
-        lastUse = -1e8, lastEat = -1e8, firstSpawn = true}
+        lastUse = -1e8, lastEat = -1e8, lastClanAction = -1e8, firstSpawn = true}
+    player:SetAttribute("ClanCode", "")
+    player:SetAttribute("ClanLeader", false)
+    player:SetAttribute("ClanMembers", 0)
     resetRun(player, true)
     player.CharacterAdded:Connect(function(char)
         local p = profiles[player]
@@ -516,6 +574,7 @@ local function addPlayer(player)
             end
             recentDamage[hum] = nil
             spikeCooldown[hum] = nil
+            slowStates[hum] = nil
         end)
     end)
 end
@@ -524,6 +583,7 @@ Players.PlayerAdded:Connect(addPlayer)
 for _, player in ipairs(Players:GetPlayers()) do addPlayer(player) end
 
 Players.PlayerRemoving:Connect(function(player)
+    Clans.remove(player)
     profiles[player] = nil
     for _, model in ipairs(buildings:GetChildren()) do
         if model:GetAttribute("OwnerUserId") == player.UserId then model:Destroy() end
@@ -546,11 +606,14 @@ task.spawn(function()
                         rotor:PivotTo(rotor:GetPivot() * CFrame.Angles(0, math.rad(22), 0))
                     end
                 elseif item.healPerTick then
-                    local _, hum, root = alive(owner)
-                    if hum and root and horizontalDistance(root.Position, model.PrimaryPart.Position) <= item.healRange then
-                        if hum.Health < hum.MaxHealth then
-                            hum.Health = math.min(hum.MaxHealth, hum.Health + item.healPerTick)
-                            emitFX("Heal", root.Position, item.healPerTick, "")
+                    for _, beneficiary in ipairs(Players:GetPlayers()) do
+                        if Clans.allies(owner, beneficiary) then
+                            local _, hum, root = alive(beneficiary)
+                            if hum and root and horizontalDistance(root.Position, model.PrimaryPart.Position) <= item.healRange
+                                and hum.Health < hum.MaxHealth then
+                                hum.Health = math.min(hum.MaxHealth, hum.Health + item.healPerTick)
+                                emitFX("Heal", root.Position, item.healPerTick, "")
+                            end
                         end
                     end
                 end

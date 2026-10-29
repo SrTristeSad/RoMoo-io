@@ -1,4 +1,4 @@
-# Checklist de validação da versão 0.5 no Roblox Studio
+# Checklist de validação da versão 0.6 no Roblox Studio
 
 **Status:** PENDENTE — não foi executado dentro do Studio nesta conversa.
 
@@ -32,7 +32,22 @@
 - [ ] Verificar todos os 13 itens obtidos visíveis e selecionáveis pelo HUD (desktop e celular).
 - [ ] Executar `tests/StudioProgressionSmokeTest.luau` no Studio e registrar a saída.
 
+## Clãs e PvP cooperativo
+- [ ] Testar com 2 clientes no Studio. A cria clã e recebe um código de 6 dígitos.
+- [ ] B entra com esse código; ambos aparecem com a tag e cor verde de aliado no minimapa.
+- [ ] A golpeia B e tenta destruir sua parede: dano negado.
+- [ ] B pisa nos espinhos e na armadilha de A: não deve sofrer dano nem lentidão.
+- [ ] O pad de A cura B enquanto estiver no alcance; jogador sem clã não recebe cura.
+- [ ] B sai; A consegue causar dano em B novamente.
+- [ ] Código não encontrado, formato inválido, clã com 8 membros e spam de pedidos rejeitados.
+- [ ] Ao sair o líder, a liderança é transferida; quando o último jogador sai, o código deixa de existir.
+- [ ] Ao morrer, o jogador mantém o clã, mas perde recursos e progresso.
+- [ ] A interface de clãs não cobre as ações principais no celular.
+
 ## Combate e segurança
+- [ ] Golpe contra jogador/animal atrás de muralha não atravessa a parede.
+- [ ] Armadilha de lentidão reaplicada não deixa velocidade travada em 10.
+- [ ] A velocidade original retorna após o último efeito expirar.
 - [ ] Testar com dois jogadores: dano somente dentro do alcance e arco frontal.
 - [ ] Ataque/colheita exibem pulso e número flutuante perto do alvo.
 - [ ] Atacar e apertar Q imediatamente consome comida sem aguardar cooldown do ataque.

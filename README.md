@@ -2,7 +2,7 @@
 
 Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento central de jogos de sobrevivência e construção no estilo do MooMoo.io. Projeto independente, com código, modelos e identidade próprios; não inclui código ou assets de terceiros.
 
-> **Versão de desenvolvimento 0.5 (progressão por idade 2–9)**: mecânicas implementadas em scripts, **ainda não testadas em sessão do Roblox Studio**. Não é uma versão pronta para lançamento.
+> **Versão de desenvolvimento 0.6 (clãs, PvP protegido e armadilhas corrigidas)**: mecânicas implementadas em scripts, **ainda não testadas em sessão do Roblox Studio**. Não é uma versão pronta para lançamento.
 
 ## O que já existe no código
 
@@ -15,6 +15,9 @@ Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento 
 - **Construções**: madeira, pedra, muralha reforçada, espinhos de madeira/pedra, armadilha de chão, plataforma curativa e três níveis de moinhos.
 - **Moinhos** produzem ouro e XP a cada segundo enquanto estão ativos.
 - **PvP**, abates, reinício da progressão após a morte e dano validado no servidor.
+- **Clãs temporários por código numérico** criado pelo servidor (até 8 membros); painel recolhível de criar/entrar/sair, tag no nome e cores de aliados no minimapa.
+- **Jogabilidade de equipe:** sem dano entre aliados, espinhos e construções dos companheiros protegidos, plataformas curativas ajudam aliados próximos.
+- **Cobertura real para golpes:** muralhas bloqueiam golpes que tentariam atravessar uma parede; armadilha de lentidão restaura corretamente a velocidade após reaplicações.
 - **Feedback visual local** de ataque, coleta, impacto, cura e construção (efeitos não replicados como peças).
 - **Comida com cooldown próprio**, para poder curar durante o combate sem bloquear golpes.
 - **Fauna** com vacas e ovelhas que fogem e touros e lobos que perseguem e atacam; caça fornece comida e XP.
@@ -67,6 +70,8 @@ Ações são enviadas ao servidor e verificadas contra inventário, alcance, coo
 - `assets/animals/` — malhas de quatro animais CC0 prontas para importar no Studio.
 - `docs/IMPORTAR_ANIMAIS_3D.md` — procedimento de importação e créditos/licença.
 - `src/server/Game.server.luau` — economia, combate, progresso, construções e rede.
+- `src/server/Clans.luau` — clãs da partida, códigos únicos e segurança de aliados.
+- `docs/CLANS_AND_COMBAT.md` — regras, limites e roteiro de teste multiplayer.
 - `src/client/Client.client.luau` — câmera, controles e HUD.
 - `src/client/Effects.luau` — efeitos de dano, coleta, cura e construções no cliente.
 - `docs/CLASSIC_MECHANICS.md` — equivalência com a experiência de referência.
@@ -75,6 +80,6 @@ Ações são enviadas ao servidor e verificadas contra inventário, alcance, coo
 
 ## Próximas etapas
 
-Testar o mapa decorado, progressão até idade 9 e os animais no Studio. Validar HUD em celular e balancear custos/dano. Depois: rios, sistemas de clãs, otimizações e cosméticos.
+Testar os clãs com dois jogadores e o combate com muralhas; revisar armadilhas, animais e HUD móvel. Depois: rios e caminhos entre biomas, otimizações e cosméticos.
 
 **Importante:** código presente no GitHub não significa que a experiência foi compilada e testada. Antes de publicar ou ativar monetização, conclua a checklist de validação.
