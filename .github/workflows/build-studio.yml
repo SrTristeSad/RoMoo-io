@@ -1,0 +1,88 @@
+name: Gerar teste do RoMoo no Roblox Studio
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  studio-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar compilador Luau 0.744
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .build/luau
+          curl -fLSs --retry 3 \
+            https://github.com/luau-lang/luau/releases/download/0.744/luau-ubuntu.zip \
+            -o .build/luau.zip
+          unzip -q .build/luau.zip -d .build/luau
+          compiler="$(find .build/luau -type f -name luau-compile | head -n 1)"
+          test -n "$compiler"
+          chmod +x "$compiler"
+          echo "LUAU_COMPILER=$compiler" >> "$GITHUB_ENV"
+
+      - name: Verificar sintaxe dos scripts Luau
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=0
+          while IFS= read -r -d '' file; do
+            echo "Verificando: $file"
+            "./$LUAU_COMPILER" "$file" >/dev/null
+            count=$((count + 1))
+          done < <(find src tests -type f -name '*.luau' -print0)
+          test "$count" -gt 5
+          echo "Scripts Luau analisados: $count"
+
+      - name: Instalar Rojo 7.7.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .build/rojo
+          curl -fLSs --retry 3 \
+            https://github.com/rojo-rbx/rojo/releases/download/v7.7.1/rojo-7.7.1-linux-x86_64.zip \
+            -o .build/rojo.zip
+          unzip -q .build/rojo.zip -d .build/rojo
+          exe="$(find .build/rojo -type f -name rojo | head -n 1)"
+          test -n "$exe"
+          chmod +x "$exe"
+          echo "ROJO_BIN=$exe" >> "$GITHUB_ENV"
+
+      - name: Gerar lugar Roblox Studio
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          "./$ROJO_BIN" build default.project.json -o dist/RoMoo-io-Teste.rbxlx
+          test -s dist/RoMoo-io-Teste.rbxlx
+          echo "Build gerado:"
+          ls -lh dist/RoMoo-io-Teste.rbxlx
+
+      - name: Conferir XML do lugar
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          path = Path("dist/RoMoo-io-Teste.rbxlx")
+          root = ET.parse(path).getroot()
+          assert root.tag == "roblox", f"Arquivo inesperado: {root.tag}"
+          print("Arquivo Roblox XML válido:", path, path.stat().st_size, "bytes")
+          PY
+
+      - name: Disponibilizar o jogo para download
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoMoo-io-Teste-Roblox-Studio
+          path: dist/RoMoo-io-Teste.rbxlx
+          if-no-files-found: error
+          retention-days: 30

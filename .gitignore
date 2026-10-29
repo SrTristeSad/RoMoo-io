@@ -1,7 +1,7 @@
-*.rbxl
+# Rojo e ferramentas locais
+.tools/
+.build/
+dist/
 *.rbxlx
-*.rbxm
-*.rbxmx
-*.rbxlock
-.DS_Store
-Thumbs.db
+*.rbxl
+*.log
