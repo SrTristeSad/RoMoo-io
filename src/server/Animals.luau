@@ -1,6 +1,7 @@
 --!nonstrict
 -- Fauna simplificada para o RoMoo io: animais herbívoros fogem, predadores perseguem.
 local Players = game:GetService("Players")
+local ServerStorage = game:GetService("ServerStorage")
 local Animals = {}
 local rng = Random.new(721)
 local defs = {
@@ -12,6 +13,57 @@ local defs = {
 local folder
 local states = {}
 local mapHalf = 260
+
+-- Substitui os protótipos pelas malhas do Roblox Studio se o usuário importar
+-- os arquivos CC0 para ServerStorage/RoMooAnimalModels/<Cow|Bull|Wolf|Sheep>.
+local function attachImportedVisual(model, core, kind)
+    local library = ServerStorage:FindFirstChild("RoMooAnimalModels")
+    local template = library and library:FindFirstChild(kind)
+    if not template or not template:IsA("Model") then return false end
+    local clone = template:Clone()
+    clone.Name = "ImportedVisual"
+    -- Nunca executar scripts que estejam acidentalmente dentro de um modelo.
+    for _, child in ipairs(clone:GetDescendants()) do
+        if child:IsA("LuaSourceContainer") then child:Destroy() end
+    end
+    clone.Parent = model
+    local foundPart = false
+    for _, desc in ipairs(clone:GetDescendants()) do
+        if desc:IsA("BasePart") then
+            foundPart = true
+            desc.Anchored = true
+            desc.CanCollide = false
+            desc.CanTouch = false
+            desc.CanQuery = false
+            desc.CastShadow = true
+        end
+    end
+    if not foundPart then
+        clone:Destroy()
+        return false
+    end
+    local ok, err = pcall(function()
+        local bounds = clone:GetExtentsSize()
+        local maximum = math.max(bounds.X, bounds.Y, bounds.Z)
+        if maximum <= 0 then error("Imported animal has zero-sized geometry") end
+        local target = if kind == "Bull" then 10 else if kind == "Wolf" then 9 else 8
+        clone:ScaleTo(math.clamp(target / maximum, .01, 100))
+        -- Model:PivotTo usa o centro da malha importada se não existir PrimaryPart.
+        clone:PivotTo(core.CFrame)
+    end)
+    if not ok then
+        warn("[RoMoo Animals] Falha no modelo " .. kind .. ": " .. tostring(err))
+        clone:Destroy()
+        return false
+    end
+    for _, child in ipairs(model:GetChildren()) do
+        if child:IsA("BasePart") then
+            child.Transparency = 1 -- Colisão/posição continua no Core, visual vem da malha.
+            child.CastShadow = false
+        end
+    end
+    return true
+end
 
 local function part(name, size, relative, color, shape, model, anchor)
     local p = Instance.new("Part")
@@ -64,6 +116,8 @@ local function spawn(kind)
                 Color3.fromRGB(236, 225, 177), Enum.PartType.Ball, model, cf)
         end
     end
+
+    attachImportedVisual(model, core, kind)
 
     local hpGui = Instance.new("BillboardGui")
     hpGui.Name = "AnimalHealth"

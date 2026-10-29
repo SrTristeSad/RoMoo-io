@@ -41,6 +41,9 @@
 - [ ] Testar entrada/saída de jogadores sem vazamento perceptível de conexões/eventos.
 - [ ] Testar vacas e ovelhas fugindo do jogador; touros e lobos perseguindo e causando dano.
 - [ ] Testar caça concedendo comida e XP; animal reaparecendo após o intervalo.
+- [ ] Importar Cow.gltf, Bull.gltf, Wolf.gltf e Sheep.fbx e colocá-los em ServerStorage/RoMooAnimalModels.
+- [ ] Verificar se os quatro animais passam a usar as malhas 3D e se a escala/rotação está correta.
+- [ ] Validar que modelos importados não bloqueiam o movimento e que as barras de vida continuam funcionando.
 - [ ] Verificar marcadores do minimapa se movendo e removendo jogadores desconectados.
 
 Preencha esta lista apenas com resultados reais do Studio; não considerar tudo aprovado por inspeção do código.

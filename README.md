@@ -16,6 +16,7 @@ Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento 
 - **Moinhos** produzem ouro e XP a cada segundo enquanto estão ativos.
 - **PvP**, abates, reinício da progressão após a morte e dano validado no servidor.
 - **Fauna** com vacas e ovelhas que fogem e touros e lobos que perseguem e atacam; caça fornece comida e XP.
+- **Arquivos 3D CC0 incluídos:** vaca, touro e lobo em glTF; ovelha em FBX. O jogo usa automaticamente as versões importadas do Roblox quando encontradas em `ServerStorage/RoMooAnimalModels`. Veja `docs/IMPORTAR_ANIMAIS_3D.md`.
 - **Mapa 3D** gerado automaticamente, com grade discreta, neve no norte, deserto no sul, árvores, pedras e arbustos; **minimapa com jogadores**.
 - Controle por **toque**: joystick nativo Roblox, toque direito para mirar, botão USAR e botão COMER.
 
@@ -54,7 +55,9 @@ Ações são enviadas ao servidor e verificadas contra inventário, alcance, coo
 - `src/shared/Config.luau` — regras, itens, custos, idades e balanceamento.
 - `src/server/World.luau` — geração do mapa e recursos.
 - `src/server/Avatar.luau` — avatares arredondados, ferramentas e barras de vida.
-- `src/server/Animals.luau` — animais, comportamento, dano, recompensa e respawn.
+- `src/server/Animals.luau` — animais, comportamento, dano, recompensa e respawn, com suporte aos modelos importados.
+- `assets/animals/` — malhas de quatro animais CC0 prontas para importar no Studio.
+- `docs/IMPORTAR_ANIMAIS_3D.md` — procedimento de importação e créditos/licença.
 - `src/server/Game.server.luau` — economia, combate, progresso, construções e rede.
 - `src/client/Client.client.luau` — câmera, controles e HUD.
 - `docs/CLASSIC_MECHANICS.md` — equivalência com a experiência de referência.
