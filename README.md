@@ -18,6 +18,8 @@ Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento 
 - **Feedback visual local** de ataque, coleta, impacto, cura e construção (efeitos não replicados como peças).
 - **Comida com cooldown próprio**, para poder curar durante o combate sem bloquear golpes.
 - **Fauna** com vacas e ovelhas que fogem e touros e lobos que perseguem e atacam; caça fornece comida e XP.
+- **Caminhada procedural** para os quatro tipos de animal, com oscilação leve e fuga mais longa após receber dano; surgimento evita recursos e outros animais.
+- **Itens visíveis na mão:** maçã, biscoito e prévia de construção quando selecionados na hotbar.
 - **Arquivos 3D CC0 incluídos:** vaca, touro e lobo em glTF; ovelha em FBX. O jogo usa automaticamente as versões importadas do Roblox quando encontradas em `ServerStorage/RoMooAnimalModels`. Veja `docs/IMPORTAR_ANIMAIS_3D.md`.
 - **Mapa 3D autoral**, com grama 3D, flores, pedrinhas, pinheiros de neve e cactos no deserto; árvores com copas em camadas e minimapa com os três biomas. A grade antiga fica desativada por padrão.
 - **Decoração limitada e sem colisão**, para não bloquear movimento, coleta, combate e construção. Quantidades ajustáveis em `Config.Decoration`.

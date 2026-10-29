@@ -83,15 +83,40 @@ local function part(name, size, relative, color, shape, model, anchor)
     return p
 end
 
+local function freeSpawnPoint(point)
+    local world = folder and folder.Parent
+    local resources = world and world:FindFirstChild("Resources")
+    if resources then
+        for _, node in ipairs(resources:GetChildren()) do
+            if node:IsA("Model") and node.PrimaryPart then
+                local offset = node.PrimaryPart.Position - point
+                if Vector2.new(offset.X, offset.Z).Magnitude < 12 then return false end
+            end
+        end
+    end
+    for _, animal in ipairs(folder:GetChildren()) do
+        if animal:IsA("Model") and animal.PrimaryPart then
+            local offset = animal.PrimaryPart.Position - point
+            if Vector2.new(offset.X, offset.Z).Magnitude < 10 then return false end
+        end
+    end
+    return true
+end
+
 local function spawn(kind)
     if not folder or not folder.Parent then return nil end
     local def = defs[kind]
     if not def then return nil end
-    local pos
-    repeat
-        pos = Vector3.new(rng:NextInteger(-mapHalf + 40, mapHalf - 40),
+    local pos = nil
+    for _ = 1, 45 do
+        local candidate = Vector3.new(rng:NextInteger(-mapHalf + 40, mapHalf - 40),
             3, rng:NextInteger(-mapHalf + 40, mapHalf - 40))
-    until Vector3.new(pos.X, 0, pos.Z).Magnitude > 35
+        if Vector3.new(candidate.X, 0, candidate.Z).Magnitude > 40 and freeSpawnPoint(candidate) then
+            pos = candidate
+            break
+        end
+    end
+    if not pos then return nil end
 
     local model = Instance.new("Model")
     model.Name = kind
@@ -142,6 +167,7 @@ local function spawn(kind)
     states[model] = {
         kind = kind, health = def.health, lastAttack = 0,
         moveDirection = Vector3.new(1, 0, 0), nextWander = 0,
+        phase = rng:NextNumber(0, math.pi * 2), panicUntil = 0,
     }
     return model
 end
@@ -185,7 +211,8 @@ function Animals.create(world, mapSize)
                 else
                     local def = defs[state.kind]
                     local pos = model.PrimaryPart.Position
-                    local playerDelta, distance, hum = directionToAnimal(pos, if def.hostile then 42 else 26)
+                    local detection = if def.hostile then 42 else if now < state.panicUntil then 58 else 26
+                    local playerDelta, distance, hum = directionToAnimal(pos, detection)
                     local dir = state.moveDirection
                     if playerDelta and playerDelta.Magnitude > 0.1 then
                         dir = if def.hostile then playerDelta.Unit else -playerDelta.Unit
@@ -195,12 +222,22 @@ function Animals.create(world, mapSize)
                         state.moveDirection = dir
                         state.nextWander = now + rng:NextNumber(1.5, 4)
                     end
-                    local moveSpeed = if playerDelta then def.speed else def.speed * 0.35
+                    local panicking = not def.hostile and now < state.panicUntil
+                    local moveSpeed = def.speed * 0.35
+                    if playerDelta then
+                        moveSpeed = def.speed
+                        if panicking then moveSpeed *= 1.18 end
+                    end
                     local nextPos = Vector3.new(
                         math.clamp(pos.X + dir.X * moveSpeed * dt, -mapHalf + 20, mapHalf - 20),
                         3, math.clamp(pos.Z + dir.Z * moveSpeed * dt, -mapHalf + 20, mapHalf - 20))
                     if dir.Magnitude > 0.1 then
-                        model:PivotTo(CFrame.lookAt(nextPos, nextPos + dir))
+                        -- Pequena animação de caminhada, compatível com Parts e MeshParts,
+                        -- sem publicar AnimationIds ou criar joints por animal.
+                        local bob = math.abs(math.sin(now * moveSpeed * .72 + state.phase)) * .17
+                        local lean = math.sin(now * moveSpeed * .72 + state.phase) * math.rad(2.0)
+                        local raised = nextPos + Vector3.new(0, bob, 0)
+                        model:PivotTo(CFrame.lookAt(raised, raised + dir) * CFrame.Angles(lean, 0, 0))
                     end
                     if def.hostile and playerDelta and hum and distance < 7 and now - state.lastAttack > 1.5 then
                         local char = hum.Parent
@@ -220,6 +257,9 @@ function Animals.hit(model, damage)
     local state = states[model]
     if not state or not model.Parent then return 0, 0, false end
     state.health -= damage
+    if not defs[state.kind].hostile then
+        state.panicUntil = os.clock() + 3.3
+    end
     local def = defs[state.kind]
     if state.health > 0 then
         model:SetAttribute("Health", state.health)

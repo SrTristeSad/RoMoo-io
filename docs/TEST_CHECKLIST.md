@@ -50,6 +50,10 @@
 - [ ] Testar destruição, respawn e 2–10 moinhos ativos simultaneamente.
 - [ ] Testar entrada/saída de jogadores sem vazamento perceptível de conexões/eventos.
 - [ ] Testar vacas e ovelhas fugindo do jogador; touros e lobos perseguindo e causando dano.
+- [ ] Conferir oscilação/rotação da caminhada e ausência de tremores nas malhas importadas.
+- [ ] Golpear uma vaca e verificar fuga ampliada temporariamente.
+- [ ] Verificar que animais não surgem dentro de árvores ou outros animais.
+- [ ] Trocar entre marreta, maçã, biscoito e construções e verificar o item exibido na mão.
 - [ ] Testar caça concedendo comida e XP; animal reaparecendo após o intervalo.
 - [ ] Importar Cow.gltf, Bull.gltf, Wolf.gltf e Sheep.fbx e colocá-los em ServerStorage/RoMooAnimalModels.
 - [ ] Verificar se os quatro animais passam a usar as malhas 3D e se a escala/rotação está correta.

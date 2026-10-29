@@ -38,7 +38,24 @@ local function changeWeapon(character, root, selected)
     local tool = Instance.new("Folder")
     tool.Name = "Weapon"
     tool.Parent = visuals
-    local stick = attachPart("Cabo", Vector3.new(1.1, 1, 5),
+    if selected == "Food" or selected == "Cookie" then
+        local cookie = selected == "Cookie"
+        attachPart(if cookie then "Biscoito" else "Maca",
+            if cookie then Vector3.new(2.6, .85, 2.6) else Vector3.new(2.4, 2.4, 2.4),
+            Vector3.new(3.3, .15, -2.6), Enum.Material.SmoothPlastic,
+            if cookie then Color3.fromRGB(198, 139, 72) else Color3.fromRGB(213, 68, 64),
+            root, tool, Enum.PartType.Ball)
+        return
+    end
+    if selected == "WoodWall" or selected == "StoneWall" or selected == "Spikes" or selected == "Windmill" then
+        local isStone = selected == "StoneWall"
+        attachPart("PlantaDeConstrucao", Vector3.new(3.5, .4, 3.5),
+            Vector3.new(3.4, 0, -2.8), Enum.Material.SmoothPlastic,
+            if isStone then Color3.fromRGB(126, 144, 152) else Color3.fromRGB(176, 135, 88),
+            root, tool)
+        return
+    end
+    attachPart("Cabo", Vector3.new(1.1, 1, 5),
         Vector3.new(3.2, .1, -3.3), Enum.Material.Wood, Color3.fromRGB(111, 74, 46), root, tool)
     if selected == "Axe" or selected == "Sword" then
         local tip = attachPart("Lamina", Vector3.new(if selected == "Sword" then 1.2 else 3.6,

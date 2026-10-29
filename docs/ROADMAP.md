@@ -31,6 +31,8 @@
 ## 0.4 — Combate e feedback visual
 - [x] Efeitos de ataque, impacto, coleta, construção e cura executados no cliente
 - [x] Números flutuantes de recursos, dano e regeneração
+- [x] Animação de caminhada dos animais sem esqueleto e reação ao dano
+- [x] Seleção visual de comida e construções na mão do personagem
 - [x] Cooldown de comida separado de ataque e construção
 - [x] Efeitos enviados apenas para jogadores próximos
 - [ ] Testar efeitos e cooldown de cura durante PvP no Roblox Studio
