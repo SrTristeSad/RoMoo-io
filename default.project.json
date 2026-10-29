@@ -1,0 +1,24 @@
+{
+  "name": "RoMoo io",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "RoMoo": {
+        "$className": "Folder",
+        "Shared": { "$path": "src/shared" }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "RoMoo": { "$path": "src/server" }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "RoMooClient": { "$path": "src/client/Client.client.luau" }
+      }
+    }
+  }
+}
