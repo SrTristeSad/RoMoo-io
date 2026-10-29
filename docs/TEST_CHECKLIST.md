@@ -1,4 +1,4 @@
-# Checklist de validação da versão 0.4 no Roblox Studio
+# Checklist de validação da versão 0.5 no Roblox Studio
 
 **Status:** PENDENTE — não foi executado dentro do Studio nesta conversa.
 
@@ -22,6 +22,15 @@
 - [ ] Coletar XP até idade 2, escolher machado ou espada, confirmar desbloqueio.
 - [ ] Verificar que opção não escolhida continua bloqueada.
 - [ ] Subir idade 3 e escolher biscoito ou parede de pedra.
+- [ ] Alcançar idades 4–9 e escolher um dos dois itens em cada fase.
+- [ ] Item rejeitado em cada escolha continua bloqueado.
+- [ ] Confirmar que todas as escolhas são aplicadas em ordem, sem pular idades via Remote.
+- [ ] Testar novas armas, alcance, coleta e dano de cada uma.
+- [ ] Construir plataforma curativa, armadilha, muralha, espinhos de pedra e moinhos superiores.
+- [ ] Verificar regeneração do pad, dano/redução de velocidade da armadilha e ouro dos moinhos.
+- [ ] Confirmar retorno da velocidade normal após a armadilha e após respawn.
+- [ ] Verificar todos os 13 itens obtidos visíveis e selecionáveis pelo HUD (desktop e celular).
+- [ ] Executar `tests/StudioProgressionSmokeTest.luau` no Studio e registrar a saída.
 
 ## Combate e segurança
 - [ ] Testar com dois jogadores: dano somente dentro do alcance e arco frontal.

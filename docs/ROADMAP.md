@@ -25,7 +25,9 @@
 - [ ] Testes de FPS e legibilidade no Roblox Studio em celular
 - [ ] Desenhar personagens e armas .io em 3D autoral
 - [ ] Expandir biomas, lago/rios, comportamento animal, drops e encontros especiais
-- [ ] Catálogo completo de upgrades, itens e estruturas até idade 9
+- [x] Oito estágios de escolha dos equipamentos (idades 2–9), com duas opções por estágio
+- [x] Armas e defesas adicionais: machados pesados, lanças, martelos, muralhas, armadilhas e moinhos melhorados
+- [ ] Fidelidade exata das árvores de equipamentos, valores e regras ao jogo de referência (não confundir com protótipo implementado)
 - [ ] Placares avançados, marcadores no minimapa e mapa de equipes
 
 ## 0.4 — Combate e feedback visual
@@ -37,12 +39,20 @@
 - [x] Efeitos enviados apenas para jogadores próximos
 - [ ] Testar efeitos e cooldown de cura durante PvP no Roblox Studio
 
-## 0.5 — Multiplayer robusto
+## 0.5 — Evolução, arsenal e construções
+- [x] Escolhas de idade 2–9 e desbloqueio validado no servidor
+- [x] 21 itens configurados; no máximo 13 obtidos em uma partida
+- [x] Barra responsiva de até três linhas mostrando todos os itens obtidos
+- [x] Plataforma de cura, armadilha de lentidão e produção por moinhos melhorados
+- [x] Proteção contra escolhas forjadas e itens não desbloqueados
+- [ ] Testar evolução, uso e interface no Studio (PC e mobile)
+
+## 0.6 — Multiplayer robusto
 - [ ] Equipas / clãs, chat com políticas do Roblox, proteção de spawn
 - [ ] Exploits, colisões, ping e resistência a ataques automatizados
 - [ ] Otimizações de dispositivos móveis / limite de construções
 
-## 0.6 — Lançamento
+## 0.7 — Lançamento
 - [ ] Teste com jogadores, arte original e UX final
 - [ ] Monetização preferencialmente cosmética, sem vantagem competitiva
 - [ ] DataStore para cosméticos/metaprogressão, não para runs temporárias

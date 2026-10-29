@@ -164,15 +164,20 @@ noticeRemote.OnClientEvent:Connect(function(msg)
     end)
 end)
 
+-- Itens obtidos permanecem visíveis; a barra ganha linhas, não cria um menu oculto.
 local hotbar = frame(screen, "Hotbar", UDim2.new(.96, 0, 0, 60),
-    UDim2.new(.5, 0, 1, if isTouch then -150 else -12),
+    UDim2.new(.5, 0, 1, if isTouch then -144 else -12),
     Color3.fromRGB(31, 40, 36), Vector2.new(.5, 1))
 round(hotbar, 8)
 local maxBar = Instance.new("UISizeConstraint")
-maxBar.MaxSize = Vector2.new(740, 64)
+maxBar.MaxSize = Vector2.new(840, 180)
 maxBar.Parent = hotbar
-local itemButtons = {}
 
+local itemButtons = {}
+local visibleItems = {}
+local adjustHotbar
+
+local keyLabels = {"1","2","3","4","5","6","7","8","9","0","-","=","R"}
 local function itemUnlocked(itemName)
     local data = Config.Items[itemName]
     return data and (not data.upgrade or player:GetAttribute("Unlock" .. itemName) == true)
@@ -183,24 +188,30 @@ local function selectItem(name)
     selected = name
     actionRemote:FireServer("Select", name)
     for itemName, button in pairs(itemButtons) do
-        button.BackgroundColor3 = if itemName == name then Color3.fromRGB(64, 166, 87) else Color3.fromRGB(83, 98, 83)
+        button.BackgroundColor3 = if itemName == name
+            then Color3.fromRGB(64, 166, 87) else Color3.fromRGB(83, 98, 83)
     end
 end
 
 local function refreshHotbar()
-    for itemName, button in pairs(itemButtons) do
-        local data = Config.Items[itemName]
-        local available = itemUnlocked(itemName)
-        button.Text = data.label .. (available and "" or "\n🔒")
-        button.TextTransparency = available and 0 or .45
-        button.BackgroundColor3 = if not available then Color3.fromRGB(55, 61, 60)
-            elseif itemName == selected then Color3.fromRGB(64, 166, 87)
-            else Color3.fromRGB(83, 98, 83)
+    table.clear(visibleItems)
+    for _, itemName in ipairs(Config.ItemOrder) do
+        local button = itemButtons[itemName]
+        local active = itemUnlocked(itemName)
+        button.Visible = active
+        if active then
+            table.insert(visibleItems, itemName)
+            local labelText = Config.Items[itemName].label
+            button.Text = if isTouch then string.sub(labelText, 1, 10) else labelText
+        end
+        button.BackgroundColor3 = if itemName == selected
+            then Color3.fromRGB(64, 166, 87) else Color3.fromRGB(83, 98, 83)
     end
     if not itemUnlocked(selected) then selectItem("Hammer") end
+    if adjustHotbar then adjustHotbar() end
 end
 
-for i, itemName in ipairs(Config.ItemOrder) do
+for _, itemName in ipairs(Config.ItemOrder) do
     local button = Instance.new("TextButton")
     button.Name = itemName
     button.BorderSizePixel = 0
@@ -211,20 +222,32 @@ for i, itemName in ipairs(Config.ItemOrder) do
     button.Parent = hotbar
     round(button, 5)
     itemButtons[itemName] = button
-    local hotbarNumber = label(button, "Number", tostring(i), Color3.fromRGB(238, 218, 118))
-    hotbarNumber.Size = UDim2.fromOffset(12, 13)
-    hotbarNumber.Position = UDim2.fromOffset(2, 1)
+    local hint = label(button, "Number", "", Color3.fromRGB(238, 218, 118))
+    hint.Size = UDim2.fromOffset(13, 13)
+    hint.Position = UDim2.fromOffset(2, 1)
     button.Activated:Connect(function() selectItem(itemName) end)
-    player:GetAttributeChangedSignal("Unlock" .. itemName):Connect(refreshHotbar)
+    if Config.Items[itemName].upgrade then
+        player:GetAttributeChangedSignal("Unlock" .. itemName):Connect(refreshHotbar)
+    end
 end
 
-local function adjustHotbar()
+adjustHotbar = function()
     local width = hotbar.AbsoluteSize.X
-    local slotWidth = math.floor((width - 12 - 8 * 4) / 9)
-    for i, itemName in ipairs(Config.ItemOrder) do
+    if width < 1 then return end
+    local columns = if width < 520 then 5 else if width < 750 then 7 else 9
+    local rows = math.max(1, math.ceil(#visibleItems / columns))
+    local cellH = if isTouch then 43 else 47
+    local height = rows * (cellH + 4) + 8
+    hotbar.Size = UDim2.new(.96, 0, 0, height)
+    local cellW = math.floor((width - 12 - (columns - 1) * 4) / columns)
+    for i, itemName in ipairs(visibleItems) do
         local button = itemButtons[itemName]
-        button.Size = UDim2.new(0, slotWidth, 1, -12)
-        button.Position = UDim2.new(0, 6 + (i - 1) * (slotWidth + 4), 0, 6)
+        local row = math.floor((i - 1) / columns)
+        local col = (i - 1) % columns
+        button.Size = UDim2.fromOffset(cellW, cellH)
+        button.Position = UDim2.fromOffset(6 + col * (cellW + 4), 4 + row * (cellH + 4))
+        local hint = button:FindFirstChild("Number")
+        if hint then hint.Text = keyLabels[i] or "" end
     end
 end
 hotbar:GetPropertyChangedSignal("AbsoluteSize"):Connect(adjustHotbar)
@@ -291,7 +314,7 @@ refreshAge()
 
 local hp = label(screen, "Health", "VIDA 100/100", Color3.fromRGB(255, 244, 244))
 hp.AnchorPoint = Vector2.new(0, 1)
-hp.Position = UDim2.new(0, 14, 1, if isTouch then -150 else -17)
+hp.Position = UDim2.new(0, 14, 1, if isTouch then -318 else -140)
 hp.Size = UDim2.new(.3, 0, 0, 25)
 hp.TextXAlignment = Enum.TextXAlignment.Left
 local function onCharacter(character)
@@ -394,6 +417,8 @@ local keyItems = {
     [Enum.KeyCode.One] = 1, [Enum.KeyCode.Two] = 2, [Enum.KeyCode.Three] = 3,
     [Enum.KeyCode.Four] = 4, [Enum.KeyCode.Five] = 5, [Enum.KeyCode.Six] = 6,
     [Enum.KeyCode.Seven] = 7, [Enum.KeyCode.Eight] = 8, [Enum.KeyCode.Nine] = 9,
+    [Enum.KeyCode.Zero] = 10, [Enum.KeyCode.Minus] = 11, [Enum.KeyCode.Equals] = 12,
+    [Enum.KeyCode.R] = 13,
 }
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
@@ -406,7 +431,8 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if not rotationLocked then lockedDirection = currentDirection() end
         rotationLocked = not rotationLocked
     elseif keyItems[input.KeyCode] then
-        selectItem(Config.ItemOrder[keyItems[input.KeyCode]])
+        local chosen = visibleItems[keyItems[input.KeyCode]]
+        if chosen then selectItem(chosen) end
     elseif input.UserInputType == Enum.UserInputType.MouseButton1 or input.KeyCode == Enum.KeyCode.Space then
         held = true
         fireUse(selected)
@@ -465,11 +491,17 @@ RunService:BindToRenderStep("RoMooClassicCamera", Enum.RenderPriority.Camera.Val
     if Config.Items[selected].category == "Building" then
         local pos = root.Position + horizontal.Unit * Config.BuildDistance
         preview.Transparency = .5
-        if selected == "WoodWall" or selected == "StoneWall" then
-            preview.Size = Vector3.new(12, 8, 3)
+        if selected == "WoodWall" or selected == "StoneWall" or selected == "CastleWall" then
+            local fortress = selected == "CastleWall"
+            preview.Size = if fortress then Vector3.new(13, 11, 4) else Vector3.new(12, 8, 3)
             local facing = if math.abs(horizontal.X) > math.abs(horizontal.Z) then math.rad(90) else 0
-            preview.CFrame = CFrame.new(math.round(pos.X / 3) * 3, 4,
+            preview.CFrame = CFrame.new(math.round(pos.X / 3) * 3, if fortress then 5.5 else 4,
                 math.round(pos.Z / 3) * 3) * CFrame.Angles(0, facing, 0)
+        elseif Config.Items[selected].goldPerTick then
+            local isGold = selected == "GoldMill"
+            preview.Size = Vector3.new(5, if isGold then 15 else 12, 5)
+            preview.Position = Vector3.new(math.round(pos.X / 3) * 3,
+                if isGold then 7.5 else 6, math.round(pos.Z / 3) * 3)
         else
             preview.Size = Vector3.new(9, 1, 9)
             preview.Position = Vector3.new(math.round(pos.X / 3) * 3, .5,
@@ -483,4 +515,4 @@ RunService:BindToRenderStep("RoMooClassicCamera", Enum.RenderPriority.Camera.Val
     end
 end)
 
-print("[RoMoo io] Barra de 9 itens, câmera elevada, clique/Space, E automático e Q comida.")
+print("[RoMoo io] Barra dinâmica com todos os itens desbloqueados, idades até 9, PC/mobile.")

@@ -1,5 +1,7 @@
 --!nonstrict
 -- Silhueta 3D minimalista: corpo circular, braços e ferramenta, sem copiar assets.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local Avatar = {}
 local palettes = {
     Color3.fromRGB(168, 112, 73),
@@ -47,8 +49,8 @@ local function changeWeapon(character, root, selected)
             root, tool, Enum.PartType.Ball)
         return
     end
-    if selected == "WoodWall" or selected == "StoneWall" or selected == "Spikes" or selected == "Windmill" then
-        local isStone = selected == "StoneWall"
+    if Config.Items[selected] and Config.Items[selected].category == "Building" then
+        local isStone = selected == "StoneWall" or selected == "CastleWall" or selected == "StoneSpikes"
         attachPart("PlantaDeConstrucao", Vector3.new(3.5, .4, 3.5),
             Vector3.new(3.4, 0, -2.8), Enum.Material.SmoothPlastic,
             if isStone then Color3.fromRGB(126, 144, 152) else Color3.fromRGB(176, 135, 88),
@@ -57,12 +59,21 @@ local function changeWeapon(character, root, selected)
     end
     attachPart("Cabo", Vector3.new(1.1, 1, 5),
         Vector3.new(3.2, .1, -3.3), Enum.Material.Wood, Color3.fromRGB(111, 74, 46), root, tool)
-    if selected == "Axe" or selected == "Sword" then
-        local tip = attachPart("Lamina", Vector3.new(if selected == "Sword" then 1.2 else 3.6,
-            1, if selected == "Sword" then 5 else 2),
-            Vector3.new(3.2, .1, -6.8), Enum.Material.Metal, Color3.fromRGB(163, 176, 180), root, tool)
+    local blade = selected == "Sword" or selected == "LongSword"
+        or selected == "Spear" or selected == "GreatSpear"
+    local axe = selected == "Axe" or selected == "HeavyAxe"
+    local long = selected == "LongSword" or selected == "Spear" or selected == "GreatSpear"
+    if blade or axe then
+        attachPart(if axe then "Machado" else "Lamina",
+            Vector3.new(if axe then 3.9 else 1.2, 1,
+                if long then 7 else if axe then 2.4 else 5),
+            Vector3.new(3.2, .1, if long then -7.3 else -6.8),
+            Enum.Material.Metal, Color3.fromRGB(163, 176, 180), root, tool)
     else
-        attachPart("Cabeca", Vector3.new(3.1, 1.6, 1.8), Vector3.new(3.2, .1, -6.1),
+        local heavy = selected == "WarHammer" or selected == "Crusher"
+        attachPart("Cabeca",
+            if heavy then Vector3.new(4.1, 2, 2.5) else Vector3.new(3.1, 1.6, 1.8),
+            Vector3.new(3.2, .1, -6.1),
             Enum.Material.Slate, Color3.fromRGB(109, 115, 124), root, tool)
     end
 end
@@ -133,7 +144,10 @@ function Avatar.attach(player, character, humanoid)
     local function updateWeapon()
         changeWeapon(character, root, player:GetAttribute("SelectedItem") or "Hammer")
     end
-    player:GetAttributeChangedSignal("SelectedItem"):Connect(updateWeapon)
+    local selectionConnection = player:GetAttributeChangedSignal("SelectedItem"):Connect(updateWeapon)
+    character.Destroying:Connect(function()
+        selectionConnection:Disconnect()
+    end)
     updateWeapon()
 end
 

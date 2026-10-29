@@ -92,8 +92,8 @@ local function refreshUpgrade(player)
     local p = profiles[player]
     if not p then return end
     local pending = 0
-    for _, level in ipairs({2, 3}) do
-        if p.age >= level and not p.chosen[level] then
+    for level = 2, #Config.AgeThresholds do
+        if Config.UpgradeChoices[level] and p.age >= level and not p.chosen[level] then
             pending = level
             break
         end
@@ -132,6 +132,13 @@ local function chooseUpgrade(player, itemName)
     if not p or not item or not item.upgrade then return end
     local age = item.upgrade
     if p.age < age or p.chosen[age] then return end
+    -- Impedir escolhas forjadas e saltos de progressão.
+    if player:GetAttribute("PendingUpgrade") ~= age then return end
+    local valid = false
+    for _, option in ipairs(Config.UpgradeChoices[age] or {}) do
+        if option == itemName then valid = true break end
+    end
+    if not valid then return end
     p.chosen[age] = itemName
     player:SetAttribute("Unlock" .. itemName, true)
     refreshUpgrade(player)
@@ -255,17 +262,25 @@ local function createBuilding(player, itemName, position, direction)
     model:SetAttribute("Health", item.health)
     model.Parent = buildings
     local facing = if math.abs(direction.X) > math.abs(direction.Z) then math.rad(90) else 0
-    if itemName == "WoodWall" or itemName == "StoneWall" then
-        local stone = itemName == "StoneWall"
-        model.PrimaryPart = modelPart("Wall", Vector3.new(12, 8, 3),
-            CFrame.new(position + Vector3.new(0, 4, 0)) * CFrame.Angles(0, facing, 0),
-            if stone then Color3.fromRGB(128, 134, 140) else Color3.fromRGB(166, 122, 72),
+    if itemName == "WoodWall" or itemName == "StoneWall" or itemName == "CastleWall" then
+        local stone = itemName ~= "WoodWall"
+        local fortress = itemName == "CastleWall"
+        model.PrimaryPart = modelPart("Wall",
+            if fortress then Vector3.new(13, 11, 4) else Vector3.new(12, 8, 3),
+            CFrame.new(position + Vector3.new(0, if fortress then 5.5 else 4, 0)) * CFrame.Angles(0, facing, 0),
+            if fortress then Color3.fromRGB(102, 120, 129) else if stone then Color3.fromRGB(128, 134, 140)
+                else Color3.fromRGB(166, 122, 72),
             if stone then Enum.Material.Slate else Enum.Material.WoodPlanks,
             model, true)
-    elseif itemName == "Spikes" then
+    elseif itemName == "Spikes" or itemName == "StoneSpikes" or itemName == "PitTrap" then
+        local stone = itemName == "StoneSpikes"
+        local pit = itemName == "PitTrap"
         local base = modelPart("Base", Vector3.new(9, 1, 9), CFrame.new(position + Vector3.new(0, 0.5, 0)),
-            Color3.fromRGB(142, 106, 70), Enum.Material.Wood, model, false)
+            if stone then Color3.fromRGB(122, 130, 135) else Color3.fromRGB(142, 106, 70),
+            if stone then Enum.Material.Slate else Enum.Material.Wood, model, false)
+        base.CanTouch = true
         model.PrimaryPart = base
+        if not pit then
         for _, offset in ipairs({
             Vector3.new(-3, 0, -3), Vector3.new(0, 0, -3), Vector3.new(3, 0, -3),
             Vector3.new(-3, 0, 0), Vector3.new(0, 0, 0), Vector3.new(3, 0, 0),
@@ -275,11 +290,13 @@ local function createBuilding(player, itemName, position, direction)
             spike.Name = "Espinho"
             spike.Size = Vector3.new(2.5, 3.5, 2.5)
             spike.CFrame = CFrame.new(position + offset + Vector3.new(0, 2, 0))
-            spike.Color = Color3.fromRGB(111, 80, 47)
-            spike.Material = Enum.Material.Wood
+            spike.Color = if stone then Color3.fromRGB(112, 121, 128) else Color3.fromRGB(111, 80, 47)
+            spike.Material = if stone then Enum.Material.Slate else Enum.Material.Wood
             spike.Anchored = true
             spike.CanCollide = false
+            spike.CanTouch = false
             spike.Parent = model
+        end
         end
         base.Touched:Connect(function(hit)
             if not model.Parent then return end
@@ -293,20 +310,39 @@ local function createBuilding(player, itemName, position, direction)
             if (spikeCooldown[hum] or 0) + 1.3 > now then return end
             spikeCooldown[hum] = now
             recentDamage[hum] = {attacker = player, at = now}
-            hum:TakeDamage(18)
+            hum:TakeDamage(item.trapDamage or 18)
+            if pit then
+                local previousSpeed = hum.WalkSpeed
+                local slowedSpeed = math.min(previousSpeed, 10)
+                hum.WalkSpeed = slowedSpeed
+                task.delay(item.slowSeconds or 2, function()
+                    if hum.Parent and hum.Health > 0 and hum.WalkSpeed == slowedSpeed then
+                        hum.WalkSpeed = previousSpeed
+                    end
+                end)
+            end
         end)
-    elseif itemName == "Windmill" then
-        local base = modelPart("Torre", Vector3.new(4, 12, 4), CFrame.new(position + Vector3.new(0, 6, 0)),
-            Color3.fromRGB(191, 150, 87), Enum.Material.Wood, model, true)
+    elseif itemName == "Windmill" or itemName == "FastWindmill" or itemName == "GoldMill" then
+        local topTier = itemName == "GoldMill"
+        local base = modelPart("Torre",
+            Vector3.new(if topTier then 5 else 4, if topTier then 15 else 12, if topTier then 5 else 4),
+            CFrame.new(position + Vector3.new(0, if topTier then 7.5 else 6, 0)),
+            if topTier then Color3.fromRGB(199, 160, 68) else Color3.fromRGB(191, 150, 87),
+            Enum.Material.Wood, model, true)
         model.PrimaryPart = base
         local rotor = Instance.new("Model")
         rotor.Name = "Rotor"
         rotor.Parent = model
+        local rotorY = if topTier then 15.5 else 12.5
         local blade1 = modelPart("PaHorizontal", Vector3.new(17, 1, 2.5),
-            CFrame.new(position + Vector3.new(0, 12.5, 0)), Color3.fromRGB(226, 202, 135), Enum.Material.Wood, rotor, false)
+            CFrame.new(position + Vector3.new(0, rotorY, 0)), Color3.fromRGB(226, 202, 135), Enum.Material.Wood, rotor, false)
         modelPart("PaVertical", Vector3.new(2.5, 1, 17),
-            CFrame.new(position + Vector3.new(0, 12.5, 0)), Color3.fromRGB(226, 202, 135), Enum.Material.Wood, rotor, false)
+            CFrame.new(position + Vector3.new(0, rotorY, 0)), Color3.fromRGB(226, 202, 135), Enum.Material.Wood, rotor, false)
         rotor.PrimaryPart = blade1
+    elseif itemName == "HealingPad" then
+        model.PrimaryPart = modelPart("HealingPad", Vector3.new(9, .8, 9),
+            CFrame.new(position + Vector3.new(0, .4, 0)),
+            Color3.fromRGB(85, 179, 137), Enum.Material.SmoothPlastic, model, false)
     end
     return model
 end
@@ -394,9 +430,14 @@ local function resetRun(player, resetKills)
     p.xp = 0
     p.age = 1
     p.chosen = {}
-    for _, name in ipairs({"Axe", "Sword", "StoneWall", "Cookie"}) do
-        player:SetAttribute("Unlock" .. name, false)
+    for _, name in ipairs(Config.ItemOrder) do
+        local entry = Config.Items[name]
+        if entry and entry.upgrade then
+            player:SetAttribute("Unlock" .. name, false)
+        end
     end
+    p.lastUse = -1e8
+    p.lastEat = -1e8
     player:SetAttribute("Age", 1)
     player:SetAttribute("XP", 0)
     player:SetAttribute("PendingUpgrade", 0)
@@ -489,20 +530,29 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Cada moinho concede ouro e XP ao proprietário vivo enquanto a estrutura existir.
+-- A produção e os pads são processados em intervalos fixos, sem uma task por estrutura.
 task.spawn(function()
     while true do
         task.wait(Config.WindmillTickSeconds)
         for _, model in ipairs(buildings:GetChildren()) do
-            if model.Name == "Windmill" then
-                local owner = Players:GetPlayerByUserId(model:GetAttribute("OwnerUserId"))
-                if owner and profiles[owner] then
-                    changeResource(owner, "Gold", Config.Items.Windmill.goldPerTick)
-                    awardXP(owner, Config.Items.Windmill.goldPerTick)
-                end
-                local rotor = model:FindFirstChild("Rotor")
-                if rotor and rotor:IsA("Model") and rotor.PrimaryPart then
-                    rotor:PivotTo(rotor:GetPivot() * CFrame.Angles(0, math.rad(22), 0))
+            local item = Config.Items[model.Name]
+            local owner = Players:GetPlayerByUserId(model:GetAttribute("OwnerUserId"))
+            if item and owner and profiles[owner] and model.PrimaryPart then
+                if item.goldPerTick then
+                    changeResource(owner, "Gold", item.goldPerTick)
+                    awardXP(owner, item.goldPerTick)
+                    local rotor = model:FindFirstChild("Rotor")
+                    if rotor and rotor:IsA("Model") and rotor.PrimaryPart then
+                        rotor:PivotTo(rotor:GetPivot() * CFrame.Angles(0, math.rad(22), 0))
+                    end
+                elseif item.healPerTick then
+                    local _, hum, root = alive(owner)
+                    if hum and root and horizontalDistance(root.Position, model.PrimaryPart.Position) <= item.healRange then
+                        if hum.Health < hum.MaxHealth then
+                            hum.Health = math.min(hum.MaxHealth, hum.Health + item.healPerTick)
+                            emitFX("Heal", root.Position, item.healPerTick, "")
+                        end
+                    end
                 end
             end
         end

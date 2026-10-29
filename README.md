@@ -2,17 +2,17 @@
 
 Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento central de jogos de sobrevivência e construção no estilo do MooMoo.io. Projeto independente, com código, modelos e identidade próprios; não inclui código ou assets de terceiros.
 
-> **Versão de desenvolvimento 0.4 (combate e feedback visual)**: mecânicas implementadas em scripts, **ainda não testadas em sessão do Roblox Studio**. Não é uma versão pronta para lançamento.
+> **Versão de desenvolvimento 0.5 (progressão por idade 2–9)**: mecânicas implementadas em scripts, **ainda não testadas em sessão do Roblox Studio**. Não é uma versão pronta para lançamento.
 
 ## O que já existe no código
 
 - **Visão elevada** e mira com o mouse; personagem 3D arredondado com arma e barra de vida.
 - **WASD** para movimento; clique/espaço para atacar, coletar ou construir com o item selecionado.
 - **E** liga/desliga ataque automático; **Q** consome comida; **X** trava direção da mira.
-- **Hotbar com nove posições**, seleção por teclas `1–9` ou toque na interface.
+- **Hotbar dinâmica com até 13 itens desbloqueados visíveis** em até três linhas, sem esconder itens obtidos em um menu. Atalhos 1–9, 0, - e =, R; seleção também por toque/clique.
 - **Coleta** de madeira, pedra, ouro e comida por golpes; rendimento diferente por ferramenta.
-- **XP e idade**, com escolhas de equipamento nas idades 2 e 3.
-- **Construções** de parede de madeira, parede de pedra, espinhos e moinho.
+- **XP e idade**, com escolhas de equipamentos nas idades 2 a 9, validadas pelo servidor. Armas novas com danos, alcance e capacidade de coleta próprios.
+- **Construções**: madeira, pedra, muralha reforçada, espinhos de madeira/pedra, armadilha de chão, plataforma curativa e três níveis de moinhos.
 - **Moinhos** produzem ouro e XP a cada segundo enquanto estão ativos.
 - **PvP**, abates, reinício da progressão após a morte e dano validado no servidor.
 - **Feedback visual local** de ataque, coleta, impacto, cura e construção (efeitos não replicados como peças).
@@ -50,7 +50,7 @@ O jogo **não depende de DataStore** nesta etapa. Ouro, recursos e idade são da
 | E | Alternar ataque automático |
 | Q | Comida rápida |
 | X | Travar/destravar mira |
-| 1–9 | Selecionar posições da hotbar |
+| 1–9, 0, -, =, R | Selecionar até 13 itens da hotbar, na ordem exibida |
 
 Ações são enviadas ao servidor e verificadas contra inventário, alcance, cooldown, permissões, idade e limites de construção.
 
@@ -75,6 +75,6 @@ Ações são enviadas ao servidor e verificadas contra inventário, alcance, coo
 
 ## Próximas etapas
 
-Testar o mapa decorado e os animais no Studio, importar modelos CC0 e corrigir possíveis problemas em dispositivos móveis. Depois: rios, mais armas e upgrades até idade 9, clãs e cosméticos.
+Testar o mapa decorado, progressão até idade 9 e os animais no Studio. Validar HUD em celular e balancear custos/dano. Depois: rios, sistemas de clãs, otimizações e cosméticos.
 
 **Importante:** código presente no GitHub não significa que a experiência foi compilada e testada. Antes de publicar ou ativar monetização, conclua a checklist de validação.
