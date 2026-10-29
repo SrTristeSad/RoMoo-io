@@ -1,45 +1,66 @@
-# RoMoo io
+# RoMoo io — Sobrevivência .io em Roblox (Luau)
 
-Protótipo multiplayer de sobrevivência e construção para **Roblox**, desenvolvido em **Luau**. Projeto independente: não utiliza código ou assets do MooMoo.io nem modifica o ToonRoyale original.
+Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento central de jogos de sobrevivência e construção no estilo do MooMoo.io. Projeto independente, com código, modelos e identidade próprios; não inclui código ou assets de terceiros.
 
-## Status
-**MVP 0.1 (código inicial)** — terreno e recursos gerados no servidor, coleta, PvP, construções, comida/recuperação, HUD para PC e celular. Ainda **não validado em sessão real do Roblox Studio**. Sem loja, monetização ativa, DataStore ou itens pagos.
+> **Versão de desenvolvimento 0.2**: mecânicas implementadas em scripts, **ainda não testadas em sessão do Roblox Studio**. Não é uma versão pronta para lançamento.
 
-## Como abrir no Roblox Studio
-O projeto usa [Rojo](https://rojo.space/) para sincronizar os scripts com o Roblox Studio.
+## O que já existe no código
 
-1. Instale o Roblox Studio e a extensão **Rojo** do Studio.
-2. Instale a CLI Rojo (versão compatível com a extensão).
-3. Baixe/clone este repositório, abra o terminal na pasta raiz e execute `rojo serve`.
-4. Abra um **Baseplate** novo no Roblox Studio, conecte o plugin Rojo ao servidor local e clique em **Play**.
-5. Para testar com dois jogadores, use **Test > Server & Clients** no Studio.
+- **Visão elevada** e mira com o mouse; personagem 3D arredondado com arma e barra de vida.
+- **WASD** para movimento; clique/espaço para atacar, coletar ou construir com o item selecionado.
+- **E** liga/desliga ataque automático; **Q** consome comida; **X** trava direção da mira.
+- **Hotbar com nove posições**, seleção por teclas `1–9` ou toque na interface.
+- **Coleta** de madeira, pedra, ouro e comida por golpes; rendimento diferente por ferramenta.
+- **XP e idade**, com escolhas de equipamento nas idades 2 e 3.
+- **Construções** de parede de madeira, parede de pedra, espinhos e moinho.
+- **Moinhos** produzem ouro e XP a cada segundo enquanto estão ativos.
+- **PvP**, abates, reinício da progressão após a morte e dano validado no servidor.
+- **Mapa 3D** gerado automaticamente, com grade discreta, neve no norte, deserto no sul, árvores, pedras e arbustos.
+- Controle por **toque**: joystick nativo Roblox, toque direito para mirar, botão USAR e botão COMER.
 
-Alternativa: `rojo build -o RoMoo.rbxlx` produz um arquivo de place no formato XML, que pode ser aberto no Studio.
+## Abrindo o projeto no Roblox Studio
 
-## Controles
-| Ação | PC | Celular |
-| --- | --- | --- |
-| Mover | WASD / padrão Roblox | Joystick Roblox |
-| Coletar recurso mais próximo | E | Botão COLETAR |
-| Atacar jogador/estrutura inimiga | F | Botão ATACAR |
-| Comer e recuperar vida | H | Botão COMER |
-| Construir parede | 1 | Botão PAREDE |
-| Construir armadilha | 2 | Botão ARMADILHA |
+Este projeto usa [Rojo](https://rojo.space/) para montar o Place a partir dos scripts.
 
-Os recursos precisam estar perto do personagem. As ações são verificadas **no servidor**, não no cliente.
+1. Instale o [Roblox Studio](https://create.roblox.com/) e o plugin Rojo.
+2. Instale a CLI Rojo compatível com a versão do plugin.
+3. Clone ou baixe o repositório.
+4. Na raiz do projeto, execute `rojo serve`.
+5. Abra um **Baseplate** novo no Studio, conecte o plugin Rojo e sincronize.
+6. Clique em **Play** para testar. Para multiplayer, use **Test → Server & Clients** com dois clientes.
+
+Como alternativa, execute `rojo build -o RoMoo.rbxlx` e abra o Place XML no Studio.
+
+O jogo **não depende de DataStore** nesta etapa. Ouro, recursos e idade são dados temporários da partida.
+
+## Controles de PC
+
+| Tecla | Ação |
+| --- | --- |
+| WASD | Movimento |
+| Mouse | Direção de ataque |
+| Clique esquerdo / Espaço | Usar item (golpear ou construir) |
+| E | Alternar ataque automático |
+| Q | Comida rápida |
+| X | Travar/destravar mira |
+| 1–9 | Selecionar posições da hotbar |
+
+Ações são enviadas ao servidor e verificadas contra inventário, alcance, cooldown, permissões, idade e limites de construção.
 
 ## Estrutura
-- `default.project.json` — projeto Rojo.
-- `src/shared/Config.luau` — configurações de balanceamento.
-- `src/server/World.luau` — terreno, recursos e modelos simples.
-- `src/server/Game.server.luau` — regras, segurança, inventário, combate e construções.
-- `src/client/Client.client.luau` — câmera, HUD, botões e teclado.
-- `docs/ROADMAP.md` — próximas versões.
 
-## Segurança / limitações
-O servidor controla inventário, cooldown, posições de construções, alcance e dano. O cliente só solicita ações. **Inventário é temporário por sessão**; a versão inicial evita DataStore para rodar sem exigir experiência publicada. Quando ativarmos salvamento, os testes no Studio precisarão de configuração apropriada de acesso à API.
+- `default.project.json` — sincronização do Rojo.
+- `src/shared/Config.luau` — regras, itens, custos, idades e balanceamento.
+- `src/server/World.luau` — geração do mapa e recursos.
+- `src/server/Avatar.luau` — avatares arredondados, ferramentas e barras de vida.
+- `src/server/Game.server.luau` — economia, combate, progresso, construções e rede.
+- `src/client/Client.client.luau` — câmera, controles e HUD.
+- `docs/CLASSIC_MECHANICS.md` — equivalência com a experiência de referência.
+- `docs/TEST_CHECKLIST.md` — testes obrigatórios no Studio.
+- `docs/ROADMAP.md` — itens pendentes até a versão comercial.
 
-## Objetivo comercial
-Jogo gratuito, otimizado para desktop e celular, com cosméticos e recursos de personalização no futuro, preferencialmente sem vantagens pagas de combate.
+## Próximas etapas
 
-**Observação:** O nome e os visuais de lançamento devem ser originais; o termo “MooMoo.io” é usado aqui apenas para descrever a inspiração mecânica.
+Animais e IA, mais armas, upgrades até idade 9, rios e efeitos de bioma, clãs e minimapa; depois desempenho, segurança, testes mobile e cosméticos.
+
+**Importante:** código presente no GitHub não significa que a experiência foi compilada e testada. Antes de publicar ou ativar monetização, conclua a checklist de validação.

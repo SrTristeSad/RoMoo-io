@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local World = require(script.Parent:WaitForChild("World"))
+local Avatar = require(script.Parent:WaitForChild("Avatar"))
 local nodes, buildings = World.create()
 local rootFolder = ReplicatedStorage:WaitForChild("RoMoo")
 local oldRemotes = rootFolder:FindFirstChild("Remotes")
@@ -353,6 +354,7 @@ local function resetRun(player, resetKills)
     player:SetAttribute("Age", 1)
     player:SetAttribute("XP", 0)
     player:SetAttribute("PendingUpgrade", 0)
+    player:SetAttribute("SelectedItem", "Hammer")
 end
 
 actionRemote.OnServerEvent:Connect(function(player, action, itemName, suppliedDirection)
@@ -361,8 +363,15 @@ actionRemote.OnServerEvent:Connect(function(player, action, itemName, suppliedDi
         chooseUpgrade(player, itemName)
         return
     end
+    if action == "Select" then
+        if typeof(itemName) == "string" and unlocked(player, itemName) then
+            player:SetAttribute("SelectedItem", itemName)
+        end
+        return
+    end
     if action ~= "Use" or typeof(itemName) ~= "string" or not unlocked(player, itemName) then return end
     local item = Config.Items[itemName]
+    if item.category ~= "Food" and player:GetAttribute("SelectedItem") ~= itemName then return end
     local _, hum, root = alive(player)
     local p = profiles[player]
     if not p or not hum or not root then return end
@@ -405,6 +414,7 @@ local function addPlayer(player)
         end
         local hum = char:WaitForChild("Humanoid", 10)
         if not hum or not hum:IsA("Humanoid") then return end
+        Avatar.attach(player, char, hum)
         hum.Died:Connect(function()
             local record = recentDamage[hum]
             if record and os.clock() - record.at < 10 and record.attacker.Parent == Players then

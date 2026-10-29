@@ -59,10 +59,30 @@ function World.create()
     local folder = Instance.new("Folder")
     folder.Name = "RoMooWorld"
     folder.Parent = workspace
+    local half = Config.MapSize / 2
 
     part("Gramado", Vector3.new(Config.MapSize, 2, Config.MapSize), Vector3.new(0, -1, 0), Color3.fromRGB(111, 183, 89), Enum.Material.Grass, folder, nil, true)
+    -- Zonas visuais clássicas: norte frio, centro verde, sul desértico.
+    local snow = part("Neve", Vector3.new(Config.MapSize - 18, 0.08, 88),
+        Vector3.new(0, 0.05, -half + 50), Color3.fromRGB(211, 235, 237), Enum.Material.Snow, folder, nil, false)
+    local desert = part("Deserto", Vector3.new(Config.MapSize - 18, 0.08, 88),
+        Vector3.new(0, 0.05, half - 50), Color3.fromRGB(216, 189, 129), Enum.Material.Sand, folder, nil, false)
+    snow.CastShadow = false
+    desert.CastShadow = false
+    -- Grade discreta que preserva a leitura do mapa visto de cima.
+    for x = -240, 240, 24 do
+        local line = part("GradeX", Vector3.new(0.09, 0.02, Config.MapSize),
+            Vector3.new(x, 0.12, 0), Color3.fromRGB(102, 133, 104), Enum.Material.SmoothPlastic, folder, nil, false)
+        line.Transparency = 0.55
+        line.CastShadow = false
+    end
+    for z = -240, 240, 24 do
+        local line = part("GradeZ", Vector3.new(Config.MapSize, 0.02, 0.09),
+            Vector3.new(0, 0.12, z), Color3.fromRGB(102, 133, 104), Enum.Material.SmoothPlastic, folder, nil, false)
+        line.Transparency = 0.55
+        line.CastShadow = false
+    end
 
-    local half = Config.MapSize / 2
     for _, wallData in ipairs({
         {pos = Vector3.new(0, 10, -half), size = Vector3.new(Config.MapSize + 20, 20, 8)},
         {pos = Vector3.new(0, 10, half), size = Vector3.new(Config.MapSize + 20, 20, 8)},
