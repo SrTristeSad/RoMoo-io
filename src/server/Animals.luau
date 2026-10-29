@@ -99,6 +99,36 @@ local function part(name, size, relative, color, shape, model, anchor)
     return p
 end
 
+-- Movimento por steering 2D: permite contornar árvores, rochas e
+-- construções sem PhysicConstraints em dezenas de criaturas.
+local function openSpace(point, ownModel)
+    local world = folder and folder.Parent
+    if not world then return false end
+    local resources = world:FindFirstChild("Resources")
+    local buildings = world:FindFirstChild("Buildings")
+    if resources then
+        for _, model in ipairs(resources:GetChildren()) do
+            local root = model.PrimaryPart
+            if root and root.CanCollide then
+                local dx = root.Position.X - point.X
+                local dz = root.Position.Z - point.Z
+                if dx * dx + dz * dz < 58 then return false end
+            end
+        end
+    end
+    if buildings then
+        for _, model in ipairs(buildings:GetChildren()) do
+            local root = model.PrimaryPart
+            if root and root.CanCollide then
+                local dx = root.Position.X - point.X
+                local dz = root.Position.Z - point.Z
+                if dx * dx + dz * dz < 66 then return false end
+            end
+        end
+    end
+    return true
+end
+
 local function freeSpawnPoint(point)
     local world = folder and folder.Parent
     local resources = world and world:FindFirstChild("Resources")
@@ -147,6 +177,8 @@ local function spawn(kind)
         def.color, Enum.PartType.Block, model, cf)
     core.Transparency = 1
     model.PrimaryPart = core
+    -- Hitbox invisível para flechas e detecção por raycast, sem colisão física.
+    core.CanQuery = true
     if not attachImportedVisual(model, core, kind) then
         AnimalModels.create(model, cf, kind, core)
     end
@@ -235,10 +267,36 @@ function Animals.create(world, mapSize)
                         moveSpeed = def.speed
                         if panicking then moveSpeed *= 1.18 end
                     end
-                    local nextPos = Vector3.new(
-                        math.clamp(pos.X + dir.X * moveSpeed * dt, -mapHalf + 20, mapHalf - 20),
-                        3.6, math.clamp(pos.Z + dir.Z * moveSpeed * dt, -mapHalf + 20, mapHalf - 20))
-                    if dir.Magnitude > 0.1 then
+                    local function at(direction)
+                        return Vector3.new(
+                            math.clamp(pos.X + direction.X * moveSpeed * dt, -mapHalf + 20, mapHalf - 20),
+                            3.6,
+                            math.clamp(pos.Z + direction.Z * moveSpeed * dt, -mapHalf + 20, mapHalf - 20))
+                    end
+                    local nextPos = at(dir)
+                    if not openSpace(nextPos, model) then
+                        -- Se a linha direta está bloqueada, seguir uma tangente
+                        -- e guardar esta direção por um instante para evitar tremor.
+                        local turn = state.pathSign or 1
+                        local sideways = Vector3.new(-dir.Z * turn, 0, dir.X * turn)
+                        local candidate = at(sideways)
+                        if openSpace(candidate, model) then
+                            dir = sideways
+                            nextPos = candidate
+                        else
+                            state.pathSign = -turn
+                            sideways = -sideways
+                            candidate = at(sideways)
+                            if openSpace(candidate, model) then
+                                dir = sideways
+                                nextPos = candidate
+                            else
+                                nextPos = pos
+                                state.nextWander = now
+                            end
+                        end
+                    end
+                    if dir.Magnitude > 0.1 and (nextPos - pos).Magnitude > .01 then
                         -- Pequena animação de caminhada, compatível com Parts e MeshParts,
                         -- sem publicar AnimationIds ou criar joints por animal.
                         local bob = math.abs(math.sin(now * moveSpeed * .72 + state.phase)) * .17

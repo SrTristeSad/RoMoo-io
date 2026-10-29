@@ -1,4 +1,4 @@
-# Checklist de validação da versão 0.7 no Roblox Studio
+# Checklist de validação da versão 0.8 no Roblox Studio
 
 **Status:** PENDENTE — não foi executado dentro do Studio nesta conversa.
 
@@ -55,6 +55,19 @@
 - [ ] Ao sair o líder, a liderança é transferida; quando o último jogador sai, o código deixa de existir.
 - [ ] Ao morrer, o jogador mantém o clã, mas perde recursos e progresso.
 - [ ] A interface de clãs não cobre as ações principais no celular.
+
+## Arco e animais 3D — versão 0.8
+- [ ] Idade 6 desbloqueia o ARCO sem alterar uma das duas escolhas de upgrade.
+- [ ] Usar arco com 0 madeira é rejeitado; com 2 madeiras cada disparo consome exatamente 2.
+- [ ] Segurar clique gera flechas no máximo a cada 0,85 s (servidor e cliente).
+- [ ] Flecha acerta animal 3D, reduz vida e concede comida + XP se abater.
+- [ ] Flecha não atravessa parede sólida nem rocha, e não coleta madeira com arco.
+- [ ] Flecha atinge jogador inimigo sem ForceField, mas não causa dano em aliado do clã.
+- [ ] Flecha destrói construção inimiga depois de dano suficiente, mas não estrutura aliada.
+- [ ] Flechas são removidas depois do alcance e não acumulam no Workspace.
+- [ ] O jogador seleciona o 14º item pelo atalho T e pelo botão da barra.
+- [ ] Verificar que lobos, touros, porcos e ovelhas não atravessam troncos nem muralhas.
+- [ ] Executar `tests/StudioProjectileTest.luau` na Command Bar do servidor.
 
 ## Combate e segurança
 - [ ] Golpe contra jogador/animal atrás de muralha não atravessa a parede.

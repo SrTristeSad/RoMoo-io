@@ -18,9 +18,9 @@
 | `world/animal_health.lua`, `animal_rewards.lua` | `Animals.hit` | Combate/caça adaptados; não paridade 1:1 |
 | `world/weapon_tick.lua`, `world/economy.lua` | `Game.server.luau`, `Config.luau` | Cooldown e economia próprios; catálogo completo pendente |
 | `world/tribes.lua` | `Clans.luau` | Clãs temporários adaptados, não protocolo original |
-| `world/projectiles.lua` | não portado | pendente |
+| `world/projectiles.lua` | `Projectiles.luau`, `Game.server.luau` | Projéteis 3D server-authoritative por raycast; ainda não há armas de fogo, veneno, reflexões nem protocolo original |
 | `world/collision.lua`, `movement.lua` | física nativa Roblox | adaptação, não port literal |
-| `world/ai.lua`, `crab_king.lua` | `Animals.luau` | IA básica; chefes complexos pendentes |
+| `world/ai.lua`, `crab_king.lua` | `Animals.luau` | IA básica com steering de obstáculos; chefes complexos pendentes |
 | WebSocket, MessagePack, HMAC do servidor Lua | RemoteEvents Roblox | substituídos pela rede/autenticação nativa Roblox |
 | `world/room.lua`, `game_loop.lua` | `Game.server.luau` | integração por funções/serviços, paridade incompleta |
 
@@ -40,6 +40,6 @@ O RoMoo io não é um produto oficial nem afiliado ao MooMoo.io ou seus titulare
 ## Critérios para próxima fase
 
 1. Terceira pessoa e quebra de recursos funcionando com mouse e dispositivos móveis.
-2. Nenhuma regressão no combate PvP, armazenamento temporário, itens, clãs e animações.
+2. Nenhuma regressão no combate PvP, flechas, armazenamento temporário, itens, clãs e animações.
 3. Melhorar IA 3D, colisão e feedback em multiplayer.
 4. Portar módulos restantes e executar testes comparativos contra servidor Lua de origem.

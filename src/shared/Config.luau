@@ -41,7 +41,7 @@ local Config = {
         "Axe", "Sword", "Cookie", "StoneWall",
         "HeavyAxe", "LongSword", "HealingPad", "PitTrap",
         "StoneSpikes", "FastWindmill", "Spear", "WarHammer",
-        "CastleWall", "GoldMill", "GreatSpear", "Crusher",
+        "CastleWall", "GoldMill", "GreatSpear", "Crusher", "Bow",
     },
     Items = {
         Hammer = {label = "MARTELO", category = "Weapon", damage = 25, gather = 1, range = 15},
@@ -71,6 +71,10 @@ local Config = {
             cost = {Wood = 95, Stone = 45}, goldPerTick = 3, upgrade = 8},
         GreatSpear = {label = "SUPERLANÇA", category = "Weapon", damage = 55, gather = 1, range = 29, upgrade = 9},
         Crusher = {label = "DESTRUIDOR", category = "Weapon", damage = 65, gather = 3, range = 14, upgrade = 9},
+        -- Arma secundária desbloqueada automaticamente na idade 6.
+        -- Munição/velocidade inspiradas em weapon_tick.lua do servidor Moo-IO.
+        Bow = {label = "ARCO", category = "Weapon", damage = 22, gather = 0, range = 115,
+            minAge = 6, projectile = true, projectileSpeed = 130, cooldown = .85, ammo = {Wood = 2}},
     },
     UpgradeChoices = {
         [2] = {"Axe", "Sword"},

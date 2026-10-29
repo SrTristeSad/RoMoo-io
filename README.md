@@ -2,14 +2,15 @@
 
 Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento central de jogos de sobrevivência e construção no estilo do MooMoo.io. Projeto independente com arte 3D própria. O port das regras do servidor Lua de Moo-IO usa referência AGPL-3.0, respeitando os avisos de origem e o servidor upstream Apache-2.0. Não é uma cópia dos arquivos proprietários do jogo MooMoo.io.
 
-> **Versão de desenvolvimento 0.7 (câmera 3ª pessoa, coleta e fauna 3D)**: mecânicas implementadas em scripts, **ainda não testadas em sessão do Roblox Studio**. Não é uma versão pronta para lançamento.
+> **Versão de desenvolvimento 0.8 (arco com projéteis, animais evitando obstáculos)**: mecânicas implementadas em scripts, **ainda não testadas em sessão do Roblox Studio**. Não é uma versão pronta para lançamento.
 
 ## O que já existe no código
 
 - **Câmera de terceira pessoa do Roblox**, zoom com roda do mouse, rotação com botão direito e mira por raycast do cursor; personagem 3D com arma e barra de vida.
 - **WASD** para movimento; clique/espaço para atacar, coletar ou construir com o item selecionado.
 - **E** liga/desliga ataque automático; **Q** consome comida; **X** trava direção da mira.
-- **Hotbar dinâmica com até 13 itens desbloqueados visíveis** em até três linhas, sem esconder itens obtidos em um menu. Atalhos 1–9, 0, - e =, R; seleção também por toque/clique.
+- **Hotbar dinâmica com até 14 itens desbloqueados visíveis** em até três linhas, sem esconder itens obtidos em um menu. Atalhos 1–9, 0, -, =, R e T; seleção também por toque/clique.
+- **Arco 3D desbloqueado na idade 6**, sem substituir as escolhas existentes; flechas custam 2 madeiras por disparo, têm alcance/cadência limitados e colidem no servidor com paredes, recursos, animais e adversários. Aliados continuam protegidos.
 - **Coleta por golpes de árvore, pedra, ouro e arbusto**: recursos concedidos por acerto, medidor de durabilidade, destruição visual ao esgotar vida e respawn. Ângulo de coleta portado do servidor Lua Moo-IO (~69°).
 - **XP e idade**, com escolhas de equipamentos nas idades 2 a 9, validadas pelo servidor. Armas novas com danos, alcance e capacidade de coleta próprios.
 - **Construções**: madeira, pedra, muralha reforçada, espinhos de madeira/pedra, armadilha de chão, plataforma curativa e três níveis de moinhos.
@@ -21,7 +22,7 @@ Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento 
 - **Feedback visual local** de ataque, coleta, impacto, cura e construção (efeitos não replicados como peças).
 - **Comida com cooldown próprio**, para poder curar durante o combate sem bloquear golpes.
 - **Fauna 3D autoral com oito espécies**: vaca, porco, ovelha, touro, Bully, lobo, javali e yeti, com perseguição/fuga e recompensas. Usa automaticamente modelos low-poly gerados em Luau quando não existem MeshParts importados.
-- **Caminhada procedural** para os quatro tipos de animal, com oscilação leve e fuga mais longa após receber dano; surgimento evita recursos e outros animais.
+- **Caminhada procedural** para as oito espécies, com oscilação leve, fuga após dano e desvio simples de árvores, pedras e construções; surgimento evita recursos e outros animais.
 - **Itens visíveis na mão:** maçã, biscoito e prévia de construção quando selecionados na hotbar.
 - **Arquivos 3D CC0 incluídos:** vaca, touro e lobo em glTF; ovelha em FBX. O jogo usa automaticamente as versões importadas do Roblox quando encontradas em `ServerStorage/RoMooAnimalModels`. Veja `docs/IMPORTAR_ANIMAIS_3D.md`.
 - **Mapa 3D autoral**, com grama 3D, flores, pedrinhas, pinheiros de neve e cactos no deserto; árvores com copas em camadas e minimapa com os três biomas. A grade antiga fica desativada por padrão.
@@ -53,7 +54,7 @@ O jogo **não depende de DataStore** nesta etapa. Ouro, recursos e idade são da
 | E | Alternar ataque automático |
 | Q | Comida rápida |
 | X | Travar/destravar mira |
-| 1–9, 0, -, =, R | Selecionar até 13 itens da hotbar, na ordem exibida |
+| 1–9, 0, -, =, R, T | Selecionar até 14 itens da hotbar, na ordem exibida |
 
 Ações são enviadas ao servidor e verificadas contra inventário, alcance, cooldown, permissões, idade e limites de construção.
 
@@ -73,6 +74,7 @@ Ações são enviadas ao servidor e verificadas contra inventário, alcance, coo
 - `docs/IMPORTAR_ANIMAIS_3D.md` — procedimento de importação e créditos/licença.
 - `src/server/Game.server.luau` — economia, combate, progresso, construções e rede.
 - `src/server/Clans.luau` — clãs da partida, códigos únicos e segurança de aliados.
+- `src/server/Projectiles.luau` — flechas autoritativas, raycast, limite de projéteis e dano de área de colisão.
 - `docs/CLANS_AND_COMBAT.md` — regras, limites e roteiro de teste multiplayer.
 - `src/client/Client.client.luau` — câmera, controles e HUD.
 - `src/client/Effects.luau` — efeitos de dano, coleta, cura e construções no cliente.
@@ -82,6 +84,6 @@ Ações são enviadas ao servidor e verificadas contra inventário, alcance, coo
 
 ## Próximas etapas
 
-Testar os clãs com dois jogadores e o combate com muralhas; revisar armadilhas, animais e HUD móvel. Depois: rios e caminhos entre biomas, otimizações e cosméticos.
+Testar o arco com dois jogadores e animais 3D, incluindo colisão de flechas com muralhas, recursos e limites de munição; depois ampliar projéteis, IA e rios com pontes.
 
 **Importante:** código presente no GitHub não significa que a experiência foi compilada e testada. Antes de publicar ou ativar monetização, conclua a checklist de validação.

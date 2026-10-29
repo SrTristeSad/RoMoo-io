@@ -40,6 +40,15 @@ local function changeWeapon(character, root, selected)
     local tool = Instance.new("Folder")
     tool.Name = "Weapon"
     tool.Parent = visuals
+    if selected == "Bow" then
+        attachPart("Arco", Vector3.new(.7, 6.3, .65),
+            Vector3.new(3.3, .1, -3.5), Enum.Material.Wood,
+            Color3.fromRGB(179, 119, 65), root, tool)
+        attachPart("Corda", Vector3.new(.17, 6.1, .17),
+            Vector3.new(3.5, .1, -3.5), Enum.Material.SmoothPlastic,
+            Color3.fromRGB(238, 218, 176), root, tool)
+        return
+    end
     if selected == "Food" or selected == "Cookie" then
         local cookie = selected == "Cookie"
         attachPart(if cookie then "Biscoito" else "Maca",

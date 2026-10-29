@@ -31,10 +31,13 @@ for name, item in pairs(Config.Items) do
         assert(item.heal > 0 and item.foodCost > 0, "Comida incompleta: " .. name)
     end
 end
-assert(#Config.ItemOrder == 21, "Esperados 21 itens cadastrados")
+assert(#Config.ItemOrder == 22, "Esperados 22 itens cadastrados")
+assert(Config.Items.Bow.minAge == 6, "Arco deveria desbloquear na idade 6")
+assert(Config.Items.Bow.projectile and Config.Items.Bow.projectileSpeed > 0, "Arco sem projétil")
+assert(Config.Items.Bow.ammo.Wood > 0, "Arco sem custo de flecha")
 local initial = 0
 for _, name in ipairs(Config.ItemOrder) do
-    if not Config.Items[name].upgrade then initial += 1 end
+    if not Config.Items[name].upgrade and not Config.Items[name].minAge then initial += 1 end
 end
 assert(initial == 5, "Esperados 5 itens iniciais")
-print("[RoMoo] PASS: 21 itens, 8 escolhas, 13 itens máximos visíveis na barra.")
+print("[RoMoo] PASS: 22 itens, 8 escolhas, até 14 itens visíveis na barra.")

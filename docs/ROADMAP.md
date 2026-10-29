@@ -67,12 +67,21 @@
 - [ ] Portar demais módulos do servidor Lua: catálogo completo, projéteis, física, IA avançada, tribos, chefes, rios e demais mecânicas
 - [ ] Testes reais de câmera, mira e colisão no Roblox Studio
 
-## 0.8 — Multiplayer robusto
+## 0.8 — Armas de longo alcance e deslocamento animal
+- [x] Arco desbloqueado automaticamente na idade 6 (sem remover progressão anterior)
+- [x] Flechas com munição consumida no servidor, cadência própria e limites antiabuso
+- [x] Projéteis 3D por raycast, colisão com paredes/árvores e dano em animais, jogadores e construções
+- [x] Aliados preservados da lógica de dano do arco
+- [x] Animais 3D desviam de recursos e estruturas por steering leve
+- [x] Atalho T para o item 14 da hotbar
+- [ ] Validação de flechas e pathing em dois clientes no Roblox Studio
+
+## 0.9 — Multiplayer robusto
 - [ ] Integração de chat com políticas do Roblox, proteção de spawn
 - [ ] Exploits, colisões, ping e resistência a ataques automatizados
 - [ ] Otimizações de dispositivos móveis / limite de construções
 
-## 0.9 — Lançamento
+## 1.0 — Lançamento
 - [ ] Teste com jogadores, arte original e UX final
 - [ ] Monetização preferencialmente cosmética, sem vantagem competitiva
 - [ ] DataStore para cosméticos/metaprogressão, não para runs temporárias

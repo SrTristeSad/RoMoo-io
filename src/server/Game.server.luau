@@ -7,8 +7,10 @@ local World = require(script.Parent:WaitForChild("World"))
 local Avatar = require(script.Parent:WaitForChild("Avatar"))
 local Animals = require(script.Parent:WaitForChild("Animals"))
 local Clans = require(script.Parent:WaitForChild("Clans"))
+local Projectiles = require(script.Parent:WaitForChild("Projectiles"))
 local nodes, buildings = World.create()
 local creatures = Animals.create(workspace:WaitForChild("RoMooWorld"), Config.MapSize)
+Projectiles.start(workspace:WaitForChild("RoMooWorld"))
 local rootFolder = ReplicatedStorage:WaitForChild("RoMoo")
 local oldRemotes = rootFolder:FindFirstChild("Remotes")
 if oldRemotes then oldRemotes:Destroy() end
@@ -164,6 +166,7 @@ local function unlocked(player, itemName)
     local item = Config.Items[itemName]
     local p = profiles[player]
     if not item or not p then return false end
+    if item.minAge then return p.age >= item.minAge end
     if not item.upgrade then return true end
     return p.chosen[item.upgrade] == itemName
 end
@@ -285,6 +288,38 @@ local function swing(player, root, itemName, direction)
         if model.PrimaryPart then emitFX("Hit", model.PrimaryPart.Position, weapon.damage, "Structure") end
         if hp <= 0 then model:Destroy() else model:SetAttribute("Health", hp) end
     end
+end
+
+local projectileContext = {
+    creatures = creatures, buildings = buildings, animals = Animals, clans = Clans,
+    emitFX = emitFX,
+    onAnimalKilled = function(owner, food, xp)
+        if not profiles[owner] then return end
+        changeResource(owner, "Food", food)
+        awardXP(owner, xp)
+        notice(owner, "Animal abatido com flecha! +" .. food .. " comida")
+    end,
+    onPlayerHit = function(owner, hum, damage)
+        if not profiles[owner] or hum.Health <= 0 then return end
+        recentDamage[hum] = {attacker = owner, at = os.clock()}
+        hum:TakeDamage(damage)
+    end,
+}
+
+local function fireProjectile(player, root, weapon, direction)
+    local p = profiles[player]
+    if not p then return end
+    for resource, cost in pairs(weapon.ammo or {}) do
+        if (p.stock[resource] or 0) < cost then
+            notice(player, "Flechas: faltam " .. cost .. " de " .. resource)
+            return
+        end
+    end
+    if not Projectiles.fire(player, root, direction, weapon, projectileContext) then return end
+    for resource, cost in pairs(weapon.ammo or {}) do
+        changeResource(player, resource, -cost)
+    end
+    emitFX("Swing", root.Position + direction * 4, 0, "Bow")
 end
 
 local function modelPart(name, size, cframe, color, material, parent, collidable)
@@ -518,13 +553,18 @@ actionRemote.OnServerEvent:Connect(function(player, action, itemName, suppliedDi
     local p = profiles[player]
     if not p or not hum or not root then return end
     local now = os.clock()
-    local cooldown = if item.category == "Food" then Config.EatCooldown else Config.UseCooldown
+    local cooldown = if item.category == "Food" then Config.EatCooldown
+        else item.cooldown or Config.UseCooldown
     local cooldownKey = if item.category == "Food" then "lastEat" else "lastUse"
     if (p[cooldownKey] or -1e8) + cooldown > now then return end
     p[cooldownKey] = now
     local direction = directionFor(root, suppliedDirection)
     if item.category == "Weapon" then
-        swing(player, root, itemName, direction)
+        if item.projectile then
+            fireProjectile(player, root, item, direction)
+        else
+            swing(player, root, itemName, direction)
+        end
     elseif item.category == "Building" then
         build(player, root, itemName, direction)
     elseif item.category == "Food" then

@@ -281,10 +281,12 @@ local itemButtons = {}
 local visibleItems = {}
 local adjustHotbar
 
-local keyLabels = {"1","2","3","4","5","6","7","8","9","0","-","=","R"}
+local keyLabels = {"1","2","3","4","5","6","7","8","9","0","-","=","R","T"}
 local function itemUnlocked(itemName)
     local data = Config.Items[itemName]
-    return data and (not data.upgrade or player:GetAttribute("Unlock" .. itemName) == true)
+    if not data then return false end
+    if data.minAge then return (player:GetAttribute("Age") or 1) >= data.minAge end
+    return not data.upgrade or player:GetAttribute("Unlock" .. itemName) == true
 end
 
 local function selectItem(name)
@@ -314,6 +316,7 @@ local function refreshHotbar()
     if not itemUnlocked(selected) then selectItem("Hammer") end
     if adjustHotbar then adjustHotbar() end
 end
+player:GetAttributeChangedSignal("Age"):Connect(refreshHotbar)
 
 for _, itemName in ipairs(Config.ItemOrder) do
     local button = Instance.new("TextButton")
@@ -482,7 +485,8 @@ local function fireUse(item)
     if not itemUnlocked(item) then return end
     local now = os.clock()
     local slot = if Config.Items[item].category == "Food" then "Food" else "Primary"
-    local interval = if slot == "Food" then Config.EatCooldown else Config.UseCooldown
+    local interval = if slot == "Food" then Config.EatCooldown
+        else Config.Items[item].cooldown or Config.UseCooldown
     if now - lastFire[slot] < interval then return end
     lastFire[slot] = now
     actionRemote:FireServer("Use", item, currentDirection())
@@ -552,7 +556,7 @@ local keyItems = {
     [Enum.KeyCode.Four] = 4, [Enum.KeyCode.Five] = 5, [Enum.KeyCode.Six] = 6,
     [Enum.KeyCode.Seven] = 7, [Enum.KeyCode.Eight] = 8, [Enum.KeyCode.Nine] = 9,
     [Enum.KeyCode.Zero] = 10, [Enum.KeyCode.Minus] = 11, [Enum.KeyCode.Equals] = 12,
-    [Enum.KeyCode.R] = 13,
+    [Enum.KeyCode.R] = 13, [Enum.KeyCode.T] = 14,
 }
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
