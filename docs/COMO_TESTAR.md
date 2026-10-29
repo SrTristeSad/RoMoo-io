@@ -21,9 +21,9 @@ O ZIP do projeto não inclui modelos importados do Roblox Studio automaticamente
 
 ## Teste solo (primeiros 3 minutos)
 - [ ] Abrir o place e pressionar **F5**.
-- [ ] O jogador surge no centro; grama 3D, flores, neve/deserto e animais são exibidos.
+- [ ] O jogador surge no centro com câmera atrás dele; grama 3D, flores, neve/deserto e animais 3D são exibidos.
 - [ ] **WASD** caminha; mouse mira; **1** seleciona marreta.
-- [ ] Clique em árvores/rochas/arbustos próximos para obter recursos.
+- [ ] Chegue perto de árvores/rochas/arbustos e minérios de ouro, aponte o mouse e segure o botão esquerdo; os recursos dão materiais por golpe, quebram e reaparecem.
 - [ ] Selecionar parede na barra, coletar madeira suficiente e construir.
 - [ ] Tentar erguer construção sem recursos: a operação deve ser recusada.
 - [ ] Usar comida (Q) quando estiver ferido.

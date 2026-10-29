@@ -6,6 +6,7 @@ local Effects = {}
 
 local palette = {
     Swing = Color3.fromRGB(235, 230, 209),
+    Break = Color3.fromRGB(255, 204, 102),
     Gather = Color3.fromRGB(246, 213, 103),
     Hit = Color3.fromRGB(240, 110, 95),
     Build = Color3.fromRGB(113, 216, 143),
@@ -46,7 +47,7 @@ local function worldPulse(kind, position)
 end
 
 local function floatingNumber(kind, position, number, detail)
-    if kind == "Swing" or kind == "Build" then return end
+    if kind == "Swing" or kind == "Build" or kind == "Break" then return end
     local text
     if kind == "Gather" then
         text = "+" .. tostring(math.floor(number)) .. " " .. (resourceNames[detail] or "recurso")

@@ -2,13 +2,29 @@
 -- Fauna simplificada para o RoMoo io: animais herbívoros fogem, predadores perseguem.
 local Players = game:GetService("Players")
 local ServerStorage = game:GetService("ServerStorage")
+local AnimalModels = require(script.Parent:WaitForChild("AnimalModels"))
 local Animals = {}
 local rng = Random.new(721)
+-- A seleção de espécies, o comportamento e as categorias têm como referência
+-- SrTristeSad/ToonRoyale-Assets/android/server-lua/world/animal_types.lua (AGPL-3.0).
+-- Valores adaptados à escala em studs, câmera 3D e balanço do Roblox.
 local defs = {
-    Cow = {color = Color3.fromRGB(213, 185, 145), health = 80, speed = 11, food = 30, xp = 30, count = 9, hostile = false},
-    Sheep = {color = Color3.fromRGB(242, 240, 222), health = 60, speed = 13, food = 20, xp = 25, count = 6, hostile = false},
-    Bull = {color = Color3.fromRGB(113, 80, 65), health = 140, speed = 19, food = 45, xp = 70, count = 4, hostile = true, damage = 18},
-    Wolf = {color = Color3.fromRGB(102, 108, 117), health = 95, speed = 21, food = 25, xp = 55, count = 5, hostile = true, damage = 13},
+    Cow = {sourceId = 0, color = Color3.fromRGB(219, 201, 175), health = 100, speed = 11,
+        food = 30, xp = 35, count = 6, hostile = false},
+    Pig = {sourceId = 1, color = Color3.fromRGB(232, 157, 155), health = 130, speed = 12,
+        food = 45, xp = 40, count = 4, hostile = false},
+    Sheep = {sourceId = 12, color = Color3.fromRGB(239, 236, 217), health = 110, speed = 13,
+        food = 35, xp = 35, count = 5, hostile = false},
+    Bull = {sourceId = 2, color = Color3.fromRGB(124, 83, 61), health = 220, speed = 18,
+        food = 60, xp = 90, count = 3, hostile = true, damage = 18},
+    Bully = {sourceId = 3, color = Color3.fromRGB(87, 60, 52), health = 360, speed = 19,
+        food = 90, xp = 120, count = 1, hostile = true, damage = 22},
+    Wolf = {sourceId = 4, color = Color3.fromRGB(126, 130, 139), health = 105, speed = 22,
+        food = 48, xp = 65, count = 4, hostile = true, damage = 13, biome = "Snow"},
+    Boar = {sourceId = 9, color = Color3.fromRGB(127, 85, 68), health = 155, speed = 18,
+        food = 45, xp = 60, count = 3, hostile = true, damage = 16},
+    Yeti = {sourceId = 10, color = Color3.fromRGB(233, 241, 243), health = 470, speed = 13,
+        food = 130, xp = 160, count = 1, hostile = true, damage = 27, biome = "Snow"},
 }
 local folder
 local states = {}
@@ -109,8 +125,10 @@ local function spawn(kind)
     if not def then return nil end
     local pos = nil
     for _ = 1, 45 do
-        local candidate = Vector3.new(rng:NextInteger(-mapHalf + 40, mapHalf - 40),
-            3, rng:NextInteger(-mapHalf + 40, mapHalf - 40))
+        local x = rng:NextInteger(-mapHalf + 40, mapHalf - 40)
+        local z = if def.biome == "Snow" then rng:NextInteger(-mapHalf + 18, -mapHalf + 82)
+            else rng:NextInteger(-mapHalf + 40, mapHalf - 40)
+        local candidate = Vector3.new(x, 3.6, z)
         if Vector3.new(candidate.X, 0, candidate.Z).Magnitude > 40 and freeSpawnPoint(candidate) then
             pos = candidate
             break
@@ -121,28 +139,17 @@ local function spawn(kind)
     local model = Instance.new("Model")
     model.Name = kind
     model:SetAttribute("Kind", kind)
+    model:SetAttribute("SourceTypeId", def.sourceId)
     model:SetAttribute("Health", def.health)
     model.Parent = folder
     local cf = CFrame.new(pos)
-    local core = part("Core", Vector3.new(6, 5, 8), Vector3.zero, def.color, Enum.PartType.Ball, model, cf)
+    local core = part("Core", Vector3.new(5.8, 4.5, 7.8), Vector3.zero,
+        def.color, Enum.PartType.Block, model, cf)
+    core.Transparency = 1
     model.PrimaryPart = core
-    part("Head", Vector3.new(4, 4, 4), Vector3.new(0, 0, -4.3), def.color, Enum.PartType.Ball, model, cf)
-    part("Nose", Vector3.new(2.3, 1.7, 1.5), Vector3.new(0, -.9, -6),
-        if kind == "Wolf" then Color3.fromRGB(55, 55, 65) else Color3.fromRGB(198, 139, 144),
-        Enum.PartType.Ball, model, cf)
-    for _, side in ipairs({-1, 1}) do
-        part("Orelha", Vector3.new(1.7, 2.2, 1.8),
-            Vector3.new(side * 2.3, 1.1, -4.1), def.color, Enum.PartType.Ball, model, cf)
-        part("Olho", Vector3.new(0.9, 1, 0.75),
-            Vector3.new(side * 1.45, 1, -6),
-            Color3.fromRGB(34, 37, 39), Enum.PartType.Ball, model, cf)
-        if kind == "Bull" then
-            part("Chifre", Vector3.new(1.8, 2, 1.2), Vector3.new(side * 2.6, 2.8, -4.4),
-                Color3.fromRGB(236, 225, 177), Enum.PartType.Ball, model, cf)
-        end
+    if not attachImportedVisual(model, core, kind) then
+        AnimalModels.create(model, cf, kind, core)
     end
-
-    attachImportedVisual(model, core, kind)
 
     local hpGui = Instance.new("BillboardGui")
     hpGui.Name = "AnimalHealth"
@@ -230,7 +237,7 @@ function Animals.create(world, mapSize)
                     end
                     local nextPos = Vector3.new(
                         math.clamp(pos.X + dir.X * moveSpeed * dt, -mapHalf + 20, mapHalf - 20),
-                        3, math.clamp(pos.Z + dir.Z * moveSpeed * dt, -mapHalf + 20, mapHalf - 20))
+                        3.6, math.clamp(pos.Z + dir.Z * moveSpeed * dt, -mapHalf + 20, mapHalf - 20))
                     if dir.Magnitude > 0.1 then
                         -- Pequena animação de caminhada, compatível com Parts e MeshParts,
                         -- sem publicar AnimationIds ou criar joints por animal.

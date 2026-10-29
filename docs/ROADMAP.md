@@ -57,12 +57,22 @@
 - [x] Armadilhas de lentidão renovam o efeito preservando a velocidade original
 - [ ] Testes de dois clientes, colisões, segurança, clãs e reconexão no Roblox Studio
 
-## 0.7 — Multiplayer robusto
+## 0.7 — Port Moo IO Lua e terceira pessoa
+- [x] Identificar fonte de referência Moo-IO / ToonRoyale-Assets android/server-lua
+- [x] Portar parâmetro de ângulo de coleta (mira + cone) e conservar servidor autoritativo
+- [x] Desgaste visual e quebra/respawn de árvores, rochas, arbustos e minério
+- [x] Câmera de terceira pessoa usando controles Roblox nativos e raycast sob o cursor
+- [x] Interface mais compacta, ajuda temporária e minimapa menor
+- [x] Fauna procedimental 3D em oito espécies com IDs de referência
+- [ ] Portar demais módulos do servidor Lua: catálogo completo, projéteis, física, IA avançada, tribos, chefes, rios e demais mecânicas
+- [ ] Testes reais de câmera, mira e colisão no Roblox Studio
+
+## 0.8 — Multiplayer robusto
 - [ ] Integração de chat com políticas do Roblox, proteção de spawn
 - [ ] Exploits, colisões, ping e resistência a ataques automatizados
 - [ ] Otimizações de dispositivos móveis / limite de construções
 
-## 0.8 — Lançamento
+## 0.9 — Lançamento
 - [ ] Teste com jogadores, arte original e UX final
 - [ ] Monetização preferencialmente cosmética, sem vantagem competitiva
 - [ ] DataStore para cosméticos/metaprogressão, não para runs temporárias

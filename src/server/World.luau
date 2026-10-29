@@ -35,6 +35,7 @@ function World.spawnNode(kind, position, parent)
     model.Name = kind
     model:SetAttribute("Kind", kind)
     model:SetAttribute("Health", entry.health)
+    model:SetAttribute("MaxHealth", entry.health)
     model.Parent = parent
 
     local center
@@ -70,7 +71,48 @@ function World.spawnNode(kind, position, parent)
         end
     end
     model.PrimaryPart = center
+    -- A vida só aparece depois do primeiro golpe; o recurso quebra ao esgotar.
+    local gui = Instance.new("BillboardGui")
+    gui.Name = "ResourceDurability"
+    gui.Size = UDim2.fromOffset(66, 8)
+    gui.StudsOffsetWorldSpace = Vector3.new(0, if kind == "Tree" then 12 else 5, 0)
+    gui.AlwaysOnTop = false
+    gui.Adornee = center
+    gui.Enabled = false
+    gui.Parent = model
+    local bg = Instance.new("Frame")
+    bg.Name = "Track"
+    bg.BackgroundColor3 = Color3.fromRGB(53, 57, 53)
+    bg.BorderSizePixel = 0
+    bg.Size = UDim2.fromScale(1,1)
+    bg.Parent = gui
+    local bar = Instance.new("Frame")
+    bar.Name = "Remaining"
+    bar.BackgroundColor3 = Color3.fromRGB(244, 181, 73)
+    bar.BorderSizePixel = 0
+    bar.Size = UDim2.fromScale(1,1)
+    bar.Parent = bg
     return model
+end
+
+function World.hitNode(model, weapon)
+    if not model or not model.Parent or not model.PrimaryPart then return false, 0 end
+    local hp = model:GetAttribute("Health")
+    if typeof(hp) ~= "number" or hp <= 0 then return false, 0 end
+    -- Golpes base: redução de durabilidade por golpe (sem ferramentas inúteis).
+    local durabilityDamage = math.max(1, (weapon.gather or 1) - 1)
+    local remaining = math.max(0, hp - durabilityDamage)
+    model:SetAttribute("Health", remaining)
+    local ui = model:FindFirstChild("ResourceDurability")
+    if ui then
+        ui.Enabled = remaining > 0
+        local bg = ui:FindFirstChild("Track")
+        local fill = bg and bg:FindFirstChild("Remaining")
+        if fill then
+            fill.Size = UDim2.fromScale(remaining / math.max(1, model:GetAttribute("MaxHealth") or hp), 1)
+        end
+    end
+    return remaining <= 0, remaining
 end
 
 function World.create()

@@ -1,6 +1,18 @@
-# Checklist de validação da versão 0.6 no Roblox Studio
+# Checklist de validação da versão 0.7 no Roblox Studio
 
 **Status:** PENDENTE — não foi executado dentro do Studio nesta conversa.
+
+## Câmera 3ª pessoa, HUD e coleta
+- [ ] Abrir um place novo da CI com F5; personagem deve aparecer em terceira pessoa atrás do personagem, não de cima.
+- [ ] Roda do mouse aproxima/afasta (12–24 studs); botão direito orbita a câmera; WASD continua funcionando.
+- [ ] Aproximar da árvore, apontar com o cursor e segurar botão esquerdo: madeira aumenta por golpe.
+- [ ] Depois de alguns golpes, a barra de durabilidade aparece e o recurso desaparece ao quebrar.
+- [ ] Após 18 segundos, o mesmo tipo de recurso reaparece no local.
+- [ ] Repetir para pedra, veio de ouro e arbusto: cada um concede o recurso correto.
+- [ ] Confirmar que a ajuda some após 7 segundos e o HUD não encobre personagem nem o centro.
+- [ ] Confirmar que clãs, hotbar de 13 itens e mobile não tiveram regressão.
+- [ ] Verificar oito espécies 3D sem precisar importar .FBX/.glTF.
+- [ ] Executar `tests/StudioResource3DTest.luau` no servidor para validar desgaste/animais.
 
 ## Inicialização
 - [ ] Abrir o Place construído pelo Rojo sem erro de sincronização.

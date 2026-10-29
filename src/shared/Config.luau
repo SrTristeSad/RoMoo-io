@@ -15,6 +15,7 @@ local Config = {
         SpawnClearRadius = 36,
         ShowGrid = false,
     },
+    -- Recursos se partem ao esgotar durabilidade, reaparecendo na mesma posição.
     ResourceRespawnSeconds = 18,
     GatherRange = 15,
     AttackRange = 15,

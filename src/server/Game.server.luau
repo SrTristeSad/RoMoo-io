@@ -115,7 +115,8 @@ local function isAimed(from, at, dir, maxDistance)
     local delta = Vector3.new(at.X - from.X, 0, at.Z - from.Z)
     if delta.Magnitude > maxDistance then return false end
     if delta.Magnitude < 0.1 then return true end
-    return delta.Unit:Dot(dir) >= 0.55
+    -- Ângulo de coleta do servidor Moo-IO Lua (~69 graus) em vez de mira muito estreita.
+    return delta.Unit:Dot(dir) >= math.cos(math.pi / 2.6)
 end
 
 local function changeResource(player, key, amount)
@@ -253,11 +254,10 @@ local function swing(player, root, itemName, direction)
         changeResource(player, entry.inventory, entry.reward * gather)
         emitFX("Gather", model.PrimaryPart.Position, entry.reward * gather, entry.inventory)
         awardXP(player, 4 * gather)
-        local hp = (model:GetAttribute("Health") or 1) - 1
-        if hp > 0 then
-            model:SetAttribute("Health", hp)
-        else
+        local broken = World.hitNode(model, weapon)
+        if broken then
             local kind = model:GetAttribute("Kind")
+            emitFX("Break", model.PrimaryPart.Position, 0, kind)
             model:Destroy()
             task.delay(Config.ResourceRespawnSeconds, function()
                 if nodes.Parent then World.spawnNode(kind, origin, nodes) end

@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
 local player = Players.LocalPlayer
 local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local remotes = ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Remotes")
@@ -20,6 +21,12 @@ local rotationLocked = false
 local lockedDirection = Vector3.new(0, 0, -1)
 local touchDirection = nil
 local viewCamera = workspace.CurrentCamera
+player.CameraMode = Enum.CameraMode.Classic
+player.CameraMinZoomDistance = 12
+player.CameraMaxZoomDistance = 24
+task.defer(function()
+    pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false) end)
+end)
 
 local screen = Instance.new("ScreenGui")
 screen.Name = "RoMooClassicHUD"
@@ -61,8 +68,8 @@ end
 
 
 -- Minimap 2D: escala do terreno 3D, marcadores de jogadores atualizados localmente.
-local minimap = frame(screen, "Minimap", UDim2.fromOffset(if isTouch then 108 else 142, if isTouch then 108 else 142),
-    UDim2.new(1, -14, 0, if isTouch then 110 else 14),
+local minimap = frame(screen, "Minimap", UDim2.fromOffset(if isTouch then 88 else 104, if isTouch then 88 else 104),
+    UDim2.new(1, -8, 0, if isTouch then 72 else 9),
     Color3.fromRGB(48, 110, 62), Vector2.new(1, 0))
 minimap.BorderSizePixel = 2
 minimap.BorderColor3 = Color3.fromRGB(34, 61, 45)
@@ -114,11 +121,11 @@ task.spawn(function()
     end
 end)
 
-local inventory = frame(screen, "Resources", UDim2.new(0.91, 0, 0, 50),
-    UDim2.new(0.5, 0, 0, 12), Color3.fromRGB(34, 42, 36), Vector2.new(0.5, 0))
+local inventory = frame(screen, "Resources", UDim2.new(.68, 0, 0, 36),
+    UDim2.new(0.5, 0, 0, 8), Color3.fromRGB(34, 42, 36), Vector2.new(0.5, 0))
 round(inventory, 8)
 local invMax = Instance.new("UISizeConstraint")
-invMax.MaxSize = Vector2.new(490, 50)
+invMax.MaxSize = Vector2.new(460, 36)
 invMax.Parent = inventory
 
 local resourceOrder = {
@@ -133,29 +140,35 @@ for i, resource in ipairs(resourceOrder) do
     round(box, 5)
     local counter = label(box, "Count", "", Color3.new(1, 1, 1))
     counter.Size = UDim2.fromScale(1, 1)
+    counter.TextScaled = false
+    counter.TextSize = if isTouch then 11 else 13
     local function refresh()
-        counter.Text = resource.text .. "\n" .. tostring(player:GetAttribute(resource.key) or 0)
+        counter.Text = resource.text .. " " .. tostring(player:GetAttribute(resource.key) or 0)
     end
     player:GetAttributeChangedSignal(resource.key):Connect(refresh)
     refresh()
 end
 
-local ageRoot = frame(screen, "Age", UDim2.new(0.65, 0, 0, 24),
-    UDim2.new(0.5, 0, 0, 67), Color3.fromRGB(31, 36, 40), Vector2.new(0.5, 0))
+local ageRoot = frame(screen, "Age", UDim2.new(.62, 0, 0, 19),
+    UDim2.new(0.5, 0, 0, 51), Color3.fromRGB(31, 36, 40), Vector2.new(0.5, 0))
 round(ageRoot, 5)
 local ageMax = Instance.new("UISizeConstraint")
-ageMax.MaxSize = Vector2.new(340, 24)
+ageMax.MaxSize = Vector2.new(350, 19)
 ageMax.Parent = ageRoot
 local ageFill = frame(ageRoot, "Progress", UDim2.new(0, 0, 1, 0),
     UDim2.new(), Color3.fromRGB(104, 197, 111))
 round(ageFill, 5)
 local ageText = label(ageRoot, "AgeText", "IDADE 1", Color3.fromRGB(255, 255, 255))
 ageText.Size = UDim2.fromScale(1, 1)
+ageText.TextScaled = false
+ageText.TextSize = 12
 
 local notification = label(screen, "Notice", "", Color3.fromRGB(255, 253, 215))
 notification.AnchorPoint = Vector2.new(.5, 0)
-notification.Size = UDim2.new(.8, 0, 0, 32)
-notification.Position = UDim2.new(.5, 0, 0, 105)
+notification.Size = UDim2.new(.7, 0, 0, 23)
+notification.Position = UDim2.new(.5, 0, 0, 79)
+notification.TextScaled = false
+notification.TextSize = 14
 notification.TextStrokeTransparency = .3
 local noticeNumber = 0
 noticeRemote.OnClientEvent:Connect(function(msg)
@@ -171,8 +184,10 @@ end)
 -- Painel recolhível de clãs (não ocupa espaço durante o combate).
 local clanToggle = Instance.new("TextButton")
 clanToggle.Name = "ClanToggle"
-clanToggle.Position = UDim2.fromOffset(12, if isTouch then 112 else 112)
-clanToggle.Size = UDim2.fromOffset(140, 35)
+clanToggle.Position = UDim2.fromOffset(12, 93)
+clanToggle.Size = UDim2.fromOffset(110, 28)
+clanToggle.TextScaled = false
+clanToggle.TextSize = 13
 clanToggle.Text = "CLÃ: SOLO"
 clanToggle.TextColor3 = Color3.fromRGB(252, 252, 243)
 clanToggle.TextScaled = true
@@ -183,7 +198,7 @@ clanToggle.Parent = screen
 round(clanToggle, 8)
 
 local clanPanel = frame(screen, "ClanPanel", UDim2.fromOffset(248, 160),
-    UDim2.fromOffset(12, 153), Color3.fromRGB(29, 44, 36))
+    UDim2.fromOffset(12, 128), Color3.fromRGB(29, 44, 36))
 clanPanel.Visible = false
 round(clanPanel, 8)
 local clanStatus = label(clanPanel, "Status", "Você está sozinho", Color3.fromRGB(231, 239, 226))
@@ -254,12 +269,12 @@ end
 refreshClan()
 
 -- Itens obtidos permanecem visíveis; a barra ganha linhas, não cria um menu oculto.
-local hotbar = frame(screen, "Hotbar", UDim2.new(.96, 0, 0, 60),
-    UDim2.new(.5, 0, 1, if isTouch then -144 else -12),
+local hotbar = frame(screen, "Hotbar", UDim2.new(.91, 0, 0, 49),
+    UDim2.new(.5, 0, 1, if isTouch then -138 else -9),
     Color3.fromRGB(31, 40, 36), Vector2.new(.5, 1))
 round(hotbar, 8)
 local maxBar = Instance.new("UISizeConstraint")
-maxBar.MaxSize = Vector2.new(840, 180)
+maxBar.MaxSize = Vector2.new(730, 165)
 maxBar.Parent = hotbar
 
 local itemButtons = {}
@@ -305,7 +320,8 @@ for _, itemName in ipairs(Config.ItemOrder) do
     button.Name = itemName
     button.BorderSizePixel = 0
     button.TextColor3 = Color3.fromRGB(245, 248, 241)
-    button.TextScaled = true
+    button.TextScaled = false
+    button.TextSize = if isTouch then 10 else 12
     button.Font = Enum.Font.GothamBold
     button.TextWrapped = true
     button.Parent = hotbar
@@ -323,9 +339,9 @@ end
 adjustHotbar = function()
     local width = hotbar.AbsoluteSize.X
     if width < 1 then return end
-    local columns = if width < 520 then 5 else if width < 750 then 7 else 9
+    local columns = if width < 480 then 5 else if width < 660 then 7 else 9
     local rows = math.max(1, math.ceil(#visibleItems / columns))
-    local cellH = if isTouch then 43 else 47
+    local cellH = if isTouch then 36 else 41
     local height = rows * (cellH + 4) + 8
     hotbar.Size = UDim2.new(.96, 0, 0, height)
     local cellW = math.floor((width - 12 - (columns - 1) * 4) / columns)
@@ -403,13 +419,22 @@ refreshAge()
 
 local hp = label(screen, "Health", "VIDA 100/100", Color3.fromRGB(255, 244, 244))
 hp.AnchorPoint = Vector2.new(0, 1)
-hp.Position = UDim2.new(0, 14, 1, if isTouch then -318 else -140)
-hp.Size = UDim2.new(.3, 0, 0, 25)
+hp.Position = UDim2.new(0, 14, 1, if isTouch then -235 else -87)
+hp.Size = UDim2.new(.25, 0, 0, 21)
+hp.TextScaled = false
+hp.TextSize = 15
 hp.TextXAlignment = Enum.TextXAlignment.Left
 local function onCharacter(character)
     local humanoid = character:WaitForChild("Humanoid", 10)
     if not humanoid then return end
     humanoid.AutoRotate = false
+    humanoid.CameraOffset = Vector3.new(0, 1.7, 0)
+    viewCamera = workspace.CurrentCamera
+    if viewCamera then
+        viewCamera.CameraType = Enum.CameraType.Custom
+        viewCamera.CameraSubject = humanoid
+        viewCamera.FieldOfView = 70
+    end
     local function updateHealth()
         hp.Text = "VIDA " .. math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth)
     end
@@ -424,17 +449,27 @@ local function getRoot()
     return character and character:FindFirstChild("HumanoidRootPart")
 end
 
+-- Seleção de alvo pelo cursor da câmera 3D, sem a projeção 2D antiga.
 local function aimFromScreen(screenPoint)
     local root = getRoot()
+    viewCamera = workspace.CurrentCamera
     if not root or not viewCamera then return Vector3.new(0, 0, -1) end
     local ray = viewCamera:ViewportPointToRay(screenPoint.X, screenPoint.Y)
-    if math.abs(ray.Direction.Y) < .001 then return root.CFrame.LookVector end
-    local t = -ray.Origin.Y / ray.Direction.Y
-    if t <= 0 then return root.CFrame.LookVector end
-    local worldPoint = ray.Origin + ray.Direction * t
-    local delta = Vector3.new(worldPoint.X - root.Position.X, 0, worldPoint.Z - root.Position.Z)
-    if delta.Magnitude < .1 then return root.CFrame.LookVector end
-    return delta.Unit
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    if player.Character then params.FilterDescendantsInstances = {player.Character} end
+    local result = workspace:Raycast(ray.Origin, ray.Direction * 700, params)
+    local target = result and result.Position
+    if not target and ray.Direction.Y < -.01 then
+        local t = (root.Position.Y - ray.Origin.Y) / ray.Direction.Y
+        if t > 0 then target = ray.Origin + ray.Direction * t end
+    end
+    if target then
+        local delta = Vector3.new(target.X - root.Position.X, 0, target.Z - root.Position.Z)
+        if delta.Magnitude > .2 then return delta.Unit end
+    end
+    local forward = Vector3.new(viewCamera.CFrame.LookVector.X, 0, viewCamera.CFrame.LookVector.Z)
+    return if forward.Magnitude > .01 then forward.Unit else root.CFrame.LookVector
 end
 
 local function currentDirection()
@@ -495,11 +530,21 @@ if isTouch then
     round(foodButton, 9)
     foodButton.Activated:Connect(quickFood)
 else
-    local hotkeyHelp = label(screen, "Help", "MOUSE: mirar/usar  |  E: automático  |  Q: comer  |  X: travar mira",
-        Color3.fromRGB(30, 53, 35))
+    local hotkeyHelp = label(screen, "Help", "Clique: coletar | Segure: golpear | Q: comer | E: automático | H: ajuda",
+        Color3.fromRGB(246, 247, 240))
     hotkeyHelp.AnchorPoint = Vector2.new(.5, 0)
-    hotkeyHelp.Position = UDim2.new(.5, 0, 0, 145)
-    hotkeyHelp.Size = UDim2.new(.9, 0, 0, 20)
+    hotkeyHelp.Position = UDim2.new(.5, 0, 0, 108)
+    hotkeyHelp.Size = UDim2.new(.85, 0, 0, 19)
+    hotkeyHelp.TextScaled = false
+    hotkeyHelp.TextSize = 12
+    task.delay(7, function()
+        if hotkeyHelp.Parent then hotkeyHelp.Visible = false end
+    end)
+    UserInputService.InputBegan:Connect(function(key, processed)
+        if not processed and key.KeyCode == Enum.KeyCode.H then
+            hotkeyHelp.Visible = not hotkeyHelp.Visible
+        end
+    end)
 end
 
 local keyItems = {
@@ -563,18 +608,14 @@ preview.CanQuery = false
 preview.Color = Color3.fromRGB(90, 230, 114)
 preview.Parent = workspace
 
-RunService:BindToRenderStep("RoMooClassicCamera", Enum.RenderPriority.Camera.Value + 1, function()
+RunService:BindToRenderStep("RoMooThirdPerson", Enum.RenderPriority.Camera.Value + 1, function()
     local root = getRoot()
     viewCamera = workspace.CurrentCamera
     if not root or not viewCamera then preview.Transparency = 1 return end
-    local focus = root.Position + Vector3.new(0, 1, 0)
-    viewCamera.CameraType = Enum.CameraType.Scriptable
-    viewCamera.FieldOfView = 45
-    viewCamera.CFrame = CFrame.lookAt(focus + Vector3.new(0, 105, 14), focus)
     local direction = currentDirection()
     local horizontal = Vector3.new(direction.X, 0, direction.Z)
     if horizontal.Magnitude >= .1 then
-        root.CFrame = CFrame.lookAt(root.Position, root.Position + horizontal.Unit)
+        root.CFrame = root.CFrame:Lerp(CFrame.lookAt(root.Position, root.Position + horizontal.Unit), .25)
     end
 
     if Config.Items[selected].category == "Building" then
@@ -604,4 +645,4 @@ RunService:BindToRenderStep("RoMooClassicCamera", Enum.RenderPriority.Camera.Val
     end
 end)
 
-print("[RoMoo io] Barra dinâmica com todos os itens desbloqueados, idades até 9, PC/mobile.")
+print("[RoMoo io] Camera terceira pessoa, mira 3D, HUD compacta e hotbar dinamica.")
