@@ -9,11 +9,13 @@ local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Sha
 local remotes = ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Remotes")
 local actionRemote = remotes:WaitForChild("Action")
 local noticeRemote = remotes:WaitForChild("Notice")
+local FX = require(script.Parent:WaitForChild("Effects"))
+FX.start(remotes:WaitForChild("FX"))
 local isTouch = UserInputService.TouchEnabled
 local selected = "Hammer"
 local held = false
 local automatic = false
-local lastFire = 0
+local lastFire = {Primary = -1e8, Food = -1e8}
 local rotationLocked = false
 local lockedDirection = Vector3.new(0, 0, -1)
 local touchDirection = nil
@@ -332,8 +334,10 @@ end
 local function fireUse(item)
     if not itemUnlocked(item) then return end
     local now = os.clock()
-    if now - lastFire < Config.UseCooldown then return end
-    lastFire = now
+    local slot = if Config.Items[item].category == "Food" then "Food" else "Primary"
+    local interval = if slot == "Food" then Config.EatCooldown else Config.UseCooldown
+    if now - lastFire[slot] < interval then return end
+    lastFire[slot] = now
     actionRemote:FireServer("Use", item, currentDirection())
 end
 

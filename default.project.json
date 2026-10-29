@@ -17,7 +17,7 @@
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
-        "RoMooClient": { "$path": "src/client/Client.client.luau" }
+        "RoMooClient": { "$path": "src/client" }
       }
     }
   }

@@ -21,6 +21,10 @@ local noticeRemote = Instance.new("RemoteEvent")
 noticeRemote.Name = "Notice"
 noticeRemote.Parent = remotes
 
+local fxRemote = Instance.new("RemoteEvent")
+fxRemote.Name = "FX"
+fxRemote.Parent = remotes
+
 local profiles = {}
 local recentDamage = {}
 local spikeCooldown = {}
@@ -36,6 +40,18 @@ local function alive(player)
     local root = char:FindFirstChild("HumanoidRootPart")
     if not hum or not root or hum.Health <= 0 then return nil, nil, nil end
     return char, hum, root
+end
+
+-- Transmitir apenas efeitos próximos. O cliente nunca envia efeitos ao servidor.
+local function emitFX(kind, position, number, detail)
+    if typeof(position) ~= "Vector3" then return end
+    for _, observer in ipairs(Players:GetPlayers()) do
+        local char = observer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root and (root.Position - position).Magnitude < 175 then
+            fxRemote:FireClient(observer, kind, position, number or 0, detail or "")
+        end
+    end
 end
 
 local function horizontalDistance(a, b)
@@ -170,6 +186,7 @@ end
 
 local function swing(player, root, itemName, direction)
     local weapon = Config.Items[itemName]
+    emitFX("Swing", root.Position + direction * 5, 0, itemName)
     local target = nearestTarget(player, root, direction, weapon.range or Config.AttackRange)
     if not target then return end
     if target.kind == "Resource" then
@@ -179,6 +196,7 @@ local function swing(player, root, itemName, direction)
         local origin = Vector3.new(model.PrimaryPart.Position.X, 0, model.PrimaryPart.Position.Z)
         local gather = weapon.gather or 1
         changeResource(player, entry.inventory, entry.reward * gather)
+        emitFX("Gather", model.PrimaryPart.Position, entry.reward * gather, entry.inventory)
         awardXP(player, 4 * gather)
         local hp = (model:GetAttribute("Health") or 1) - 1
         if hp > 0 then
@@ -191,7 +209,9 @@ local function swing(player, root, itemName, direction)
             end)
         end
     elseif target.kind == "Animal" then
+        local hitPosition = target.instance.PrimaryPart.Position
         local food, xp, killed = Animals.hit(target.instance, weapon.damage)
+        emitFX("Hit", hitPosition, weapon.damage, "Animal")
         if killed then
             changeResource(player, "Food", food)
             awardXP(player, xp)
@@ -200,10 +220,14 @@ local function swing(player, root, itemName, direction)
     elseif target.kind == "Player" then
         local hum = target.instance
         recentDamage[hum] = {attacker = player, at = os.clock()}
+        local victimRoot = hum.Parent and hum.Parent:FindFirstChild("HumanoidRootPart")
+        emitFX("Hit", if victimRoot then victimRoot.Position else root.Position + direction * 6,
+            weapon.damage, "Player")
         hum:TakeDamage(weapon.damage)
     else
         local model = target.instance
         local hp = (model:GetAttribute("Health") or 1) - weapon.damage
+        if model.PrimaryPart then emitFX("Hit", model.PrimaryPart.Position, weapon.damage, "Structure") end
         if hp <= 0 then model:Destroy() else model:SetAttribute("Health", hp) end
     end
 end
@@ -338,6 +362,7 @@ local function build(player, root, itemName, direction)
     end
     for resource, cost in pairs(item.cost) do changeResource(player, resource, -cost) end
     createBuilding(player, itemName, position, direction)
+    emitFX("Build", position + Vector3.new(0, 3, 0), 0, itemName)
 end
 
 local function eat(player, humanoid, itemName)
@@ -347,6 +372,9 @@ local function eat(player, humanoid, itemName)
     if humanoid.Health >= humanoid.MaxHealth or p.stock.Food < item.foodCost then return end
     changeResource(player, "Food", -item.foodCost)
     humanoid.Health = math.min(humanoid.MaxHealth, humanoid.Health + item.heal)
+    local character = player.Character
+    local root = character and character:FindFirstChild("HumanoidRootPart")
+    if root then emitFX("Heal", root.Position, item.heal, "") end
 end
 
 local function resetRun(player, resetKills)
@@ -395,8 +423,9 @@ actionRemote.OnServerEvent:Connect(function(player, action, itemName, suppliedDi
     if not p or not hum or not root then return end
     local now = os.clock()
     local cooldown = if item.category == "Food" then Config.EatCooldown else Config.UseCooldown
-    if (p.lastUse or -1e8) + cooldown > now then return end
-    p.lastUse = now
+    local cooldownKey = if item.category == "Food" then "lastEat" else "lastUse"
+    if (p[cooldownKey] or -1e8) + cooldown > now then return end
+    p[cooldownKey] = now
     local direction = directionFor(root, suppliedDirection)
     if item.category == "Weapon" then
         swing(player, root, itemName, direction)
@@ -417,7 +446,8 @@ local function addPlayer(player)
     local kills = Instance.new("IntValue")
     kills.Name = "Abates"
     kills.Parent = stats
-    profiles[player] = {stock = {}, xp = 0, age = 1, chosen = {}, lastUse = -1e8, firstSpawn = true}
+    profiles[player] = {stock = {}, xp = 0, age = 1, chosen = {},
+        lastUse = -1e8, lastEat = -1e8, firstSpawn = true}
     resetRun(player, true)
     player.CharacterAdded:Connect(function(char)
         local p = profiles[player]

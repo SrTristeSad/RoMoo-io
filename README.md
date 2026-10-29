@@ -2,7 +2,7 @@
 
 Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento central de jogos de sobrevivência e construção no estilo do MooMoo.io. Projeto independente, com código, modelos e identidade próprios; não inclui código ou assets de terceiros.
 
-> **Versão de desenvolvimento 0.3 (arte do terreno)**: mecânicas implementadas em scripts, **ainda não testadas em sessão do Roblox Studio**. Não é uma versão pronta para lançamento.
+> **Versão de desenvolvimento 0.4 (combate e feedback visual)**: mecânicas implementadas em scripts, **ainda não testadas em sessão do Roblox Studio**. Não é uma versão pronta para lançamento.
 
 ## O que já existe no código
 
@@ -15,6 +15,8 @@ Jogo multiplayer 3D construído no **Roblox Studio**, recriando o funcionamento 
 - **Construções** de parede de madeira, parede de pedra, espinhos e moinho.
 - **Moinhos** produzem ouro e XP a cada segundo enquanto estão ativos.
 - **PvP**, abates, reinício da progressão após a morte e dano validado no servidor.
+- **Feedback visual local** de ataque, coleta, impacto, cura e construção (efeitos não replicados como peças).
+- **Comida com cooldown próprio**, para poder curar durante o combate sem bloquear golpes.
 - **Fauna** com vacas e ovelhas que fogem e touros e lobos que perseguem e atacam; caça fornece comida e XP.
 - **Arquivos 3D CC0 incluídos:** vaca, touro e lobo em glTF; ovelha em FBX. O jogo usa automaticamente as versões importadas do Roblox quando encontradas em `ServerStorage/RoMooAnimalModels`. Veja `docs/IMPORTAR_ANIMAIS_3D.md`.
 - **Mapa 3D autoral**, com grama 3D, flores, pedrinhas, pinheiros de neve e cactos no deserto; árvores com copas em camadas e minimapa com os três biomas. A grade antiga fica desativada por padrão.
@@ -64,6 +66,7 @@ Ações são enviadas ao servidor e verificadas contra inventário, alcance, coo
 - `docs/IMPORTAR_ANIMAIS_3D.md` — procedimento de importação e créditos/licença.
 - `src/server/Game.server.luau` — economia, combate, progresso, construções e rede.
 - `src/client/Client.client.luau` — câmera, controles e HUD.
+- `src/client/Effects.luau` — efeitos de dano, coleta, cura e construções no cliente.
 - `docs/CLASSIC_MECHANICS.md` — equivalência com a experiência de referência.
 - `docs/TEST_CHECKLIST.md` — testes obrigatórios no Studio.
 - `docs/ROADMAP.md` — itens pendentes até a versão comercial.

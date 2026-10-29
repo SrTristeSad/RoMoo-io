@@ -1,4 +1,4 @@
-# Checklist de validação da versão 0.3 no Roblox Studio
+# Checklist de validação da versão 0.4 no Roblox Studio
 
 **Status:** PENDENTE — não foi executado dentro do Studio nesta conversa.
 
@@ -25,6 +25,10 @@
 
 ## Combate e segurança
 - [ ] Testar com dois jogadores: dano somente dentro do alcance e arco frontal.
+- [ ] Ataque/colheita exibem pulso e número flutuante perto do alvo.
+- [ ] Atacar e apertar Q imediatamente consome comida sem aguardar cooldown do ataque.
+- [ ] Cura, construção e golpes não criam instâncias persistentes no Workspace do servidor.
+- [ ] Com muitos jogadores atacando, verificar efeitos visuais e memória de clientes próximos.
 - [ ] Espinhos do próprio jogador não devem causar dano ao dono.
 - [ ] PvP registra abate e XP; morto renasce com idade e inventário reiniciados.
 - [ ] Dois jogadores não conseguem usar construções um do outro sem destruí-las.

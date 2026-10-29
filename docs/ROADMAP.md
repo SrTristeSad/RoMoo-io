@@ -28,12 +28,19 @@
 - [ ] Catálogo completo de upgrades, itens e estruturas até idade 9
 - [ ] Placares avançados, marcadores no minimapa e mapa de equipes
 
-## 0.4 — Multiplayer robusto
+## 0.4 — Combate e feedback visual
+- [x] Efeitos de ataque, impacto, coleta, construção e cura executados no cliente
+- [x] Números flutuantes de recursos, dano e regeneração
+- [x] Cooldown de comida separado de ataque e construção
+- [x] Efeitos enviados apenas para jogadores próximos
+- [ ] Testar efeitos e cooldown de cura durante PvP no Roblox Studio
+
+## 0.5 — Multiplayer robusto
 - [ ] Equipas / clãs, chat com políticas do Roblox, proteção de spawn
 - [ ] Exploits, colisões, ping e resistência a ataques automatizados
 - [ ] Otimizações de dispositivos móveis / limite de construções
 
-## 0.5 — Lançamento
+## 0.6 — Lançamento
 - [ ] Teste com jogadores, arte original e UX final
 - [ ] Monetização preferencialmente cosmética, sem vantagem competitiva
 - [ ] DataStore para cosméticos/metaprogressão, não para runs temporárias
