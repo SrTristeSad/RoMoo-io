@@ -110,7 +110,7 @@ jobs:
           assert 'for _,kind in ipairs({"Wall","Spikes","Windmill","StoneWall"}) do' in buildtest
           progression = Path('src/server/Progression.luau').read_text()
           progtest = Path('tests/StudioProgressionSmokeTest.luau').read_text()
-          assert '"Progression":' in project and 'Progression.initialize' in game
+          assert '"Progression":' in project and 'Progression.initialize' in Path('src/server/SessionState.luau').read_text()
           assert 'Progression.award' in game and 'awardXP(player,profile,amount)' in game
           assert 'XPFromWolf = 80' in cfg and 'XPFromBuild = 15' in cfg
           assert 'StoneWall = {' in cfg and 'minAge=4' in cfg
