@@ -9,8 +9,8 @@
 - Câmara Roblox normal em **3ª pessoa**, roda do mouse para zoom, botão direito para orbitar, WASD para andar.
 - **Terrain** do Roblox para grama com vegetação nativa. O rio usa `Enum.Material.Water`, ondas, transparência e cor configuradas, com fundo de areia e **ponte** de madeira.
 - Árvores com tronco e copa, rochas angulares de `WedgePart`/Slate, e minérios de ouro com veios metálicos. Todos são modelos físicos 3D do Roblox.
-- Clique no recurso perto do jogador enquanto segura a marreta: o **servidor valida a distância**, a ferramenta, o cooldown e a visibilidade do alvo.
-- Recompensa por golpe, **barra de durabilidade** ao atingir, desaparecimento quando quebra e **reaparecimento após 12 segundos**.
+- Clique no recurso perto do jogador com a marreta: o **servidor valida distância, ferramenta, cooldown e linha de visão**. Cada golpe rende material, sem remover o recurso.
+- **Coleta ilimitada a cada golpe, como no MooMoo.io**: árvore, pedra e minério de ouro são permanentes; sem durabilidade, destruição ou respawn.
 - HUD pequena com contadores de madeira, pedra e ouro; recurso sob o cursor ganha contorno amarelo e dica de interação.
 - Recursos iniciais próximos ao spawn. Não é necessário caminhar pelo mapa inteiro para encontrar a primeira árvore ou pedra.
 - Os recursos podem ser substituídos por seus próprios modelos do Creator Store: crie `ServerStorage/RoMooResourceModels` com `Model` nomeados `Tree`, `Rock`, `Gold`. O jogo usa automaticamente o template 3D importado, sem executar scripts incluídos nos modelos.
@@ -23,7 +23,7 @@
 2. Abra o arquivo no Roblox Studio, pressione **F5**.
 3. Veja o avatar padrão segurando a marreta, posicionado perto das primeiras árvores, pedras e ouro.
 4. Ande com **WASD**, aproxime-se até ficar a cerca de 17 studs, aponte o cursor para a árvore e **clique várias vezes** (ou mantenha o botão pressionado).
-5. Acompanhe a barra de durabilidade e os contadores. Repita para pedra e ouro.
+5. Acompanhe os contadores; continue batendo indefinidamente na mesma árvore. Repita com pedra e ouro.
 6. Explore o rio de água real e atravesse a ponte. A água funciona como Terrain nativo, com comportamento de natação padrão.
 7. Se não funcionar, abra **Exibir → Saída** e envie a mensagem de erro e uma captura do jogo.
 

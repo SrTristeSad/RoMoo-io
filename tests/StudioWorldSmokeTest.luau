@@ -13,7 +13,8 @@ for _, node in ipairs(nodes:GetChildren()) do
     local kind = node:GetAttribute("Kind")
     assert(count[kind] ~= nil, "Tipo desconhecido " .. tostring(kind))
     count[kind] += 1
-    assert(node:GetAttribute("Health") == Config.ResourceTypes[kind].hp)
+    assert(node:GetAttribute("Health") == nil, "Recurso natural não deve ter HP")
+    assert(node:FindFirstChild("Durability") == nil, "Recurso com barra de durabilidade")
 end
 assert(count.Tree > 0 and count.Rock > 0 and count.Gold > 0, "Falta recurso essencial")
 
@@ -22,15 +23,14 @@ testFolder.Name = "TesteTemporario"
 testFolder.Parent = workspace
 for _, kind in ipairs({"Tree", "Rock", "Gold"}) do
     local node = World.spawnNode(kind, Vector3.new(900, 0, 900), testFolder)
-    local ticks = math.ceil(Config.ResourceTypes[kind].hp / Config.ResourceTypes[kind].damage)
-    local broken = false
-    for i = 1, ticks do
-        local stats
-        stats, broken = World.hitNode(node)
-        assert(stats and stats.inventory, "Recurso não deu recompensa")
-        if i < ticks then assert(not broken, "Quebrou antes da hora") end
+    local originalParent = node.Parent
+    for i = 1, 100 do
+        local stats = World.hitNode(node)
+        assert(stats and stats.inventory and stats.yield > 0, "Golpe não concedeu recurso")
+        assert(node.Parent == originalParent and node.PrimaryPart ~= nil,
+            "Recurso desapareceu depois de " .. i .. " golpes: " .. kind)
+        assert(node:GetAttribute("Health") == nil, "Recurso recebeu vida: " .. kind)
     end
-    assert(broken and node:GetAttribute("Health") == 0, "Recurso não quebrou: " .. kind)
 end
 testFolder:Destroy()
 assert(workspace.Terrain.WaterWaveSize > 0, "Água sem ondas")

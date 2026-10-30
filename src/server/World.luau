@@ -170,10 +170,6 @@ function World.spawnNode(kind, pos, parent)
     local model = Instance.new("Model")
     model.Name = kind
     model:SetAttribute("Kind", kind)
-    model:SetAttribute("Health", stats.hp)
-    model:SetAttribute("MaxHealth", stats.hp)
-    model:SetAttribute("SpawnX", pos.X)
-    model:SetAttribute("SpawnZ", pos.Z)
     model.Parent = parent
 
     local core = importedResource(kind, model, pos)
@@ -183,46 +179,15 @@ function World.spawnNode(kind, pos, parent)
     end
     model.PrimaryPart = core
 
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "Durability"
-    billboard.Adornee = core
-    billboard.Size = UDim2.fromOffset(86, 11)
-    billboard.StudsOffsetWorldSpace = Vector3.new(0, if kind == "Tree" then 11 else 4.6, 0)
-    billboard.AlwaysOnTop = true
-    billboard.Enabled = false
-    billboard.Parent = model
-    local background = Instance.new("Frame")
-    background.Name = "Track"
-    background.Size = UDim2.fromScale(1, 1)
-    background.BackgroundColor3 = Color3.fromRGB(43, 47, 49)
-    background.BorderSizePixel = 0
-    background.Parent = billboard
-    local fill = Instance.new("Frame")
-    fill.Name = "Fill"
-    fill.Size = UDim2.fromScale(1, 1)
-    fill.BackgroundColor3 = Color3.fromRGB(239, 185, 65)
-    fill.BorderSizePixel = 0
-    fill.Parent = background
     return model
 end
 
+-- O servidor original coleta materiais de objetos naturais sem esgotar sua vida.
+-- São permanentes; dano, durabilidade e destruição só se aplicam a construções.
 function World.hitNode(node)
-    if not node or not node.Parent or not node.PrimaryPart then return nil, false end
+    if not node or not node.Parent or not node.PrimaryPart then return nil end
     local kind = node:GetAttribute("Kind")
-    local stats = Config.ResourceTypes[kind]
-    if not stats then return nil, false end
-    local hp = node:GetAttribute("Health")
-    if typeof(hp) ~= "number" or hp <= 0 then return nil, false end
-    local remaining = math.max(0, hp - stats.damage)
-    node:SetAttribute("Health", remaining)
-    local billboard = node:FindFirstChild("Durability")
-    if billboard then
-        billboard.Enabled = remaining > 0
-        local track = billboard:FindFirstChild("Track")
-        local fill = track and track:FindFirstChild("Fill")
-        if fill then fill.Size = UDim2.fromScale(remaining / stats.hp, 1) end
-    end
-    return stats, remaining == 0
+    return Config.ResourceTypes[kind]
 end
 
 function World.create()

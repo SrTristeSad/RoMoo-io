@@ -65,24 +65,14 @@ strike.OnServerEvent:Connect(function(player, candidate)
     if not hit or not hit.Instance:IsDescendantOf(candidate) then return end
     profile.lastStrike = now
 
-    local stats, broken = World.hitNode(candidate)
+    -- Um golpe sempre coleta; árvores, pedras e ouro NUNCA são destruídos.
+    local stats = World.hitNode(candidate)
     if not stats then return end
 
     local key = stats.inventory
     profile.stock[key] += stats.yield
     player:SetAttribute(key, profile.stock[key])
-    local spot = core.Position
-    feedback:FireAllClients("Impact", spot, candidate:GetAttribute("Kind"), broken)
-    if broken then
-        local kind = candidate:GetAttribute("Kind")
-        local x, z = candidate:GetAttribute("SpawnX"), candidate:GetAttribute("SpawnZ")
-        candidate:Destroy()
-        task.delay(Config.RespawnSeconds, function()
-            if resources.Parent then
-                World.spawnNode(kind, Vector3.new(x, 0, z), resources)
-            end
-        end)
-    end
+    feedback:FireAllClients("Impact", core.Position, candidate:GetAttribute("Kind"), false)
 end)
 
 local function characterReady(player, character)
@@ -112,4 +102,4 @@ Players.PlayerAdded:Connect(playerAdded)
 for _, player in ipairs(Players:GetPlayers()) do playerAdded(player) end
 Players.PlayerRemoving:Connect(function(player) profiles[player] = nil end)
 
-print("[RoMoo 3D] Marreta equipada, recursos quebráveis e coleta de madeira/pedra/ouro ativos.")
+print("[RoMoo 3D] Marreta equipada; arvores, pedras e ouro permanentes: coleta infinita por golpe.")

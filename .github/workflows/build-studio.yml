@@ -43,6 +43,23 @@ jobs:
           test "$count" -gt 5
           echo "Scripts Luau analisados: $count"
 
+      - name: Garantir que recursos naturais sao permanentes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          cfg = Path('src/shared/Config.luau').read_text()
+          world = Path('src/server/World.luau').read_text()
+          game = Path('src/server/Game.server.luau').read_text()
+          assert 'RespawnSeconds' not in cfg
+          assert 'stats.hp' not in world
+          assert 'node:SetAttribute("Health"' not in world
+          assert 'candidate:Destroy()' not in game
+          assert 'task.delay(Config.RespawnSeconds' not in game
+          assert 'profile.stock[key] += stats.yield' in game
+          print('Coleta de arvore, pedra e ouro permanente: OK')
+          PY
+
       - name: Instalar Rojo 7.7.1
         shell: bash
         run: |

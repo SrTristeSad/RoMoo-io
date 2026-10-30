@@ -11,10 +11,10 @@ Abra o `.rbxlx`, clique em **Continuar** se o Studio exibir aviso de migração 
 ## Conferir ação
 - [ ] WASD e câmera do Roblox em terceira pessoa funcionam.
 - [ ] Aproximar da árvore destaca seu contorno amarelo quando o cursor está sobre ela.
-- [ ] Clicar com marreta dá +5 madeira, mostra a barra de vida, e quebra após 3 golpes.
-- [ ] Pedra dá +5 pedra e quebra após 4 golpes.
-- [ ] Minério dá +3 ouro e quebra após 5 golpes.
-- [ ] Recurso reaparece no mesmo lugar após ~12 s.
+- [ ] Clicar com a marreta dá +5 madeira **por golpe**, mesmo após 20, 50 ou 100 golpes; a árvore continua no lugar.
+- [ ] Pedra dá +5 pedra por golpe e nunca desaparece.
+- [ ] Minério dá +3 ouro por golpe e nunca desaparece.
+- [ ] Não existe respawn para esses recursos: todos permanecem presentes o tempo inteiro.
 - [ ] A marreta não minera um recurso distante, nem ataca rápido demais.
 - [ ] Rio permite natação e a ponte permite a travessia a pé.
 - [ ] HUD mostra apenas madeira, pedra e ouro. Não há painel de clãs nem dezenas de itens.

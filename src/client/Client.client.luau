@@ -221,17 +221,17 @@ RunService.RenderStepped:Connect(function()
     local target = targetFromPointer()
     if target and closeEnough(target) then
         hover.Adornee = target
-        hint.Text = labels[target.Name] .. "  •  CLIQUE PARA QUEBRAR"
+        hint.Text = labels[target.Name] .. "  •  CLIQUE PARA COLETAR"
     elseif target then
         hover.Adornee = nil
-        hint.Text = "Aproxime-se para quebrar " .. (labels[target.Name] or "recurso")
+        hint.Text = "Aproxime-se para coletar " .. (labels[target.Name] or "recurso")
     else
         hover.Adornee = nil
         hint.Text = "WASD: andar  •  Mouse: mirar  •  Clique: marreta"
     end
 end)
 
-feedback.OnClientEvent:Connect(function(kind, position, resourceKind, broken)
+feedback.OnClientEvent:Connect(function(kind, position, resourceKind, _broken)
     if kind ~= "Impact" then
         if kind == "Muito longe! Aproxime-se do recurso." then hint.Text = kind end
         return
@@ -240,7 +240,7 @@ feedback.OnClientEvent:Connect(function(kind, position, resourceKind, broken)
     local baseColor = if resourceKind == "Tree" then Color3.fromRGB(142, 102, 67)
         else if resourceKind == "Gold" then Color3.fromRGB(244, 196, 68)
         else Color3.fromRGB(156, 166, 170)
-    local particles = if broken then 9 else 4
+    local particles = 4
     for i = 1, particles do
         local frag = Instance.new("Part")
         frag.Name = "RoMooImpactFX"

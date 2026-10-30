@@ -7,11 +7,11 @@ return {
     StartingGold = 0,
     HitRange = 17,
     HitCooldown = .42,
-    RespawnSeconds = 12,
     ResourceTypes = {
-        Tree = {label = "ÁRVORE", inventory = "Wood", hp = 75, damage = 25, yield = 5},
-        Rock = {label = "PEDRA", inventory = "Stone", hp = 100, damage = 25, yield = 5},
-        Gold = {label = "MINÉRIO DE OURO", inventory = "Gold", hp = 125, damage = 25, yield = 3},
+        -- Como no MooMoo.io, recursos naturais são inesgotáveis: cada golpe rende materiais.
+        Tree = {label = "ÁRVORE", inventory = "Wood", yield = 5},
+        Rock = {label = "PEDRA", inventory = "Stone", yield = 5},
+        Gold = {label = "MINÉRIO DE OURO", inventory = "Gold", yield = 3},
     },
     River = {Width = 28, Depth = 6, BridgeX = 0, BridgeWidth = 13},
 }
