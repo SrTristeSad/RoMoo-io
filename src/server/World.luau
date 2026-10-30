@@ -132,27 +132,17 @@ function World.create()
     folder.Parent = workspace
     local half = Config.MapSize / 2
 
-    part("Gramado", Vector3.new(Config.MapSize, 2, Config.MapSize), Vector3.new(0, -1, 0), Color3.fromRGB(111, 183, 89), Enum.Material.Grass, folder, nil, true)
+    -- Terreno nativo Roblox: grama com vegetação animada, neve e areia.
+    local terrain = workspace.Terrain
+    terrain:Clear()
+    terrain.Decoration = true
+    terrain.GrassLength = .45
+    terrain:FillBlock(CFrame.new(0, -4, 0), Vector3.new(Config.MapSize, 8, Config.MapSize), Enum.Material.Grass)
     -- Zonas visuais clássicas: norte frio, centro verde, sul desértico.
-    local snow = part("Neve", Vector3.new(Config.MapSize - 18, 0.08, 88),
-        Vector3.new(0, 0.05, -half + 50), Color3.fromRGB(211, 235, 237), Enum.Material.Snow, folder, nil, false)
-    local desert = part("Deserto", Vector3.new(Config.MapSize - 18, 0.08, 88),
-        Vector3.new(0, 0.05, half - 50), Color3.fromRGB(216, 189, 129), Enum.Material.Sand, folder, nil, false)
-    snow.CastShadow = false
-    desert.CastShadow = false
-    -- Faixas suaves entre campo, gelo e areia, sem barreiras físicas.
-    for i = 1, 5 do
-        local opacity = i / 6
-        local dist = (i - .5) * 6
-        local snowFade = part("TransicaoNeve", Vector3.new(Config.MapSize - 18, 0.04, 6),
-            Vector3.new(0, .12, -half + 94 + dist),
-            Color3.fromRGB(217, 232, 229), Enum.Material.Snow, folder, nil, false)
-        snowFade.Transparency = opacity
-        local sandFade = part("TransicaoAreia", Vector3.new(Config.MapSize - 18, 0.04, 6),
-            Vector3.new(0, .12, half - 94 - dist),
-            Color3.fromRGB(223, 193, 135), Enum.Material.Sand, folder, nil, false)
-        sandFade.Transparency = opacity
-    end
+    terrain:FillBlock(CFrame.new(0, -2, -half + 50),
+        Vector3.new(Config.MapSize - 18, 4, 88), Enum.Material.Snow)
+    terrain:FillBlock(CFrame.new(0, -2, half - 50),
+        Vector3.new(Config.MapSize - 18, 4, 88), Enum.Material.Sand)
     -- Grade antiga opcional; visual padrão usa vegetação 3D autoral.
     if Config.Decoration.ShowGrid then
         -- Grade discreta que preserva a leitura do mapa visto de cima.

@@ -6,9 +6,9 @@ local Config = {
     -- Cenário bonito sem exagerar no número de partes para celulares.
     Decoration = {
         Enabled = true,
-        GrassTufts = 160,
-        Flowers = 40,
-        MeadowPebbles = 40,
+        GrassTufts = 35,
+        Flowers = 25,
+        MeadowPebbles = 15,
         SnowPines = 16,
         DesertCacti = 14,
         DesertPebbles = 24,
