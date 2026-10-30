@@ -23,6 +23,7 @@
         "Melee": {"$path": "src/server/Melee.luau"},
         "Structures": {"$path": "src/server/Structures.luau"},
         "Progression": {"$path": "src/server/Progression.luau"},
+        "SessionState": {"$path": "src/server/SessionState.luau"},
         "CreatorAssets": {"$path": "src/server/CreatorAssets.luau"}
       }
     },

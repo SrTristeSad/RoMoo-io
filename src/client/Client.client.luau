@@ -273,7 +273,14 @@ for i,item in ipairs(choices) do
 end
 setMode("Hammer",true)
 player:GetAttributeChangedSignal("Age"):Connect(function()
-    setMode(selectedMode,true)
+    local blueprint = Config.Weapons[selectedMode] or Config.Buildings[selectedMode]
+    local age = player:GetAttribute("Age") or 1
+    if blueprint and age < (blueprint.minAge or 1) then
+        -- Quando a idade reinicia, voltar para arma realmente disponivel.
+        setMode("Hammer",true)
+    else
+        setMode(selectedMode,true)
+    end
 end)
 player:GetAttributeChangedSignal("WeaponId"):Connect(function()
     local serverWeapon=player:GetAttribute("WeaponId")
@@ -768,6 +775,10 @@ feedback.OnClientEvent:Connect(function(kind, position, resourceKind, _broken)
         return
     elseif kind=="Income" then
         hint.Text="Moinho: +"..tostring(position).." ouro"
+        return
+    elseif kind=="RespawnReset" then
+        setMode("Hammer",true)
+        hint.Text="Nova vida: recursos, idade e armas reiniciados"
         return
     elseif kind=="WeaponEquipped" then
         hint.Text="Arma equipada: "..tostring(position)

@@ -11,6 +11,7 @@ local Boundaries = require(script.Parent:WaitForChild("Boundaries"))
 local Melee = require(script.Parent:WaitForChild("Melee"))
 local Structures = require(script.Parent:WaitForChild("Structures"))
 local Progression = require(script.Parent:WaitForChild("Progression"))
+local SessionState = require(script.Parent:WaitForChild("SessionState"))
 
 local resources = World.create()
 local world = resources.Parent
@@ -158,6 +159,7 @@ strike.OnServerEvent:Connect(function(player, aim)
     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
     local root = character and character:FindFirstChild("HumanoidRootPart")
     if not humanoid or not root or humanoid.Health <= 0 then return end
+    if not SessionState.canStrike(character) then return end
     local weapon = equippedWeapon(player,character,profile)
     if not weapon then return end
     local now = os.clock()
@@ -219,41 +221,25 @@ end)
 
 local function characterReady(player, character)
     local humanoid = character:WaitForChild("Humanoid", 10)
-    if humanoid and humanoid:IsA("Humanoid") then
+    if humanoid and humanoid:IsA("Humanoid") and player.Character==character then
         local profile=profiles[player]
         Avatar.equip(player,character,humanoid,profile and profile.weapon or "Hammer")
         humanoid.Died:Connect(function()
             local current=profiles[player]
-            if current then
+            if current and player.Character==character then
                 current.deaths += 1
                 player:SetAttribute("Deaths",current.deaths)
+                -- Partida por vidas: construcoes e progressao recomecam.
+                Structures.clearOwner(player.UserId)
+                SessionState.resetForNewLife(player,current,Config)
+                feedback:FireClient(player,"RespawnReset")
             end
         end)
     end
 end
 
 local function playerAdded(player)
-    profiles[player] = {
-        stock = {
-            Wood = Config.StartingWood, Stone = Config.StartingStone,
-            Gold = Config.StartingGold, Food = Config.StartingFood,
-        },
-        lastStrike = -1e8,
-        lastEat = -1e8,
-        lastBuild = -1e8,
-        weapon = "Hammer",
-        lastWeaponSelect = -1e8,
-        kills = 0,
-        deaths = 0,
-    }
-    Progression.initialize(player,profiles[player],Config)
-    player:SetAttribute("WeaponId","Hammer")
-    player:SetAttribute("Kills",0)
-    player:SetAttribute("Deaths",0)
-    player:SetAttribute("Wood", Config.StartingWood)
-    player:SetAttribute("Stone", Config.StartingStone)
-    player:SetAttribute("Gold", Config.StartingGold)
-    player:SetAttribute("Food", Config.StartingFood)
+    profiles[player] = SessionState.create(player,Config)
     player.CharacterAdded:Connect(function(character)
         task.spawn(characterReady, player, character)
     end)
@@ -264,6 +250,9 @@ end
 
 Players.PlayerAdded:Connect(playerAdded)
 for _, player in ipairs(Players:GetPlayers()) do playerAdded(player) end
-Players.PlayerRemoving:Connect(function(player) profiles[player] = nil end)
+Players.PlayerRemoving:Connect(function(player)
+    Structures.clearOwner(player.UserId)
+    profiles[player] = nil
+end)
 
 print("[RoMoo 3D] Mapa Moo-IO por setores, rio com correnteza, lobos 3D e coleta infinita.")

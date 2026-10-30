@@ -140,6 +140,20 @@ jobs:
           assert 'RoMooCameraAndAim' in client
           assert 'hover.Enabled = false' in client
           assert 'humanoid.AutoRotate=false' in avatar.replace(' ', '')
+          session = Path('src/server/SessionState.luau').read_text()
+          state_test = Path('tests/StudioSessionStateSmokeTest.luau').read_text()
+          assert '"SessionState":' in project
+          assert 'SessionState.resetForNewLife' in game
+          assert 'SessionState.canStrike(character)' in game
+          assert 'SessionState.create(player,Config)' in game
+          assert 'Structures.clearOwner(player.UserId)' in game
+          assert 'function Structures.clearOwner(' in structures
+          assert 'profile.weapon = "Hammer"' in session
+          assert 'Progression.initialize(player, profile, config)' in session
+          assert 'FindFirstChildOfClass("ForceField")' in session
+          assert 'Config.SpawnProtectionSeconds' in world
+          assert 'RespawnReset' in client
+          assert 'resetForNewLife' in state_test
           print('Moo-IO: recursos permanentes, rio sem pontes, biomas, limites, lobos 3D: OK')
           PY
 

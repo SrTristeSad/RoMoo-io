@@ -69,6 +69,18 @@
 - [ ] Verificar que lobos, touros, porcos e ovelhas não atravessam troncos nem muralhas.
 - [ ] Executar `tests/StudioProjectileTest.luau` na Command Bar do servidor.
 
+## Renascimento e protecao inicial (revisao de outubro de 2026)
+- [ ] Com dois clientes, jogador A nasce com ForceField por 3 segundos; B nao deve feri-lo.
+- [ ] Enquanto o ForceField estiver ativo, A nao pode atacar/colher/derrubar estruturas.
+- [ ] Apos 3 segundos, A consegue atacar e colher normalmente.
+- [ ] A evolui ate idade 5, usa espada, acumula madeira/pedra/ouro/comida e constroi parede e moinho.
+- [ ] B derrota A: o placar de mortes sobe uma vez; idade e XP voltam ao inicio; inventario zera e a espada fica bloqueada.
+- [ ] As estruturas de A somem ao morrer, inclusive moinhos que geravam ouro.
+- [ ] Ao renascer, a marreta funciona e o HUD volta a selecionar uma opcao desbloqueada.
+- [ ] Abates e mortes da sessao permanecem no placar.
+- [ ] Ao sair da partida, bases e moinhos do jogador desconectado sao removidos.
+- [ ] Rodar `tests/StudioSessionStateSmokeTest.luau` na Command Bar do servidor.
+
 ## Combate e segurança
 - [ ] Golpe contra jogador/animal atrás de muralha não atravessa a parede.
 - [ ] Armadilha de lentidão reaplicada não deixa velocidade travada em 10.

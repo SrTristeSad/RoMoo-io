@@ -160,6 +160,18 @@ local function destroy(model)
     model:Destroy()
 end
 
+-- Evita bases orfas, renda de moinhos antigos e limites de construcao
+-- desatualizados apos morte ou desconexao do dono.
+function Structures.clearOwner(userId)
+    if typeof(userId) ~= "number" then return end
+    local owned = {}
+    for model, info in pairs(registered) do
+        if info.userId == userId then table.insert(owned, model) end
+    end
+    for _, model in ipairs(owned) do destroy(model) end
+    ownerCounts[userId] = nil
+end
+
 function Structures.damage(model, amount)
     if not registered[model] or typeof(amount) ~= "number" or amount <= 0 then return false end
     local maxHp = model:GetAttribute("MaxHealth")

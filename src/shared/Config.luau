@@ -5,6 +5,7 @@ return {
     Seed = 20261030,
     StartingWood = 0, StartingStone = 0, StartingGold = 0, StartingFood = 0,
     HitRange = 17, HitCooldown = .42, HitArcDot = .38,
+    SpawnProtectionSeconds = 3,
     -- Armas primarias 3D. Todas mantem a coleta ilimitada dos recursos naturais.
     Weapons = {
         Hammer = {label="MARRETA",minAge=1,range=17,cooldown=.42,

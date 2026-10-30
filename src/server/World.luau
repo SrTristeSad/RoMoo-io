@@ -288,7 +288,7 @@ function World.create()
     spawn.Name = "Nascimento"
     spawn.Anchored = true
     spawn.Neutral = true
-    spawn.Duration = 2
+    spawn.Duration = Config.SpawnProtectionSeconds
     spawn.Size = Vector3.new(10, 1, 10)
     spawn.Position = Vector3.new(0, .6, -64)
     spawn.Transparency = 1
