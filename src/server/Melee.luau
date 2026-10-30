@@ -3,6 +3,7 @@
 -- O cliente envia apenas o vetor de mira. O servidor resolve o alvo
 -- usando alcance, angulo e bloqueio. Regras testaveis sem eventos de rede.
 local Players = game:GetService("Players")
+local CombatVisibility = require(script.Parent:WaitForChild("CombatVisibility"))
 local Melee = {}
 
 function Melee.validDirection(aim)
@@ -52,7 +53,9 @@ function Melee.choose(root, direction, resources, animals, config, buildings, we
         end
     end
     overlap.FilterDescendantsInstances = targets
-    overlap.MaxParts = 120
+    -- Malhas 3D importadas possuem multiplas partes; 120 pode cortar
+    -- candidatos arbitrariamente quando muitas arvores cercam um jogador.
+    overlap.MaxParts = 0
 
     local sight = RaycastParams.new()
     sight.FilterType = Enum.RaycastFilterType.Include
@@ -76,7 +79,8 @@ function Melee.choose(root, direction, resources, animals, config, buildings, we
                 if alignment >= (config.HitArcDot or .38) then
                     local eye = origin + Vector3.new(0,.9,0)
                     local result = workspace:Raycast(eye,center-eye,sight)
-                    if not result or result.Instance:IsDescendantOf(model) then
+                    if (not result or result.Instance:IsDescendantOf(model))
+                        and CombatVisibility.clear(eye,center,resources,buildings,model) then
                         local score = distance + (1-alignment)*9
                         if score<lowest then
                             lowest=score

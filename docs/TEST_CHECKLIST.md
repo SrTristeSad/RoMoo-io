@@ -93,6 +93,17 @@
 - [ ] Executar `tests/StudioResource3DTest.luau` na Command Bar do servidor.
 - [ ] Monitorar FPS com 2 clientes, mapa cheio e 20 ou mais animais.
 
+## Fauna e golpes: paredes, FPS e viradas
+- [ ] Com vaca atras de muro, marreta nao acerta atraves da parede.
+- [ ] Contra vaca sem muro, coleta de alimento e XP continua funcionando.
+- [ ] Lobo, javali e touro nao causam dano ao jogador atras do muro.
+- [ ] Espinhos sem colisao nao bloqueiam visao dos animais.
+- [ ] Arvores e rochas solidas bloqueiam ataques de proximidade.
+- [ ] Animais distantes de jogadores atualizam posicao com menor frequencia.
+- [ ] Girar repetidamente perto da fauna: nao deve ter rotacao brusca.
+- [ ] Validar no servidor `tests/StudioCombatVisibilitySmokeTest.luau`.
+- [ ] Medir FPS e memoria em PC e emulador mobile.
+
 ## Combate e segurança
 - [ ] Golpe contra jogador/animal atrás de muralha não atravessa a parede.
 - [ ] Armadilha de lentidão reaplicada não deixa velocidade travada em 10.

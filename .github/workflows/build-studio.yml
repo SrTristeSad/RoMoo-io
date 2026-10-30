@@ -154,6 +154,15 @@ jobs:
           assert 'Config.SpawnProtectionSeconds' in world
           assert 'RespawnReset' in client
           assert 'resetForNewLife' in state_test
+          visible = Path('src/server/CombatVisibility.luau').read_text()
+          visibility_test = Path('tests/StudioCombatVisibilitySmokeTest.luau').read_text()
+          assert '"CombatVisibility":' in project
+          assert 'CombatVisibility.clear(eye,center,resources,buildings,model)' in melee
+          assert 'CombatVisibility.clear(pos,humanRoot.Position,resources,buildings)' in Path('src/server/Animals.luau').read_text()
+          assert 'CombatVisibility.clear(position,humanRoot.Position' in wolf
+          assert 'params.RespectCanCollide = true' in visible
+          assert 'Melee.choose' in visibility_test
+          assert 'WildlifeFarDistance = 155' in cfg
           fauna = Path('src/server/Animals.luau').read_text()
           fauna_models = Path('src/server/AnimalModels.luau').read_text()
           fauna_test = Path('tests/StudioResource3DTest.luau').read_text()

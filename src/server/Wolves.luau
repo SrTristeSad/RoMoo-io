@@ -8,6 +8,7 @@ local RunService=game:GetService("RunService")
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local Config=require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local Rules=require(script.Parent:WaitForChild("MapRules"))
+local CombatVisibility=require(script.Parent:WaitForChild("CombatVisibility"))
 local Wolves={}
 local rng=Random.new(Config.Seed+42)
 local folder=nil
@@ -264,8 +265,10 @@ local function nearestPlayer(position)
 end
 
 function Wolves.hit(model,damage)
+    if typeof(damage)~="number" or damage~=damage or damage<=0
+        or damage==math.huge or damage>1000 then return false end
     local state=states[model]
-    if not state or not model.Parent or damage<=0 then return false end
+    if not state or model.Parent~=folder then return false end
     state.hp=math.max(0,state.hp-damage)
     model:SetAttribute("Health",state.hp)
     local ui=model:FindFirstChild("WolfHealth")
@@ -384,8 +387,13 @@ function Wolves.start(world,resources)
                     newPos+=Vector3.new(0,bounce,0)
                     model:PivotTo(CFrame.lookAt(newPos,newPos+dir))
                 end
-                if hum and distance<Config.Wolf.AttackDistance and now-state.lastAttack>=1.4 then
-                    if not hum.Parent:FindFirstChildOfClass("ForceField") then
+                if hum and hum.Health>0 and distance<Config.Wolf.AttackDistance
+                    and now-state.lastAttack>=1.4 then
+                    local char=hum.Parent
+                    local humanRoot=char and char:FindFirstChild("HumanoidRootPart")
+                    if char and humanRoot and not char:FindFirstChildOfClass("ForceField")
+                        and CombatVisibility.clear(position,humanRoot.Position,
+                            mapResources,structuresFolder) then
                         state.lastAttack=now
                         hum:TakeDamage(Config.Wolf.AttackDamage)
                     end

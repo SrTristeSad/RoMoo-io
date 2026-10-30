@@ -24,6 +24,7 @@
         "Animals": {"$path": "src/server/Animals.luau"},
         "AnimalModels": {"$path": "src/server/AnimalModels.luau"},
         "Melee": {"$path": "src/server/Melee.luau"},
+        "CombatVisibility": {"$path": "src/server/CombatVisibility.luau"},
         "Structures": {"$path": "src/server/Structures.luau"},
         "Progression": {"$path": "src/server/Progression.luau"},
         "SessionState": {"$path": "src/server/SessionState.luau"},

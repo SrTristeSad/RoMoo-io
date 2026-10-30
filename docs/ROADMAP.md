@@ -85,6 +85,15 @@
 - [x] Substituir smoke test antigo que exigia quebra de recursos por teste de coleta infinita
 - [ ] Validar todas as espécies, combate, FPS e respawn no Roblox Studio
 
+## 0.86 — Colisao de ataques e fauna otimizada (codigo implementado; teste pendente)
+- [x] Lobo, touro, javali e yeti nao causam dano atraves de parede/tronco solido
+- [x] Parede e tronco bloqueiam golpes diretos, espinhos sem colisao nao bloqueiam
+- [x] Mira 3D deixa de ignorar alvos por limite artificial de partes de malhas
+- [x] Animação procedimental suaviza viradas dos animais
+- [x] Animais distantes atualizados com menor frequencia; alvos de jogadores avaliados uma vez por ciclo
+- [x] Teste de linha de visao isolado e verificacoes na CI
+- [ ] Validar linha de visao, duas maquinas e FPS real no Roblox Studio
+
 ## 0.9 — Multiplayer robusto
 - [ ] Integração de chat com políticas do Roblox, proteção de spawn
 - [ ] Exploits, colisões, ping e resistência a ataques automatizados

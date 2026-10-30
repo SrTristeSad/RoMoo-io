@@ -8,6 +8,8 @@ return {
     StartingWood = 0, StartingStone = 0, StartingGold = 0, StartingFood = 0,
     HitRange = 17, HitCooldown = .42, HitArcDot = .38,
     SpawnProtectionSeconds = 3,
+    -- LOD de IA: animais distantes caminham em passos menos frequentes.
+    WildlifeFarDistance = 155, WildlifeFarStep = .9,
     -- Armas primarias 3D. Todas mantem a coleta ilimitada dos recursos naturais.
     Weapons = {
         Hammer = {label="MARRETA",minAge=1,range=17,cooldown=.42,

@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local ServerStorage = game:GetService("ServerStorage")
 local AnimalModels = require(script.Parent:WaitForChild("AnimalModels"))
 local Rules = require(script.Parent:WaitForChild("MapRules"))
+local CombatVisibility = require(script.Parent:WaitForChild("CombatVisibility"))
 local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local Animals = {}
 local rng = Random.new(721)
@@ -241,25 +242,41 @@ local function spawn(kind)
         kind = kind, health = def.health, lastAttack = 0,
         moveDirection = Vector3.new(1, 0, 0), nextWander = 0,
         phase = rng:NextNumber(0, math.pi * 2), panicUntil = 0,
+        facing = Vector3.new(0,0,-1), lastFarUpdate = -1e8,
     }
     return model
 end
 
-local function directionToAnimal(animalPosition, maxDist)
-    local chosen, distance, hum = nil, maxDist, nil
-    for _, player in ipairs(Players:GetPlayers()) do
+-- Uma unica leitura de jogadores para toda a rodada de IA.
+local function snapshotTargets()
+    local targets = {}
+    for _,player in ipairs(Players:GetPlayers()) do
         local char = player.Character
-        local human = char and char:FindFirstChildOfClass("Humanoid")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
         local root = char and char:FindFirstChild("HumanoidRootPart")
-        if human and root and human.Health > 0
+        if root and hum and hum.Health > 0
             and not char:FindFirstChildOfClass("ForceField") then
-            local delta = Vector3.new(root.Position.X - animalPosition.X, 0, root.Position.Z - animalPosition.Z)
-            if delta.Magnitude < distance then
-                chosen, distance, hum = delta, delta.Magnitude, human
-            end
+            table.insert(targets,{position=root.Position,humanoid=hum})
         end
     end
-    return chosen, distance, hum
+    return targets
+end
+
+local function directionToAnimal(animalPosition, maxDist, targets)
+    local chosen, hum, best = nil, nil, maxDist*maxDist
+    local closest = math.huge
+    for _,entry in ipairs(targets) do
+        local dx = entry.position.X-animalPosition.X
+        local dz = entry.position.Z-animalPosition.Z
+        local distance2 = dx*dx + dz*dz
+        if distance2 < closest then closest=distance2 end
+        if distance2 < best then
+            best=distance2
+            chosen=Vector3.new(dx,0,dz)
+            hum=entry.humanoid
+        end
+    end
+    return chosen, if chosen then math.sqrt(best) else math.huge, hum, closest
 end
 
 function Animals.create(world, mapSize)
@@ -282,6 +299,7 @@ function Animals.create(world, mapSize)
             local dt = task.wait(0.15)
             dt = math.min(dt, 0.3)
             local now = os.clock()
+            local targets = snapshotTargets()
             for model, state in pairs(states) do
                 if not model.Parent or not model.PrimaryPart then
                     states[model] = nil
@@ -289,7 +307,15 @@ function Animals.create(world, mapSize)
                     local def = defs[state.kind]
                     local pos = model.PrimaryPart.Position
                     local detection = if def.hostile then 42 else if now < state.panicUntil then 58 else 26
-                    local playerDelta, distance, hum = directionToAnimal(pos, detection)
+                    local playerDelta, distance, hum, nearest2 =
+                        directionToAnimal(pos, detection, targets)
+                    -- Animais fora do alcance de qualquer jogador precisam de
+                    -- menos atualizacoes. Isso reduz trafego e PivotTo no servidor.
+                    if nearest2 > Config.WildlifeFarDistance*Config.WildlifeFarDistance
+                        and now-state.lastFarUpdate < Config.WildlifeFarStep then
+                        continue
+                    end
+                    state.lastFarUpdate = now
                     local dir = state.moveDirection
                     if playerDelta and playerDelta.Magnitude > 0.1 then
                         dir = if def.hostile then playerDelta.Unit else -playerDelta.Unit
@@ -340,11 +366,22 @@ function Animals.create(world, mapSize)
                         local bob = math.abs(math.sin(now * moveSpeed * .72 + state.phase)) * .17
                         local lean = math.sin(now * moveSpeed * .72 + state.phase) * math.rad(2.0)
                         local raised = nextPos + Vector3.new(0, bob, 0)
-                        model:PivotTo(CFrame.lookAt(raised, raised + dir) * CFrame.Angles(lean, 0, 0))
+                        local smooth=state.facing:Lerp(dir,math.clamp(dt*7,0,1))
+                        if smooth.Magnitude > .05 then
+                            state.facing=smooth.Unit
+                        end
+                        model:PivotTo(CFrame.lookAt(raised, raised + state.facing) *
+                            CFrame.Angles(lean, 0, 0))
                     end
-                    if def.hostile and playerDelta and hum and distance < 7 and now - state.lastAttack > 1.5 then
+                    if def.hostile and playerDelta and hum and hum.Health > 0
+                        and distance < 7 and now - state.lastAttack > 1.5 then
                         local char = hum.Parent
-                        if not char or not char:FindFirstChildOfClass("ForceField") then
+                        local humanRoot=char and char:FindFirstChild("HumanoidRootPart")
+                        local map=folder.Parent
+                        local resources=map and map:FindFirstChild("Resources")
+                        local buildings=map and map:FindFirstChild("Buildings")
+                        if char and humanRoot and not char:FindFirstChildOfClass("ForceField")
+                            and CombatVisibility.clear(pos,humanRoot.Position,resources,buildings) then
                             state.lastAttack = now
                             hum:TakeDamage(def.damage)
                         end
