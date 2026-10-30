@@ -111,7 +111,7 @@ jobs:
           progression = Path('src/server/Progression.luau').read_text()
           progtest = Path('tests/StudioProgressionSmokeTest.luau').read_text()
           assert '"Progression":' in project and 'Progression.initialize' in game
-          assert 'Progression.award' in game and 'awardXP(player,profile,stats.yield)' in game
+          assert 'Progression.award' in game and 'awardXP(player,profile,amount)' in game
           assert 'XPFromWolf = 80' in cfg and 'XPFromBuild = 15' in cfg
           assert 'StoneWall = {' in cfg and 'minAge=4' in cfg
           assert 'function Progression.threshold' in progression
