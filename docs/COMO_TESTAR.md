@@ -1,44 +1,27 @@
-# Como testar o RoMoo io no Roblox Studio
+# Teste direto — protótipo 3D da marreta
 
-## Opção A — baixar o arquivo já compilado
-1. Abra **Actions** no repositório: https://github.com/SrTristeSad/RoMoo-io/actions/workflows/build-studio.yml
-2. Abra a execução mais recente **verde** do fluxo "Gerar teste do RoMoo no Roblox Studio".
-3. Em **Artifacts**, clique em **RoMoo-io-Teste-Roblox-Studio** para baixar um ZIP.
-4. Extraia o ZIP e abra **RoMoo-io-Teste.rbxlx** no Roblox Studio.
-5. Clique **Play / Test (F5)**. Não precisa de Rojo instalado para abrir esse arquivo.
+Abra o `.rbxlx`, clique em **Continuar** se o Studio exibir aviso de migração de iluminação (é um aviso do Studio, não erro do projeto), e pressione **F5**.
 
-Se não houver execução verde ou o artefato não estiver disponível, use a opção B e envie o log da falha.
+## Conferir visual
+- [ ] O personagem é o **avatar Roblox padrão**, não uma bola.
+- [ ] A **marreta aparece na mão** ao nascer.
+- [ ] O chão usa **Terrain Grass** e há um rio azul com ondas, margens de areia e ponte de madeira.
+- [ ] Árvores têm tronco e folhagem; pedra tem formas angulares; ouro tem veios dourados.
 
-## Opção B — gerar o arquivo no seu PC (Windows)
-1. Abra https://github.com/SrTristeSad/RoMoo-io e clique em **Code > Download ZIP**.
-2. Extraia toda a pasta do ZIP no Windows.
-3. Clique duas vezes em **TESTAR-ROMOO.cmd**.
-4. O script baixa o Rojo oficial 7.7.1, compila a versão atual e tenta abrir o arquivo no Studio.
-5. Se o Studio não abrir, use **Arquivo > Abrir** no Roblox Studio para selecionar **RoMoo-io-Teste.rbxlx**.
-6. Para futuras atualizações, baixe o novo ZIP da branch main e repita.
+## Conferir ação
+- [ ] WASD e câmera do Roblox em terceira pessoa funcionam.
+- [ ] Aproximar da árvore destaca seu contorno amarelo quando o cursor está sobre ela.
+- [ ] Clicar com marreta dá +5 madeira, mostra a barra de vida, e quebra após 3 golpes.
+- [ ] Pedra dá +5 pedra e quebra após 4 golpes.
+- [ ] Minério dá +3 ouro e quebra após 5 golpes.
+- [ ] Recurso reaparece no mesmo lugar após ~12 s.
+- [ ] A marreta não minera um recurso distante, nem ataca rápido demais.
+- [ ] Rio permite natação e a ponte permite a travessia a pé.
+- [ ] HUD mostra apenas madeira, pedra e ouro. Não há painel de clãs nem dezenas de itens.
 
-O ZIP do projeto não inclui modelos importados do Roblox Studio automaticamente. Vaca, touro, lobo e ovelha ainda usarão visuais procedurais até importar os modelos 3D via `docs/IMPORTAR_ANIMAIS_3D.md`.
+## Conferir console
+- [ ] Não há erro vermelho de servidor/cliente.
+- [ ] O console do servidor exibe `[RoMoo 3D] Marreta equipada...`.
+- [ ] Executar `tests/StudioWorldSmokeTest.luau` no servidor resulta em PASS.
 
-## Teste solo (primeiros 3 minutos)
-- [ ] Abrir o place e pressionar **F5**.
-- [ ] O jogador surge no centro com câmera atrás dele; grama 3D, flores, neve/deserto e animais 3D são exibidos.
-- [ ] **WASD** caminha; mouse mira; **1** seleciona marreta.
-- [ ] Chegue perto de árvores/rochas/arbustos e minérios de ouro, aponte o mouse e segure o botão esquerdo; os recursos dão materiais por golpe, quebram e reaparecem.
-- [ ] Selecionar parede na barra, coletar madeira suficiente e construir.
-- [ ] Tentar erguer construção sem recursos: a operação deve ser recusada.
-- [ ] Usar comida (Q) quando estiver ferido.
-- [ ] A janela **Exibir > Saída (Output)** não deve ter erros vermelhos.
-
-## Teste multiplayer
-1. No Studio escolha **Test / Server & Clients**, **2 clients** e execute.
-2. Teste golpes contra outro jogador; depois crie uma parede entre os dois.
-3. No painel **CLÃ: SOLO**, o jogador A cria um código numérico de 6 dígitos.
-4. O jogador B digita o código e clica em **ENTRAR**.
-5. Verifique se os aliados ficam verdes no minimapa, não recebem dano entre si e se o pad de cura funciona.
-6. O jogador B sai do clã; verifique que ataques voltam a causar dano.
-
-## Se encontrar um problema
-Envie **uma captura da janela Output e da tela do jogo**. Inclua a ação que gerou o erro (ex.: F5, clicar em árvore, Q, criar clã). Não publique a experiência ainda: a validação dentro do Studio é obrigatória.
-
-O jogo não precisa ser publicado para este teste e não depende de DataStore. Testar em modo solo e multi-clientes é recomendado pela documentação do Roblox:
-https://create.roblox.com/docs/pt-br/studio/testing-modes
+A compilação automática **não substitui** os testes reais do Play no Studio.

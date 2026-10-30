@@ -1,238 +1,322 @@
---!strict
+--!nonstrict
+-- Cenário de teste 3D: Terrain nativo, água real, árvores, pedras e minério de ouro.
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
-local WorldDecor = require(script.Parent:WaitForChild("WorldDecor"))
 
 local World = {}
-local random = Random.new(20261029)
+local rng = Random.new(20261029)
 
-local function part(name, size, position, color, material, parent, shape, collidable)
-    local p = Instance.new("Part")
+local function makePart(parent, name, size, cf, color, material, opts)
+    opts = opts or {}
+    local p = Instance.new(opts.wedge and "WedgePart" or "Part")
     p.Name = name
     p.Size = size
-    p.Position = position
-    p.Anchored = true
+    p.CFrame = cf
     p.Color = color
     p.Material = material
+    if opts.shape then p.Shape = opts.shape end
+    p.Anchored = true
+    p.CanCollide = opts.collide == true
+    p.CanTouch = false
+    p.CanQuery = opts.query ~= false
+    p.CastShadow = opts.shadow ~= false
     p.TopSurface = Enum.SurfaceType.Smooth
     p.BottomSurface = Enum.SurfaceType.Smooth
-    p.CanCollide = collidable ~= false
-    p.CanTouch = collidable ~= false
-    p.CanQuery = true
-    if collidable == false then p.CastShadow = false end
-    if shape then
-        p.Shape = shape
-    end
     p.Parent = parent
     return p
 end
 
-function World.spawnNode(kind, position, parent)
-    local entry = Config.ResourceTypes[kind]
-    assert(entry, "Tipo de recurso desconhecido: " .. tostring(kind))
+local function riverZ(x)
+    return math.sin(x / 85) * 6 + math.sin(x / 37) * 2
+end
+
+local function clearFromRiver(x, z)
+    local width = Config.River.Width
+    return math.abs(z - riverZ(x)) > width / 2 + 14
+end
+
+local function createRiver(terrain, folder)
+    local size = Config.MapSize
+    local width = Config.River.Width
+    terrain.WaterColor = Color3.fromRGB(47, 139, 180)
+    terrain.WaterTransparency = .24
+    terrain.WaterReflectance = .1
+    terrain.WaterWaveSize = .23
+    terrain.WaterWaveSpeed = 7
+    for x = -size/2 + 8, size/2 - 8, 14 do
+        local middleZ = riverZ(x)
+        -- Esculpir o canal no solo e preencher com água real do Terrain.
+        terrain:FillBlock(CFrame.new(x, -1, middleZ),
+            Vector3.new(18, 14, width + 5), Enum.Material.Air)
+        terrain:FillBlock(CFrame.new(x, -8, middleZ),
+            Vector3.new(18, 4, width + 5), Enum.Material.Sand)
+        terrain:FillBlock(CFrame.new(x, -3, middleZ),
+            Vector3.new(18, 6, width), Enum.Material.Water)
+        for _, side in ipairs({-1, 1}) do
+            terrain:FillBlock(CFrame.new(x, -.8, middleZ + side * (width/2 + 5)),
+                Vector3.new(18, 1.5, 6), Enum.Material.Sand)
+        end
+    end
+    local bridge = Instance.new("Model")
+    bridge.Name = "PonteDeMadeira"
+    bridge.Parent = folder
+    local bWidth = Config.River.BridgeWidth
+    local length = width + 22
+    local centerZ = riverZ(0)
+    for z = -length / 2, length / 2, 2.6 do
+        makePart(bridge, "Tabua", Vector3.new(bWidth, .8, 2.45),
+            CFrame.new(0, 1.12, centerZ + z),
+            if math.floor(z) % 2 == 0 then Color3.fromRGB(151, 104, 64)
+                else Color3.fromRGB(178, 126, 77),
+            Enum.Material.WoodPlanks, {collide = true})
+    end
+    for _, side in ipairs({-1, 1}) do
+        local railX = side * (bWidth/2 - .5)
+        makePart(bridge, "Corrimao", Vector3.new(.5, .7, length),
+            CFrame.new(railX, 3.2, centerZ),
+            Color3.fromRGB(108, 73, 46), Enum.Material.Wood, {collide = true})
+        for z = -length / 2 + 2, length / 2 - 2, 9 do
+            makePart(bridge, "Poste", Vector3.new(.7, 2.8, .7),
+                CFrame.new(railX, 2, centerZ + z),
+                Color3.fromRGB(111, 78, 48), Enum.Material.Wood, {collide = true})
+        end
+    end
+    return bridge
+end
+
+local function createTree(model, pos)
+    local variation = rng:NextNumber(.85, 1.15)
+    local trunkH = 8 * variation
+    local trunk = makePart(model, "Core", Vector3.new(trunkH, 2.6, 2.6),
+        CFrame.new(pos + Vector3.new(0, trunkH/2, 0)) * CFrame.Angles(0, 0, math.rad(90)),
+        Color3.fromRGB(116, 82, 54), Enum.Material.Wood, {shape = Enum.PartType.Cylinder, collide = true})
+    -- Copa com volumes separados, não uma esfera substituindo a árvore.
+    for i, offset in ipairs({
+        Vector3.new(0, 9.0, 0), Vector3.new(-3.5, 8.5, .8),
+        Vector3.new(3.2, 8.7, -1), Vector3.new(0, 11.8, 1.1),
+    }) do
+        makePart(model, "Folhas", Vector3.new(7.5, 5.4, 7.4) * variation,
+            CFrame.new(pos + offset * variation),
+            if i % 2 == 0 then Color3.fromRGB(59, 129, 66) else Color3.fromRGB(73, 150, 80),
+            Enum.Material.Grass, {shape = Enum.PartType.Ball})
+    end
+    for _, side in ipairs({-1, 1}) do
+        local branch = makePart(model, "Galho", Vector3.new(1.25, 4.1, 1.25),
+            CFrame.new(pos + Vector3.new(side * 1.4, 6.7, 0)) *
+            CFrame.Angles(0, 0, math.rad(side * 37)),
+            Color3.fromRGB(116, 82, 54), Enum.Material.Wood)
+        branch.CanQuery = false
+    end
+    return trunk
+end
+
+local function createRock(model, pos, gold)
+    local body = makePart(model, "Core", Vector3.new(7.5, 5, 6.8),
+        CFrame.new(pos + Vector3.new(0, 2.5, 0)) * CFrame.Angles(0, math.rad(18), 0),
+        Color3.fromRGB(110, 121, 130), Enum.Material.Slate, {collide = true})
+    for index, offset in ipairs({
+        Vector3.new(-2.7, 1.4, 2.2), Vector3.new(2.8, 1.5, -1.9),
+        Vector3.new(0, 2.5, -3.2)
+    }) do
+        makePart(model, "Rochoso", Vector3.new(3.6, 3.8, 4.5),
+            CFrame.new(pos + offset) * CFrame.Angles(0, math.rad(index * 53), math.rad(8)),
+            if index == 1 then Color3.fromRGB(138, 147, 150) else Color3.fromRGB(117, 126, 131),
+            Enum.Material.Rock, {wedge = true})
+    end
+    if gold then
+        for index, offset in ipairs({
+            Vector3.new(-2.2, 4.4, .4),
+            Vector3.new(1.6, 3.8, -2.2),
+            Vector3.new(1.7, 2.1, 2.1),
+        }) do
+            makePart(model, "VeioDeOuro", Vector3.new(1.25, 2.2, 1.4),
+                CFrame.new(pos + offset) * CFrame.Angles(0, math.rad(index * 35), math.rad(18)),
+                Color3.fromRGB(236, 183, 39), Enum.Material.Metal, {wedge = true})
+        end
+    end
+    return body
+end
+
+local function importedResource(kind, model, pos)
+    local library = ServerStorage:FindFirstChild("RoMooResourceModels")
+    local template = library and library:FindFirstChild(kind)
+    if not template or not template:IsA("Model") then return nil end
+    local visual = template:Clone()
+    visual.Name = "Visual3D"
+    for _, item in ipairs(visual:GetDescendants()) do
+        if item:IsA("LuaSourceContainer") then item:Destroy() end
+        if item:IsA("BasePart") then
+            item.Anchored = true
+            item.CanCollide = false
+            item.CanTouch = false
+            item.CanQuery = true
+        end
+    end
+    visual.Parent = model
+    local ok = pcall(function() visual:PivotTo(CFrame.new(pos)) end)
+    if not ok then visual:Destroy() return nil end
+    local center = makePart(model, "Core", Vector3.new(6, 6, 6),
+        CFrame.new(pos + Vector3.new(0, 3, 0)), Color3.fromRGB(112, 115, 116),
+        Enum.Material.SmoothPlastic, {collide = true})
+    center.Transparency = 1
+    return center
+end
+
+function World.spawnNode(kind, pos, parent)
+    local stats = Config.ResourceTypes[kind]
+    assert(stats, "Tipo de recurso desconhecido: " .. tostring(kind))
     local model = Instance.new("Model")
     model.Name = kind
     model:SetAttribute("Kind", kind)
-    model:SetAttribute("Health", entry.health)
-    model:SetAttribute("MaxHealth", entry.health)
+    model:SetAttribute("Health", stats.hp)
+    model:SetAttribute("MaxHealth", stats.hp)
+    model:SetAttribute("SpawnX", pos.X)
+    model:SetAttribute("SpawnZ", pos.Z)
     model.Parent = parent
 
-    local center
-    if kind == "Tree" then
-        local half = Config.MapSize / 2
-        local leafA = Color3.fromRGB(59, 147, 71)
-        local leafB = Color3.fromRGB(75, 165, 74)
-        if position.Z < -half + 96 then
-            leafA = Color3.fromRGB(61, 118, 106)
-            leafB = Color3.fromRGB(84, 146, 126)
-        elseif position.Z > half - 96 then
-            leafA = Color3.fromRGB(110, 138, 83)
-            leafB = Color3.fromRGB(139, 155, 88)
-        end
-        center = part("Core", Vector3.new(3.8, 10, 3.8), position + Vector3.new(0, 5, 0),
-            Color3.fromRGB(115, 79, 49), Enum.Material.Wood, model, Enum.PartType.Cylinder, true)
-        part("CopaBaixa", Vector3.new(12, 9, 12), position + Vector3.new(0, 10.5, 0),
-            leafA, Enum.Material.Grass, model, Enum.PartType.Ball, false)
-        part("CopaAlta", Vector3.new(9, 7, 9), position + Vector3.new(0, 15.2, 0),
-            leafB, Enum.Material.Grass, model, Enum.PartType.Ball, false)
-    elseif kind == "Rock" then
-        center = part("Core", Vector3.new(8, 6, 8), position + Vector3.new(0, 3, 0),
-            Color3.fromRGB(128, 136, 141), Enum.Material.Slate, model, Enum.PartType.Ball, true)
-        part("Fragmento", Vector3.new(4, 3, 5), position + Vector3.new(3, 1.5, 1),
-            Color3.fromRGB(153, 158, 156), Enum.Material.Slate, model, Enum.PartType.Ball, false)
-    elseif kind == "Gold" then
-        center = part("Core", Vector3.new(7, 6, 7), position + Vector3.new(0, 3, 0), Color3.fromRGB(114, 118, 123), Enum.Material.Slate, model, Enum.PartType.Ball, true)
-        part("VeioDeOuro", Vector3.new(4, 3, 4), position + Vector3.new(1, 5, 1), Color3.fromRGB(255, 194, 46), Enum.Material.Metal, model, Enum.PartType.Ball, false)
-    else
-        center = part("Core", Vector3.new(7, 4, 7), position + Vector3.new(0, 2, 0), Color3.fromRGB(62, 155, 68), Enum.Material.Grass, model, Enum.PartType.Ball, false)
-        for _, offset in ipairs({Vector3.new(2, 3, 0), Vector3.new(-2, 3, 1), Vector3.new(0, 4, -2)}) do
-            part("Fruta", Vector3.new(1.6, 1.6, 1.6), position + offset, Color3.fromRGB(230, 67, 73), Enum.Material.SmoothPlastic, model, Enum.PartType.Ball, false)
-        end
+    local core = importedResource(kind, model, pos)
+    if not core then
+        core = if kind == "Tree" then createTree(model, pos)
+            else createRock(model, pos, kind == "Gold")
     end
-    model.PrimaryPart = center
-    -- A vida só aparece depois do primeiro golpe; o recurso quebra ao esgotar.
-    local gui = Instance.new("BillboardGui")
-    gui.Name = "ResourceDurability"
-    gui.Size = UDim2.fromOffset(66, 8)
-    gui.StudsOffsetWorldSpace = Vector3.new(0, if kind == "Tree" then 12 else 5, 0)
-    gui.AlwaysOnTop = false
-    gui.Adornee = center
-    gui.Enabled = false
-    gui.Parent = model
-    local bg = Instance.new("Frame")
-    bg.Name = "Track"
-    bg.BackgroundColor3 = Color3.fromRGB(53, 57, 53)
-    bg.BorderSizePixel = 0
-    bg.Size = UDim2.fromScale(1,1)
-    bg.Parent = gui
-    local bar = Instance.new("Frame")
-    bar.Name = "Remaining"
-    bar.BackgroundColor3 = Color3.fromRGB(244, 181, 73)
-    bar.BorderSizePixel = 0
-    bar.Size = UDim2.fromScale(1,1)
-    bar.Parent = bg
+    model.PrimaryPart = core
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "Durability"
+    billboard.Adornee = core
+    billboard.Size = UDim2.fromOffset(86, 11)
+    billboard.StudsOffsetWorldSpace = Vector3.new(0, if kind == "Tree" then 11 else 4.6, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Enabled = false
+    billboard.Parent = model
+    local background = Instance.new("Frame")
+    background.Name = "Track"
+    background.Size = UDim2.fromScale(1, 1)
+    background.BackgroundColor3 = Color3.fromRGB(43, 47, 49)
+    background.BorderSizePixel = 0
+    background.Parent = billboard
+    local fill = Instance.new("Frame")
+    fill.Name = "Fill"
+    fill.Size = UDim2.fromScale(1, 1)
+    fill.BackgroundColor3 = Color3.fromRGB(239, 185, 65)
+    fill.BorderSizePixel = 0
+    fill.Parent = background
     return model
 end
 
-function World.hitNode(model, weapon)
-    if not model or not model.Parent or not model.PrimaryPart then return false, 0 end
-    local hp = model:GetAttribute("Health")
-    if typeof(hp) ~= "number" or hp <= 0 then return false, 0 end
-    -- Golpes base: redução de durabilidade por golpe (sem ferramentas inúteis).
-    local durabilityDamage = math.max(1, (weapon.gather or 1) - 1)
-    local remaining = math.max(0, hp - durabilityDamage)
-    model:SetAttribute("Health", remaining)
-    local ui = model:FindFirstChild("ResourceDurability")
-    if ui then
-        ui.Enabled = remaining > 0
-        local bg = ui:FindFirstChild("Track")
-        local fill = bg and bg:FindFirstChild("Remaining")
-        if fill then
-            fill.Size = UDim2.fromScale(remaining / math.max(1, model:GetAttribute("MaxHealth") or hp), 1)
-        end
+function World.hitNode(node)
+    if not node or not node.Parent or not node.PrimaryPart then return nil, false end
+    local kind = node:GetAttribute("Kind")
+    local stats = Config.ResourceTypes[kind]
+    if not stats then return nil, false end
+    local hp = node:GetAttribute("Health")
+    if typeof(hp) ~= "number" or hp <= 0 then return nil, false end
+    local remaining = math.max(0, hp - stats.damage)
+    node:SetAttribute("Health", remaining)
+    local billboard = node:FindFirstChild("Durability")
+    if billboard then
+        billboard.Enabled = remaining > 0
+        local track = billboard:FindFirstChild("Track")
+        local fill = track and track:FindFirstChild("Fill")
+        if fill then fill.Size = UDim2.fromScale(remaining / stats.hp, 1) end
     end
-    return remaining <= 0, remaining
+    return stats, remaining == 0
 end
 
 function World.create()
-    local old = workspace:FindFirstChild("RoMooWorld")
-    if old then old:Destroy() end
+    local prior = workspace:FindFirstChild("RoMooWorld")
+    if prior then prior:Destroy() end
+    local old = workspace:FindFirstChild("Baseplate")
+    if old and old:IsA("BasePart") and old.Anchored then old:Destroy() end
 
-    -- Remove apenas a Baseplate grande do template, evitando z-fighting.
-    local defaultBaseplate = workspace:FindFirstChild("Baseplate")
-    if defaultBaseplate and defaultBaseplate:IsA("BasePart")
-        and defaultBaseplate.Anchored and defaultBaseplate.Size.X >= 500
-        and defaultBaseplate.Size.Z >= 500 then
-        defaultBaseplate:Destroy()
-    end
-
+    local terrain = workspace.Terrain
+    terrain:Clear()
+    -- Materiais 3D nativos: nada de uma placa plana feita com Part.
+    pcall(function() terrain.Decoration = true end)
+    pcall(function() terrain.GrassLength = .75 end)
+    terrain:FillBlock(CFrame.new(0, -6, 0),
+        Vector3.new(Config.MapSize, 12, Config.MapSize), Enum.Material.Grass)
     local folder = Instance.new("Folder")
     folder.Name = "RoMooWorld"
     folder.Parent = workspace
-    local half = Config.MapSize / 2
+    createRiver(terrain, folder)
 
-    -- Terreno nativo Roblox: grama com vegetação animada, neve e areia.
-    local terrain = workspace.Terrain
-    terrain:Clear()
-    terrain.Decoration = true
-    terrain.GrassLength = .45
-    terrain:FillBlock(CFrame.new(0, -4, 0), Vector3.new(Config.MapSize, 8, Config.MapSize), Enum.Material.Grass)
-    -- Zonas visuais clássicas: norte frio, centro verde, sul desértico.
-    terrain:FillBlock(CFrame.new(0, -2, -half + 50),
-        Vector3.new(Config.MapSize - 18, 4, 88), Enum.Material.Snow)
-    terrain:FillBlock(CFrame.new(0, -2, half - 50),
-        Vector3.new(Config.MapSize - 18, 4, 88), Enum.Material.Sand)
-    -- Grade antiga opcional; visual padrão usa vegetação 3D autoral.
-    if Config.Decoration.ShowGrid then
-        -- Grade discreta que preserva a leitura do mapa visto de cima.
-        for x = -240, 240, 24 do
-            local line = part("GradeX", Vector3.new(0.09, 0.02, Config.MapSize),
-                Vector3.new(x, 0.12, 0), Color3.fromRGB(102, 133, 104), Enum.Material.SmoothPlastic, folder, nil, false)
-            line.Transparency = 0.55
-            line.CastShadow = false
+    -- Nas margens: pedras reais, espalhadas, sem colisão com o jogador.
+    for i = 1, 34 do
+        local x = rng:NextNumber(-Config.MapSize/2 + 12, Config.MapSize/2 - 12)
+        local side = if i % 2 == 0 then -1 else 1
+        local z = riverZ(x) + side * (Config.River.Width / 2 + rng:NextNumber(5, 12))
+        if math.abs(x) > Config.River.BridgeWidth + 9 then
+            makePart(folder, "PedraMargem", Vector3.new(1.3, .8, 1.7),
+                CFrame.new(x, .1, z) * CFrame.Angles(0, rng:NextNumber(-3, 3), 0),
+                Color3.fromRGB(145, 150, 142), Enum.Material.Slate,
+                {shape = Enum.PartType.Ball, query = false, shadow = false})
         end
-        for z = -240, 240, 24 do
-            local line = part("GradeZ", Vector3.new(Config.MapSize, 0.02, 0.09),
-                Vector3.new(0, 0.12, z), Color3.fromRGB(102, 133, 104), Enum.Material.SmoothPlastic, folder, nil, false)
-            line.Transparency = 0.55
-            line.CastShadow = false
-        end
-    
-    end
-
-    for _, wallData in ipairs({
-        {pos = Vector3.new(0, 10, -half), size = Vector3.new(Config.MapSize + 20, 20, 8)},
-        {pos = Vector3.new(0, 10, half), size = Vector3.new(Config.MapSize + 20, 20, 8)},
-        {pos = Vector3.new(-half, 10, 0), size = Vector3.new(8, 20, Config.MapSize + 20)},
-        {pos = Vector3.new(half, 10, 0), size = Vector3.new(8, 20, Config.MapSize + 20)},
-    }) do
-        part("LimiteDoMapa", wallData.size, wallData.pos, Color3.fromRGB(91, 122, 90), Enum.Material.Rock, folder, nil, true)
     end
 
     local spawn = Instance.new("SpawnLocation")
-    spawn.Name = "SpawnCentral"
-    spawn.Size = Vector3.new(20, 1, 20)
-    spawn.Position = Vector3.new(0, 0.5, 0)
+    spawn.Name = "Nascimento"
     spawn.Anchored = true
     spawn.Neutral = true
-    spawn.Duration = 5
-    spawn.Color = Color3.fromRGB(67, 151, 185)
-    spawn.Material = Enum.Material.SmoothPlastic
+    spawn.Duration = 2
+    spawn.Size = Vector3.new(10, 1, 10)
+    spawn.Position = Vector3.new(0, .6, -64)
+    spawn.Transparency = 1
+    spawn.CanCollide = false
     spawn.Parent = folder
 
-    local nodes = Instance.new("Folder")
-    nodes.Name = "Resources"
-    nodes.Parent = folder
-    local buildings = Instance.new("Folder")
-    buildings.Name = "Buildings"
-    buildings.Parent = folder
+    local resources = Instance.new("Folder")
+    resources.Name = "Resources"
+    resources.Parent = folder
 
-    local positions = {}
-    local kinds = { "Tree", "Tree", "Tree", "Rock", "Rock", "Gold", "Bush", "Bush" }
-    for _ = 1, Config.ResourceCount do
-        local chosen
-        for _try = 1, 40 do
-            local candidate = Vector3.new(random:NextInteger(-half + 24, half - 24), 0, random:NextInteger(-half + 24, half - 24))
-            local valid = candidate.Magnitude > 32
-            for _, existing in ipairs(positions) do
-                if (candidate - existing).Magnitude < 16 then
-                    valid = false
-                    break
-                end
-            end
-            if valid then
-                chosen = candidate
-                break
-            end
+    local spots = {}
+    local function add(kind, x, z)
+        local pos = Vector3.new(x, 0, z)
+        if not clearFromRiver(x, z) then return false end
+        if Vector2.new(x, z + 64).Magnitude < 11 then return false end
+        for _, other in ipairs(spots) do
+            if (other - pos).Magnitude < 16 then return false end
         end
-        if chosen then
-            table.insert(positions, chosen)
-            World.spawnNode(kinds[random:NextInteger(1, #kinds)], chosen, nodes)
+        table.insert(spots, pos)
+        World.spawnNode(kind, pos, resources)
+        return true
+    end
+
+    -- Recursos garantidos a curta distância do ponto inicial: teste imediato.
+    add("Tree", -19, -67)
+    add("Rock", 18, -72)
+    add("Gold", 5, -91)
+    add("Tree", -33, -94)
+    add("Rock", 30, -104)
+
+    local desired = {Tree = 25, Rock = 18, Gold = 8}
+    for kind, count in pairs(desired) do
+        for _ = 1, count do
+            for _try = 1, 90 do
+                local x = rng:NextInteger(-Config.MapSize/2 + 24, Config.MapSize/2 - 24)
+                local z = rng:NextInteger(-Config.MapSize/2 + 24, Config.MapSize/2 - 24)
+                if add(kind, x, z) then break end
+            end
         end
     end
 
-    -- Plantas e detalhes ficam separados dos recursos (não dão materiais).
-    WorldDecor.generate(folder, Config.MapSize, positions, Config.Decoration)
-
-    Lighting.ClockTime = 13.8
+    Lighting.ClockTime = 14
     Lighting.Brightness = 2.4
-    Lighting.Ambient = Color3.fromRGB(165, 174, 161)
-    Lighting.OutdoorAmbient = Color3.fromRGB(162, 171, 163)
+    Lighting.Ambient = Color3.fromRGB(158, 167, 167)
+    Lighting.OutdoorAmbient = Color3.fromRGB(179, 190, 177)
     Lighting.GlobalShadows = true
-    local atmosphere = Lighting:FindFirstChild("RoMooAtmosphere")
-    if not atmosphere then
-        atmosphere = Instance.new("Atmosphere")
-        atmosphere.Name = "RoMooAtmosphere"
-        atmosphere.Parent = Lighting
-    end
-    atmosphere.Density = 0.14
-    atmosphere.Offset = 0.2
-    atmosphere.Haze = 0.65
-    atmosphere.Glare = 0
-    atmosphere.Color = Color3.fromRGB(213, 231, 225)
+    local atmo = Lighting:FindFirstChild("RoMooAtmosphere") or Instance.new("Atmosphere")
+    atmo.Name = "RoMooAtmosphere"
+    atmo.Density = .2
+    atmo.Haze = .8
+    atmo.Color = Color3.fromRGB(208, 230, 239)
+    atmo.Parent = Lighting
 
-    return nodes, buildings
+    print("[RoMoo] Terrain nativo, rio com agua real, marreta e "
+        .. #resources:GetChildren() .. " recursos 3D.")
+    return resources
 end
 
 return World

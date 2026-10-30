@@ -1,23 +1,31 @@
 {
-  "name": "RoMoo io",
+  "name": "RoMoo io — teste de mundo 3D",
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
       "RoMoo": {
         "$className": "Folder",
-        "Shared": { "$path": "src/shared" }
+        "Shared": {"$path": "src/shared"}
       }
     },
     "ServerScriptService": {
       "$className": "ServerScriptService",
-      "RoMoo": { "$path": "src/server" }
+      "RoMoo": {
+        "$className": "Folder",
+        "Game": {"$path": "src/server/Game.server.luau"},
+        "World": {"$path": "src/server/World.luau"},
+        "Avatar": {"$path": "src/server/Avatar.luau"}
+      }
     },
     "StarterPlayer": {
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
-        "RoMooClient": { "$path": "src/client" }
+        "RoMooClient": {
+          "$className": "Folder",
+          "Client": {"$path": "src/client/Client.client.luau"}
+        }
       }
     }
   }
