@@ -2,6 +2,8 @@
 -- Adaptacao 3D do gerador de objects.lua e movimento.lua de Moo-IO (AGPL-3.0).
 return {
     MapSize = 520,
+    -- Prefere modelos do Creator Store oficial; fallback nativo sem rede.
+    NatureAssetsEnabled = true,
     Seed = 20261030,
     StartingWood = 0, StartingStone = 0, StartingGold = 0, StartingFood = 0,
     HitRange = 17, HitCooldown = .42, HitArcDot = .38,

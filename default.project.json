@@ -15,6 +15,7 @@
         "$className": "Folder",
         "Game": {"$path": "src/server/Game.server.luau"},
         "World": {"$path": "src/server/World.luau"},
+        "NatureAssets": {"$path": "src/server/NatureAssets.luau"},
         "Avatar": {"$path": "src/server/Avatar.luau"},
         "MapRules": {"$path": "src/server/MapRules.luau"},
         "RiverFlow": {"$path": "src/server/RiverFlow.luau"},

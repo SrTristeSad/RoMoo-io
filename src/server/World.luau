@@ -155,8 +155,22 @@ end
 
 local function importedResource(kind, model, pos)
     local library = ServerStorage:FindFirstChild("RoMooResourceModels")
-    local template = library and library:FindFirstChild(kind)
-    if not template or not template:IsA("Model") then return nil end
+    local entry = library and library:FindFirstChild(kind)
+    if not entry then return nil end
+    local template
+    if entry:IsA("Model") then
+        template = entry
+    elseif entry:IsA("Folder") then
+        local variants = {}
+        for _, child in ipairs(entry:GetChildren()) do
+            if child:IsA("Model") then table.insert(variants,child) end
+        end
+        if #variants == 0 then return nil end
+        table.sort(variants,function(a,b) return a.Name<b.Name end)
+        local hash = math.floor(math.abs(pos.X*17 + pos.Z*31))
+        template = variants[hash % #variants + 1]
+    end
+    if not template then return nil end
     local visual = template:Clone()
     visual.Name = "Visual3D"
     for _, item in ipairs(visual:GetDescendants()) do

@@ -12,7 +12,9 @@ local Melee = require(script.Parent:WaitForChild("Melee"))
 local Structures = require(script.Parent:WaitForChild("Structures"))
 local Progression = require(script.Parent:WaitForChild("Progression"))
 local SessionState = require(script.Parent:WaitForChild("SessionState"))
+local NatureAssets = require(script.Parent:WaitForChild("NatureAssets"))
 
+NatureAssets.prepare(Config)
 local resources = World.create()
 local world = resources.Parent
 local wolves = Wolves.start(world,resources)

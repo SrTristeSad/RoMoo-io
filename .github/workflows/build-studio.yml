@@ -154,7 +154,29 @@ jobs:
           assert 'Config.SpawnProtectionSeconds' in world
           assert 'RespawnReset' in client
           assert 'resetForNewLife' in state_test
+          nature = Path('src/server/NatureAssets.luau').read_text()
+          assert '"NatureAssets":' in project
+          assert 'NatureAssets.prepare(Config)' in game
+          assert 'AssetService:LoadAssetAsync(SOURCE_ID)' in nature
+          assert '6933438443' in nature
+          assert 'template = variants[hash % #variants + 1]' in world
           print('Moo-IO: recursos permanentes, rio sem pontes, biomas, limites, lobos 3D: OK')
+          PY
+
+      - name: Conferir origem e integridade dos novos GLB
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          files = sorted(Path('assets/nature').glob('*.glb'))
+          assert len(files) == 10, f'Esperados 10 GLB, recebidos {len(files)}'
+          for path in files:
+              data = path.read_bytes()
+              assert data[:4] == b'glTF', f'Formato inesperado: {path}'
+              assert struct.unpack_from('<I',data,4)[0] == 2, f'GLB v2 esperado: {path}'
+              assert struct.unpack_from('<I',data,8)[0] == len(data)
+          print('10 GLBs genuinos e validos como contêiner GLB 2.0')
           PY
 
       - name: Instalar Rojo 7.7.1
@@ -198,5 +220,32 @@ jobs:
         with:
           name: RoMoo-io-Teste-Roblox-Studio
           path: dist/RoMoo-io-Teste.rbxlx
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Criar pacote de modelos 3D para Roblox Studio
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          out=Path('dist/RoMoo-io-Modelos-3D.zip')
+          with ZipFile(out,'w',ZIP_DEFLATED,compresslevel=6) as z:
+              for folder in ('assets/nature','assets/animals'):
+                  for path in sorted(Path(folder).rglob('*')):
+                      if path.is_file():
+                          z.write(path)
+              for path in ('docs/ASSETS_3D.md','docs/IMPORTAR_ANIMAIS_3D.md',
+                           'scripts/OrganizarModelosNatureza-Studio.luau'):
+                  z.write(path)
+          assert out.stat().st_size>50000
+          print(out, out.stat().st_size)
+          PY
+
+      - name: Publicar pacote de modelos 3D
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoMoo-io-Modelos-3D
+          path: dist/RoMoo-io-Modelos-3D.zip
           if-no-files-found: error
           retention-days: 30
