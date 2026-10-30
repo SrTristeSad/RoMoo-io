@@ -76,6 +76,15 @@
 - [x] Atalho T para o item 14 da hotbar
 - [ ] Validação de flechas e pathing em dois clientes no Roblox Studio
 
+## 0.85 — Fauna 3D integrada ao jogo real (código implementado; teste pendente)
+- [x] Ativar sete espécies no place: vaca, porco, ovelha, touro, touro alfa, javali e yeti
+- [x] Evitar duplicar o lobo, que permanece no sistema próprio
+- [x] Integrar animais ao cone de mira, HUD, dano, comida, XP e respawn
+- [x] Corrigir surgimento/movimentação no rio; indexar obstáculos estáticos para reduzir custo de IA
+- [x] Permitir importar malhas 3D para Cow/Bull/Sheep (fallback procedural)
+- [x] Substituir smoke test antigo que exigia quebra de recursos por teste de coleta infinita
+- [ ] Validar todas as espécies, combate, FPS e respawn no Roblox Studio
+
 ## 0.9 — Multiplayer robusto
 - [ ] Integração de chat com políticas do Roblox, proteção de spawn
 - [ ] Exploits, colisões, ping e resistência a ataques automatizados

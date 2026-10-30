@@ -20,6 +20,7 @@ local eat = remotes:WaitForChild("Eat")
 local world = workspace:WaitForChild("RoMooWorld")
 local resources = world:WaitForChild("Resources")
 local wolves = world:WaitForChild("Wolves")
+local wildlife = world:WaitForChild("Animals")
 local buildings = world:WaitForChild("Buildings")
 local holding = false
 local previous = -1e8
@@ -29,7 +30,7 @@ local selectedMode = "Hammer"
 local clientRayParams = RaycastParams.new()
 clientRayParams.FilterType = Enum.RaycastFilterType.Include
 local function updateRayTargets()
-    local targets={resources,wolves,buildings}
+    local targets={resources,wolves,wildlife,buildings}
     for _,other in ipairs(Players:GetPlayers()) do
         if other~=player and other.Character then table.insert(targets,other.Character) end
     end
@@ -399,13 +400,14 @@ local function targetFromPointer()
     local hit = workspace:Raycast(ray.Origin, ray.Direction * 240, clientRayParams)
     local model = hit and hit.Instance:FindFirstAncestorOfClass("Model")
     while model and model.Parent ~= resources and model.Parent ~= wolves
-        and model.Parent ~= buildings and not Players:GetPlayerFromCharacter(model) do
+        and model.Parent ~= wildlife and model.Parent ~= buildings
+        and not Players:GetPlayerFromCharacter(model) do
         local parent = model.Parent
         if not parent then break end
         model = if parent:IsA("Model") then parent else parent:FindFirstAncestorOfClass("Model")
     end
     return if model and (model.Parent == resources or model.Parent == wolves
-        or model.Parent == buildings or (
+        or model.Parent == wildlife or model.Parent == buildings or (
             Players:GetPlayerFromCharacter(model) and model ~= player.Character))
         then model else nil
 end
@@ -714,6 +716,16 @@ RunService.RenderStepped:Connect(function()
         elseif target.Parent==wolves then
             hint.Text="LOBO • SEGURE PARA ATACAR"
             hover.OutlineColor=Color3.fromRGB(249,95,78)
+        elseif target.Parent==wildlife then
+            local displayNames={
+                Cow="VACA",Pig="PORCO",Sheep="OVELHA",Bull="TOURO",
+                Bully="TOURO ALFA",Boar="JAVALI",Yeti="YETI",
+            }
+            local hostile=target:GetAttribute("Hostile")
+            hint.Text=(displayNames[target.Name] or "ANIMAL")..
+                (if hostile then " • CUIDADO: HOSTIL" else " • PODE FUGIR")
+            hover.OutlineColor=if hostile then Color3.fromRGB(246,97,73)
+                else Color3.fromRGB(240,190,92)
         else
             hint.Text=(labels[target.Name] or "RECURSO").." • SEGURE PARA GOLPEAR"
             hover.OutlineColor=Color3.fromRGB(255,216,95)
@@ -821,7 +833,7 @@ feedback.OnClientEvent:Connect(function(kind, position, resourceKind, _broken)
     if typeof(position) ~= "Vector3" then return end
     local baseColor = if resourceKind == "Tree" then Color3.fromRGB(142, 102, 67)
         else if resourceKind == "Gold" then Color3.fromRGB(244, 196, 68)
-        else if resourceKind == "Wolf" then Color3.fromRGB(229, 96, 75)
+        else if resourceKind == "Wolf" or resourceKind == "Animal" then Color3.fromRGB(229, 96, 75)
         else if resourceKind == "Bush" then Color3.fromRGB(98, 185, 99)
         else Color3.fromRGB(156, 166, 170)
     local particles = 4

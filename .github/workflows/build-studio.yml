@@ -154,6 +154,20 @@ jobs:
           assert 'Config.SpawnProtectionSeconds' in world
           assert 'RespawnReset' in client
           assert 'resetForNewLife' in state_test
+          fauna = Path('src/server/Animals.luau').read_text()
+          fauna_models = Path('src/server/AnimalModels.luau').read_text()
+          fauna_test = Path('tests/StudioResource3DTest.luau').read_text()
+          assert '"Animals":' in project and '"AnimalModels":' in project
+          assert 'Animals.create(world,Config.MapSize)' in game
+          assert 'Animals.hit(candidate,weapon.wolfDamage)' in game
+          assert 'Melee.choose(root,facing,resources,wolves,Config,buildings,weapon,player,wildlife)' in game
+          assert 'model.Parent ~= wildlife' in melee
+          assert 'nearResource(point,58,true)' in fauna
+          assert 'Rules.isRiver(Config,point,10)' in fauna
+          assert 'local speciesOrder' in fauna and 'Wolf",' not in fauna.split('local speciesOrder = ')[1].split('}')[0]
+          assert 'Models.create(' in fauna_models
+          assert 'world:WaitForChild("Animals")' in client
+          assert 'FAUNA' in fauna_test
           nature = Path('src/server/NatureAssets.luau').read_text()
           assert '"NatureAssets":' in project
           assert 'NatureAssets.prepare(Config)' in game

@@ -14,20 +14,21 @@ function Melee.validDirection(aim)
     return horizontal.Unit
 end
 
-local function parentTarget(part, resources, animals, buildings, characters)
+local function parentTarget(part, resources, animals, buildings, characters, wildlife)
     local model = part:FindFirstAncestorOfClass("Model")
     while model and model.Parent ~= resources and model.Parent ~= animals
-        and model.Parent ~= buildings and not characters[model] do
+        and model.Parent ~= wildlife and model.Parent ~= buildings
+        and not characters[model] do
         local parent = model.Parent
         model = if parent and parent:IsA("Model") then parent
             else parent and parent:FindFirstAncestorOfClass("Model")
     end
     return if model and (model.Parent == resources or model.Parent == animals
-        or model.Parent == buildings or characters[model])
+        or model.Parent == wildlife or model.Parent == buildings or characters[model])
         then model else nil
 end
 
-function Melee.choose(root, direction, resources, animals, config, buildings, weapon, attacker)
+function Melee.choose(root, direction, resources, animals, config, buildings, weapon, attacker, wildlife)
     if not root or not root.Parent then return nil end
     local forward = Melee.validDirection(direction)
     if not forward then return nil end
@@ -36,6 +37,7 @@ function Melee.choose(root, direction, resources, animals, config, buildings, we
     overlap.FilterType = Enum.RaycastFilterType.Include
     local targets = {resources, animals}
     if buildings then table.insert(targets, buildings) end
+    if wildlife then table.insert(targets, wildlife) end
     -- Apenas personagens vivos, que nao sejam o autor do ataque.
     local characters = {}
     if attacker then
@@ -62,7 +64,7 @@ function Melee.choose(root, direction, resources, animals, config, buildings, we
     local best, lowest = nil, math.huge
     local parts = workspace:GetPartBoundsInRadius(origin, hitRange+3, overlap)
     for _, part in ipairs(parts) do
-        local model = parentTarget(part, resources, animals, buildings, characters)
+        local model = parentTarget(part, resources, animals, buildings, characters, wildlife)
         if model and not visited[model] and model.PrimaryPart then
             visited[model]=true
             local center = model.PrimaryPart.Position

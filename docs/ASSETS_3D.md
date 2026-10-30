@@ -64,8 +64,11 @@ ja existentes em `ServerStorage`.
 
 Leia `docs/IMPORTAR_ANIMAIS_3D.md`: o lobo real pode substituir o fallback
 quando seu modelo `Wolf` estiver em `ServerStorage/RoMooAnimalModels`.
-Os arquivos de vaca, touro e ovelha estao disponíveis para
-integracao posterior; a versão atual **nao gera automaticamente essas especies**.
+Vacas, touros e ovelhas agora **aparecem na partida**: o jogo utiliza as
+malhas reais desses animais quando importadas em ServerStorage, e modelos
+3D gerados com Parts como fallback enquanto a importacao nao tiver sido feita.
+Porcos, javalis, touro alfa e yeti tambem aparecem com modelos procedurais.
+O lobo continua com sistema independente de IA e comportamento.
 As animacoes dos GLTF/FBX tambem nao sao conectadas automaticamente a IA.
 
 ## O que a compilacao valida

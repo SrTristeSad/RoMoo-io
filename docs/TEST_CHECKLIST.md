@@ -81,6 +81,18 @@
 - [ ] Ao sair da partida, bases e moinhos do jogador desconectado sao removidos.
 - [ ] Rodar `tests/StudioSessionStateSmokeTest.luau` na Command Bar do servidor.
 
+## Fauna 3D integrada — sete novas especies (sem duplicar lobos)
+- [ ] Vaca, porco e ovelha aparecem no campo, com formas 3D visiveis.
+- [ ] Touro, touro alfa e javali perseguem; yeti aparece na neve.
+- [ ] Fauna nao nasce dentro do rio nem caminha atraves dele.
+- [ ] Rebanhos desviam de arvores, pedras e construcoes.
+- [ ] Segurar o ataque causa dano a vacas e outros animais, com alimento e XP no abate.
+- [ ] Animais mortos reaparecem apos 24 segundos sem duplicatas.
+- [ ] Lobo antigo permanece independente, com dano e espinhos inalterados.
+- [ ] Apos importar Cow/Bull/Sheep em ServerStorage/RoMooAnimalModels, a malha real e exibida.
+- [ ] Executar `tests/StudioResource3DTest.luau` na Command Bar do servidor.
+- [ ] Monitorar FPS com 2 clientes, mapa cheio e 20 ou mais animais.
+
 ## Combate e segurança
 - [ ] Golpe contra jogador/animal atrás de muralha não atravessa a parede.
 - [ ] Armadilha de lentidão reaplicada não deixa velocidade travada em 10.

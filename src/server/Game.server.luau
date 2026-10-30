@@ -6,6 +6,7 @@ local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Sha
 local World = require(script.Parent:WaitForChild("World"))
 local Avatar = require(script.Parent:WaitForChild("Avatar"))
 local Wolves = require(script.Parent:WaitForChild("Wolves"))
+local Animals = require(script.Parent:WaitForChild("Animals"))
 local RiverFlow = require(script.Parent:WaitForChild("RiverFlow"))
 local Boundaries = require(script.Parent:WaitForChild("Boundaries"))
 local Melee = require(script.Parent:WaitForChild("Melee"))
@@ -18,6 +19,7 @@ NatureAssets.prepare(Config)
 local resources = World.create()
 local world = resources.Parent
 local wolves = Wolves.start(world,resources)
+local wildlife = Animals.create(world,Config.MapSize)
 RiverFlow.start(Config)
 Boundaries.start(Config)
 local namespace = ReplicatedStorage:WaitForChild("RoMoo")
@@ -167,7 +169,7 @@ strike.OnServerEvent:Connect(function(player, aim)
     local now = os.clock()
     if now-profile.lastStrike<weapon.cooldown then return end
     profile.lastStrike=now
-    local candidate = Melee.choose(root,facing,resources,wolves,Config,buildings,weapon,player)
+    local candidate = Melee.choose(root,facing,resources,wolves,Config,buildings,weapon,player,wildlife)
     if not candidate then return end
     local core = candidate.PrimaryPart
     if not core then return end
@@ -195,6 +197,17 @@ strike.OnServerEvent:Connect(function(player, aim)
             feedback:FireAllClients("Impact",position,"Building",false)
         else
             feedback:FireClient(player,"Notice","Sua construcao esta protegida")
+        end
+        return
+    end
+    if candidate.Parent == wildlife then
+        local food,xp,killed = Animals.hit(candidate,weapon.wolfDamage)
+        feedback:FireAllClients("Impact",position,"Animal",false)
+        if killed then
+            profile.stock.Food += food
+            player:SetAttribute("Food",profile.stock.Food)
+            awardXP(player,profile,xp)
+            feedback:FireClient(player,"Gather",position,candidate.Name,food)
         end
         return
     end

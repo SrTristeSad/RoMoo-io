@@ -3,6 +3,8 @@
 local Players = game:GetService("Players")
 local ServerStorage = game:GetService("ServerStorage")
 local AnimalModels = require(script.Parent:WaitForChild("AnimalModels"))
+local Rules = require(script.Parent:WaitForChild("MapRules"))
+local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local Animals = {}
 local rng = Random.new(721)
 -- A seleção de espécies, o comportamento e as categorias têm como referência
@@ -19,8 +21,6 @@ local defs = {
         food = 60, xp = 90, count = 3, hostile = true, damage = 18},
     Bully = {sourceId = 3, color = Color3.fromRGB(87, 60, 52), health = 360, speed = 19,
         food = 90, xp = 120, count = 1, hostile = true, damage = 22},
-    Wolf = {sourceId = 4, color = Color3.fromRGB(126, 130, 139), health = 105, speed = 22,
-        food = 48, xp = 65, count = 4, hostile = true, damage = 13, biome = "Snow"},
     Boar = {sourceId = 9, color = Color3.fromRGB(127, 85, 68), health = 155, speed = 18,
         food = 45, xp = 60, count = 3, hostile = true, damage = 16},
     Yeti = {sourceId = 10, color = Color3.fromRGB(233, 241, 243), health = 470, speed = 13,
@@ -29,6 +29,48 @@ local defs = {
 local folder
 local states = {}
 local mapHalf = 260
+-- Lobos usam Wolves.start e seu proprio sistema de IA. Nao duplicar lobos.
+local speciesOrder = {"Cow","Pig","Sheep","Bull","Bully","Boar","Yeti"}
+-- Spatial hash estatico: os recursos do RoMoo nao desaparecem e nao
+-- precisam ser lidos 300 vezes por animal em cada tick de IA.
+local resourceGrid = {}
+local TILE = 18
+local function cell(x,z)
+    return tostring(math.floor(x/TILE))..":"..tostring(math.floor(z/TILE))
+end
+local function indexResources(world)
+    resourceGrid = {}
+    local resources = world:FindFirstChild("Resources")
+    if not resources then return end
+    for _,resource in ipairs(resources:GetChildren()) do
+        local core = resource.PrimaryPart
+        if core then
+            local point = core.Position
+            local key = cell(point.X,point.Z)
+            if not resourceGrid[key] then resourceGrid[key] = {} end
+            table.insert(resourceGrid[key],{
+                x=point.X, z=point.Z, blocks=core.CanCollide
+            })
+        end
+    end
+end
+local function nearResource(point,squaredDistance,blockingOnly)
+    local ix,iz = math.floor(point.X/TILE),math.floor(point.Z/TILE)
+    for dx=-1,1 do
+        for dz=-1,1 do
+            local entries=resourceGrid[tostring(ix+dx)..":"..tostring(iz+dz)]
+            if entries then
+                for _,item in ipairs(entries) do
+                    if not blockingOnly or item.blocks then
+                        local x,z=point.X-item.x,point.Z-item.z
+                        if x*x+z*z < squaredDistance then return true end
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
 
 -- Substitui os protótipos pelas malhas do Roblox Studio se o usuário importar
 -- os arquivos CC0 para ServerStorage/RoMooAnimalModels/<Cow|Bull|Wolf|Sheep>.
@@ -102,48 +144,37 @@ end
 -- Movimento por steering 2D: permite contornar árvores, rochas e
 -- construções sem PhysicConstraints em dezenas de criaturas.
 local function openSpace(point, ownModel)
+    if not Rules.insideMap(Config,point,20)
+        or Rules.isRiver(Config,point,10) then return false end
+    if nearResource(point,58,true) then return false end
     local world = folder and folder.Parent
-    if not world then return false end
-    local resources = world:FindFirstChild("Resources")
-    local buildings = world:FindFirstChild("Buildings")
-    if resources then
-        for _, model in ipairs(resources:GetChildren()) do
-            local root = model.PrimaryPart
-            if root and root.CanCollide then
-                local dx = root.Position.X - point.X
-                local dz = root.Position.Z - point.Z
-                if dx * dx + dz * dz < 58 then return false end
-            end
-        end
-    end
+    local buildings = world and world:FindFirstChild("Buildings")
     if buildings then
-        for _, model in ipairs(buildings:GetChildren()) do
-            local root = model.PrimaryPart
-            if root and root.CanCollide then
-                local dx = root.Position.X - point.X
-                local dz = root.Position.Z - point.Z
-                if dx * dx + dz * dz < 66 then return false end
+        for _,structure in ipairs(buildings:GetChildren()) do
+            local core=structure.PrimaryPart
+            if core and core.CanCollide then
+                local dx,dz=core.Position.X-point.X,core.Position.Z-point.Z
+                if dx*dx+dz*dz < 66 then return false end
             end
         end
     end
     return true
 end
 
-local function freeSpawnPoint(point)
-    local world = folder and folder.Parent
-    local resources = world and world:FindFirstChild("Resources")
-    if resources then
-        for _, node in ipairs(resources:GetChildren()) do
-            if node:IsA("Model") and node.PrimaryPart then
-                local offset = node.PrimaryPart.Position - point
-                if Vector2.new(offset.X, offset.Z).Magnitude < 12 then return false end
-            end
-        end
+local function freeSpawnPoint(point, kind)
+    if not Rules.insideMap(Config,point,22)
+        or Rules.isRiver(Config,point,14) then return false end
+    if kind == "Yeti" then
+        if not Rules.isSnow(Config,point) then return false end
+    elseif Rules.isSnow(Config,point) then
+        return false
     end
-    for _, animal in ipairs(folder:GetChildren()) do
-        if animal:IsA("Model") and animal.PrimaryPart then
-            local offset = animal.PrimaryPart.Position - point
-            if Vector2.new(offset.X, offset.Z).Magnitude < 10 then return false end
+    if nearResource(point,12*12,false) then return false end
+    for _,animal in ipairs(folder:GetChildren()) do
+        if animal.PrimaryPart then
+            local p=animal.PrimaryPart.Position
+            local x,z=p.X-point.X,p.Z-point.Z
+            if x*x+z*z < 10*10 then return false end
         end
     end
     return true
@@ -159,7 +190,8 @@ local function spawn(kind)
         local z = if def.biome == "Snow" then rng:NextInteger(-mapHalf + 18, -mapHalf + 82)
             else rng:NextInteger(-mapHalf + 40, mapHalf - 40)
         local candidate = Vector3.new(x, 3.6, z)
-        if Vector3.new(candidate.X, 0, candidate.Z).Magnitude > 40 and freeSpawnPoint(candidate) then
+        if Vector3.new(candidate.X, 0, candidate.Z).Magnitude > 70
+            and freeSpawnPoint(candidate,kind) then
             pos = candidate
             break
         end
@@ -170,7 +202,9 @@ local function spawn(kind)
     model.Name = kind
     model:SetAttribute("Kind", kind)
     model:SetAttribute("SourceTypeId", def.sourceId)
+    model:SetAttribute("Hostile", def.hostile)
     model:SetAttribute("Health", def.health)
+    model:SetAttribute("MaxHealth", def.health)
     model.Parent = folder
     local cf = CFrame.new(pos)
     local core = part("Core", Vector3.new(5.8, 4.5, 7.8), Vector3.zero,
@@ -217,7 +251,8 @@ local function directionToAnimal(animalPosition, maxDist)
         local char = player.Character
         local human = char and char:FindFirstChildOfClass("Humanoid")
         local root = char and char:FindFirstChild("HumanoidRootPart")
-        if human and root and human.Health > 0 then
+        if human and root and human.Health > 0
+            and not char:FindFirstChildOfClass("ForceField") then
             local delta = Vector3.new(root.Position.X - animalPosition.X, 0, root.Position.Z - animalPosition.Z)
             if delta.Magnitude < distance then
                 chosen, distance, hum = delta, delta.Magnitude, human
@@ -235,9 +270,12 @@ function Animals.create(world, mapSize)
     folder.Parent = world
     states = {}
     mapHalf = math.floor(mapSize / 2)
-    for kind, def in pairs(defs) do
+    indexResources(world)
+    for _,kind in ipairs(speciesOrder) do
+        local def=defs[kind]
         for _ = 1, def.count do spawn(kind) end
     end
+    print("[RoMoo FAUNA] Espécies ativas: vaca, porco, ovelha, touro, touro alfa, javali e yeti.")
 
     task.spawn(function()
         while folder and folder.Parent do
@@ -319,8 +357,10 @@ function Animals.create(world, mapSize)
 end
 
 function Animals.hit(model, damage)
+    if typeof(damage) ~= "number" or damage ~= damage
+        or damage <= 0 or damage > 1000 then return 0, 0, false end
     local state = states[model]
-    if not state or not model.Parent then return 0, 0, false end
+    if not state or model.Parent ~= folder then return 0, 0, false end
     state.health -= damage
     if not defs[state.kind].hostile then
         state.panicUntil = os.clock() + 3.3
