@@ -355,7 +355,7 @@ local function popupGather(position, kind, amount)
     if typeof(position) ~= "Vector3" or typeof(amount) ~= "number" then return end
     local camera = workspace.CurrentCamera
     if not camera then return end
-    local point, onScreen = camera:WorldToViewportPoint(position + Vector3.new(0, 5, 0))
+    local point, onScreen = camera:WorldToScreenPoint(position + Vector3.new(0, 5, 0))
     if not onScreen then return end
     local counter = Instance.new("TextLabel")
     counter.Name = "Coleta"

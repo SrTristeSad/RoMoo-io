@@ -63,7 +63,7 @@ jobs:
           assert 'Enum.Material.Leather' not in avatar, 'Material invalido na marreta'
           assert 'Enum.Material.Fabric' in avatar
           assert 'World.hitNode(candidate)' in game
-          assert 'ScreenPointToRay' in client and 'popupGather' in client
+          assert 'ViewportPointToRay' in client and 'popupGather' in client
           assert 'candidate:Destroy()' not in game
           assert 'for i = 1, 100 do' in tests
           assert 'BridgeXs = {-150, 0, 150}' in cfg
