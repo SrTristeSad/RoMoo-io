@@ -20,6 +20,7 @@
         "RiverFlow": {"$path": "src/server/RiverFlow.luau"},
         "Boundaries": {"$path": "src/server/Boundaries.luau"},
         "Wolves": {"$path": "src/server/Wolves.luau"},
+        "Melee": {"$path": "src/server/Melee.luau"},
         "CreatorAssets": {"$path": "src/server/CreatorAssets.luau"}
       }
     },

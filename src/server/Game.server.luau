@@ -8,6 +8,7 @@ local Avatar = require(script.Parent:WaitForChild("Avatar"))
 local Wolves = require(script.Parent:WaitForChild("Wolves"))
 local RiverFlow = require(script.Parent:WaitForChild("RiverFlow"))
 local Boundaries = require(script.Parent:WaitForChild("Boundaries"))
+local Melee = require(script.Parent:WaitForChild("Melee"))
 
 local resources = World.create()
 local world = resources.Parent
@@ -26,8 +27,34 @@ strike.Parent = remotes
 local feedback = Instance.new("RemoteEvent")
 feedback.Name = "Feedback"
 feedback.Parent = remotes
+local eat = Instance.new("RemoteEvent")
+eat.Name = "Eat"
+eat.Parent = remotes
 
+-- Cura somente no servidor: o cliente não pode inventar comida nem vida.
 local profiles = {}
+eat.OnServerEvent:Connect(function(player)
+    local profile = profiles[player]
+    local char = player.Character
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    if not profile or not humanoid or humanoid.Health <= 0 then return end
+    local now = os.clock()
+    if now - profile.lastEat < Config.EatCooldown then return end
+    if (profile.stock.Food or 0) < Config.EatCost then
+        feedback:FireClient(player, "Notice", "Precisa de " .. Config.EatCost .. " comidas para curar")
+        return
+    end
+    if humanoid.Health >= humanoid.MaxHealth then
+        feedback:FireClient(player, "Notice", "Vida ja esta cheia")
+        return
+    end
+    profile.lastEat = now
+    profile.stock.Food -= Config.EatCost
+    player:SetAttribute("Food", profile.stock.Food)
+    local before = humanoid.Health
+    humanoid.Health = math.min(humanoid.MaxHealth, before + Config.EatHeal)
+    feedback:FireClient(player,"Healed",math.floor(humanoid.Health-before+.5))
+end)
 
 local function distance2D(a, b)
     local dx, dz = a.X-b.X, a.Z-b.Z
@@ -40,60 +67,44 @@ local function validEquippedHammer(player, character)
         and player.Character == character
 end
 
-local function firstResourceOnPath(origin, destination)
-    local params = RaycastParams.new()
-    params.FilterType = Enum.RaycastFilterType.Include
-    params.FilterDescendantsInstances = {resources,wolves}
-    return workspace:Raycast(origin, destination - origin, params)
-end
+-- Os alvos são resolvidos por Melee.choose; nada de confiar no clique exato.
 
-strike.OnServerEvent:Connect(function(player, candidate)
+strike.OnServerEvent:Connect(function(player, aim)
     local profile = profiles[player]
-    if not profile or typeof(candidate) ~= "Instance" or not candidate:IsA("Model")
-        or (candidate.Parent ~= resources and candidate.Parent ~= wolves) then return end
+    if not profile then return end
+    local facing = Melee.validDirection(aim)
+    if not facing then return end
     local character = player.Character
     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
     local root = character and character:FindFirstChild("HumanoidRootPart")
     if not humanoid or not root or humanoid.Health <= 0
-        or not validEquippedHammer(player, character) then return end
-
+        or not validEquippedHammer(player,character) then return end
     local now = os.clock()
-    if now - profile.lastStrike < Config.HitCooldown then return end
+    if now-profile.lastStrike<Config.HitCooldown then return end
+    profile.lastStrike=now
+    local candidate = Melee.choose(root,facing,resources,wolves,Config)
+    if not candidate then return end
     local core = candidate.PrimaryPart
-    if not core or distance2D(root.Position, core.Position) > Config.HitRange then
-        feedback:FireClient(player, "Muito longe! Aproxime-se do recurso.")
-        return
-    end
-
-    -- O cliente pode sugerir um Model, mas não escolher recompensa nem distância.
-    -- Proibir acertar recursos através de outro recurso entre o jogador e o alvo.
-    local origin = root.Position + Vector3.new(0, 1, 0)
-    local hit = firstResourceOnPath(origin, core.Position)
-    if not hit or not hit.Instance:IsDescendantOf(candidate) then return end
-    profile.lastStrike = now
-
+    if not core then return end
+    local position = core.Position
     if candidate.Parent == wolves then
-        -- Animais possuem vida e podem morrer; recursos naturais permanecem eternos.
-        local killed = Wolves.hit(candidate, Config.Wolf.HammerDamage)
-        feedback:FireAllClients("Impact",core.Position,"Wolf",false)
+        local killed = Wolves.hit(candidate,Config.Wolf.HammerDamage)
+        feedback:FireAllClients("Impact",position,"Wolf",false)
         if killed then
-            profile.stock.Food += Config.Wolf.FoodOnKill
+            profile.stock.Food+=Config.Wolf.FoodOnKill
             player:SetAttribute("Food",profile.stock.Food)
-            feedback:FireClient(player,"Gather",core.Position,"Wolf",Config.Wolf.FoodOnKill)
+            feedback:FireClient(player,"Gather",position,"Wolf",Config.Wolf.FoodOnKill)
         end
         return
     end
-
-    -- Arvores, arbustos, pedras e ouro NUNCA sao destruídos.
+    -- Recursos naturais nunca têm HP nem são destruídos.
     local stats = World.hitNode(candidate)
     if not stats then return end
-
     local key = stats.inventory
-    profile.stock[key] += stats.yield
-    player:SetAttribute(key, profile.stock[key])
-    -- Resposta privada confirma a recompensa; impacto público é somente visual.
-    feedback:FireClient(player, "Gather", core.Position, candidate:GetAttribute("Kind"), stats.yield)
-    feedback:FireAllClients("Impact", core.Position, candidate:GetAttribute("Kind"), false)
+    profile.stock[key]+=stats.yield
+    player:SetAttribute(key,profile.stock[key])
+    feedback:FireClient(player,"Gather",position,candidate:GetAttribute("Kind"),stats.yield)
+    feedback:FireAllClients("Impact",position,candidate:GetAttribute("Kind"),false)
 end)
 
 local function characterReady(player, character)
@@ -110,6 +121,7 @@ local function playerAdded(player)
             Gold = Config.StartingGold, Food = Config.StartingFood,
         },
         lastStrike = -1e8,
+        lastEat = -1e8,
     }
     player:SetAttribute("Wood", Config.StartingWood)
     player:SetAttribute("Stone", Config.StartingStone)

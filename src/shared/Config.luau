@@ -4,7 +4,9 @@ return {
     MapSize = 520,
     Seed = 20261030,
     StartingWood = 0, StartingStone = 0, StartingGold = 0, StartingFood = 0,
-    HitRange = 17, HitCooldown = .42,
+    HitRange = 17, HitCooldown = .42, HitArcDot = .38,
+    -- Alimento cura vida, como nas mecânicas clássicas.
+    EatCost = 10, EatHeal = 32, EatCooldown = 1.25,
     -- Original: areaCount=7, treesPerArea=9, bushesPerArea=3,
     -- totalRocks=32, goldOres=7 num mapa 14400; quantidades reduzidas
     -- ou adaptadas para modelos 3D no Roblox.

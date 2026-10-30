@@ -1,0 +1,72 @@
+--!nonstrict
+-- Combate corpo a corpo 3D inspirado no cone de golpes do Moo-IO.
+-- O cliente envia apenas o vetor de mira. O servidor resolve o alvo
+-- usando alcance, angulo e bloqueio. Regras testaveis sem eventos de rede.
+local Melee = {}
+
+function Melee.validDirection(aim)
+    if typeof(aim) ~= "Vector3" then return nil end
+    if aim.X ~= aim.X or aim.Y ~= aim.Y or aim.Z ~= aim.Z then return nil end
+    if math.abs(aim.X)>2 or math.abs(aim.Z)>2 or math.abs(aim.Y)>.2 then return nil end
+    local horizontal = Vector3.new(aim.X,0,aim.Z)
+    if horizontal.Magnitude<.7 or horizontal.Magnitude>1.5 then return nil end
+    return horizontal.Unit
+end
+
+local function parentTarget(part, resources, animals)
+    local model = part:FindFirstAncestorOfClass("Model")
+    while model and model.Parent ~= resources and model.Parent ~= animals do
+        local parent = model.Parent
+        model = if parent and parent:IsA("Model") then parent
+            else parent and parent:FindFirstAncestorOfClass("Model")
+    end
+    return if model and (model.Parent == resources or model.Parent == animals)
+        then model else nil
+end
+
+function Melee.choose(root, direction, resources, animals, config)
+    if not root or not root.Parent then return nil end
+    local forward = Melee.validDirection(direction)
+    if not forward then return nil end
+
+    local overlap = OverlapParams.new()
+    overlap.FilterType = Enum.RaycastFilterType.Include
+    overlap.FilterDescendantsInstances = {resources, animals}
+    overlap.MaxParts = 120
+
+    local sight = RaycastParams.new()
+    sight.FilterType = Enum.RaycastFilterType.Include
+    sight.FilterDescendantsInstances = {resources, animals}
+
+    local origin = root.Position
+    local visited = {}
+    local best, lowest = nil, math.huge
+    local parts = workspace:GetPartBoundsInRadius(origin, config.HitRange+3, overlap)
+    for _, part in ipairs(parts) do
+        local model = parentTarget(part, resources, animals)
+        if model and not visited[model] and model.PrimaryPart then
+            visited[model]=true
+            local center = model.PrimaryPart.Position
+            local delta = Vector3.new(center.X-origin.X,0,center.Z-origin.Z)
+            local distance = delta.Magnitude
+            if distance>.3 and distance<=config.HitRange
+                and math.abs(center.Y-origin.Y)<11 then
+                local alignment = delta.Unit:Dot(forward)
+                if alignment >= (config.HitArcDot or .38) then
+                    local eye = origin + Vector3.new(0,.9,0)
+                    local result = workspace:Raycast(eye,center-eye,sight)
+                    if not result or result.Instance:IsDescendantOf(model) then
+                        local score = distance + (1-alignment)*9
+                        if score<lowest then
+                            lowest=score
+                            best=model
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return best
+end
+
+return Melee

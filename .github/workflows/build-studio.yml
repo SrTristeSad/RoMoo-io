@@ -61,6 +61,7 @@ jobs:
           tests = Path('tests/StudioWorldSmokeTest.luau').read_text()
           river = Path('src/server/RiverFlow.luau').read_text()
           wolf = Path('src/server/Wolves.luau').read_text()
+          melee = Path('src/server/Melee.luau').read_text()
           project = Path('default.project.json').read_text()
           rules = Path('src/server/MapRules.luau').read_text()
           assert 'Enum.Material.Leather' not in avatar
@@ -81,6 +82,14 @@ jobs:
           assert 'Rules.canPlaceTree' in world
           assert 'function Wolves.hit(' in wolf
           assert '"Wolves":' in project and '"MapRules":' in project
+          assert '"Melee":' in project and 'Melee.choose' in game
+          assert 'function Melee.validDirection' in melee
+          assert 'GetPartBoundsInRadius' in melee
+          assert 'strike:FireServer(direction.Unit)' in client
+          assert 'eat.OnServerEvent:Connect' in game
+          assert 'EatCost = 10' in cfg and 'EatHeal = 32' in cfg
+          assert 'HealthFill' in client and 'KeyCode.Q' in client
+          assert 'obstacleCells' in wolf and 'packTarget' in wolf
           assert 'RoMooCameraAndAim' in client
           assert 'hover.Enabled = false' in client
           assert 'humanoid.AutoRotate = false' in avatar

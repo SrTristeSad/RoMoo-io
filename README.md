@@ -10,7 +10,9 @@
 - **Rio central, reto, sem pontes**, água real do Terrain, espuma deslocando para **+X**, corrente física que empurra o jogador e reduz sua velocidade de natação.
 - **Limites físicos invisíveis** em todas as extremidades e salvamento pelo servidor de jogadores que caírem fora do terreno.
 - **Árvores, arbustos com frutas, pedras e minérios de ouro não quebram jamais**: cada golpe da marreta concede madeira, comida, pedra ou ouro, sem durabilidade ou respawn.
-- **Lobos hostis 3D**, id de referência 4 do Moo-IO. Perseguem jogadores, atacam de perto, têm barra de vida, podem ser derrotados e reaparecem posteriormente.
+- **Lobos hostis 3D**, ID 4 do Moo-IO. Perseguem jogadores, compartilham alertas entre membros da matilha, contornam obstáculos por índice espacial, atacam de perto, têm barra de vida, podem morrer e reaparecem.
+- **Golpes por direção, como no MooMoo.io**: clique/segure com a marreta; o servidor encontra o alvo no alcance e no cone frontal, sem exigir clicar exatamente na superfície de cada árvore ou lobo. Envie apenas o vetor de mira (controle validado no servidor).
+- **Cura com comida:** pressione **Q** ou o botão **CURAR** no celular; gaste 10 alimentos e recupere até 32 de vida. O servidor valida saldo, vida e intervalo de 1,25 s; há uma barra de vida compacta no HUD.
 - **Modelos alternativos de árvores/lobos da Creator Store** disponíveis para importar pelo Studio; a geometria procedural padrão mantém o jogo funcionando sem download ou compra de malhas.
 - HUD compacta para madeira, pedra, ouro e comida; destaque do alvo e recompensa flutuante por golpe.
 - Regras e recompensas verificadas no servidor, não calculadas pelo cliente.
@@ -20,10 +22,10 @@
 1. Abra a [compilação mais recente no GitHub Actions](https://github.com/SrTristeSad/RoMoo-io/actions/workflows/build-studio.yml).
 2. Baixe o artefato **RoMoo-io-Teste-Roblox-Studio** da execução mais recente aprovada.
 3. Extraia `RoMoo-io-Teste.rbxlx` e abra no Roblox Studio.
-4. Pressione **F5**. Use WASD para mover, mouse para mirar, clique/segurar para usar a marreta.
+4. Pressione **F5**. Use WASD para mover, mouse para apontar e clique/segure para golpear **na direção do mouse**, mesmo sem clicar exatamente sobre um objeto. Colete frutas nos arbustos e pressione Q para curar a vida perdida contra lobos.
 5. Encontre o rio horizontal, entre na água para sentir a corrente; tente andar além do limite do mapa; enfrente lobos.
 
-Teste da geração: `tests/StudioWorldSmokeTest.luau` no Command Bar **do servidor** durante Play.
+Teste do mapa: `tests/StudioWorldSmokeTest.luau`. Teste de combate e cura: `tests/StudioMeleeHealingSmokeTest.luau`. Execute ambos na Command Bar **do servidor** durante Play.
 
 ## Modelos 3D disponíveis na Creator Store (importação opcional)
 
@@ -48,7 +50,8 @@ Os modelos são armazenados em `ServerStorage/RoMooResourceModels/Tree` e `Serve
 - `src/server/Boundaries.luau` — proteção física e recuperação nas bordas.
 - `src/server/Wolves.luau` — modelos 3D e IA hostil.
 - `src/server/CreatorAssets.luau` — importação opcional segura da Creator Store.
-- `src/server/Game.server.luau` — marreta, coleta, vida dos lobos e inventário.
+- `src/server/Game.server.luau` — processamento de golpes, coleta, cura, lobos e inventário.
+- `src/server/Melee.luau` — teste de mira, cone de golpe, distância e oclusão pelo servidor.
 - `src/server/Avatar.luau` — avatar e Tool.
 - `src/client/Client.client.luau` — mira do mouse, câmera 3D, HUD e efeitos.
 - `docs/COMO_TESTAR.md` — checklist de teste.

@@ -2,12 +2,13 @@
 
 1. Baixe o ZIP da última compilação verde em GitHub Actions, extraia `RoMoo-io-Teste.rbxlx` e abra no Roblox Studio.
 2. Pressione **F5**. O jogo deve exibir personagem R15 com marreta, várias árvores e arbustos, pedras e ouro.
-3. Use **WASD**, mova o **mouse para mirar**, segure o clique para coletar. Árvores, arbustos, pedras e ouro **não quebram**, não têm vida nem respawn.
+3. Use **WASD**, mova o **mouse para mirar**, segure clique esquerdo para golpear. **Não precisa acertar exatamente o pixel da árvore:** o servidor escolhe um alvo à frente dentro do alcance. Árvores, arbustos, pedras e ouro **não quebram**, não têm vida nem respawn.
 4. Siga até o centro do mapa. Atravesse o **rio sem ponte** nadando; a água empurra para a **direita do mapa (+X)** e diminui a velocidade.
 5. Explore o norte nevado e o sul desértico. A neve desacelera o jogador.
 6. Ande até a borda: paredes invisíveis devem impedir que o personagem caia. Se algo o derrubar abaixo do mapa, o servidor o reposiciona.
-7. Encontre lobos. Eles possuem corpo 3D, perseguem, atacam e podem ser derrotados com a marreta (não são recursos permanentes).
-8. No Command Bar do **servidor** em Play, execute `tests/StudioWorldSmokeTest.luau`. Verifique mensagens PASS e o painel **Saída**.
+7. Encontre lobos. Eles possuem corpo 3D, perseguem, **avisam lobos próximos**, atacam e podem ser derrotados com a marreta. Ao morrerem, fornecem comida. **Os lobos são criaturas, não recursos naturais permanentes.**
+8. Após perder vida para um lobo, colete comida nos arbustos e pressione **Q** para curar (10 comidas, até 32 pontos de vida, intervalo de 1,25 s). No celular, use **CURAR**.
+9. No Command Bar do **servidor** em Play, execute `tests/StudioWorldSmokeTest.luau` e `tests/StudioMeleeHealingSmokeTest.luau`. Verifique mensagens PASS e o painel **Saída**.
 
 ## Modelos gratuitos da Creator Store (opcionais)
 
@@ -33,7 +34,10 @@ Depois salve o place no Studio. **O ZIP pronto não incorpora automaticamente ma
 - [ ] Pelo menos ~170 árvores e ~45 arbustos distribuídos em setores.
 - [ ] Pedras e ouro também podem aparecer no rio.
 - [ ] Quatro limites invisíveis impedem sair do mapa.
-- [ ] Lobos 3D aparecem e perseguem jogadores.
+- [ ] Lobos 3D aparecem, perseguem, avisam a matilha e desviam de árvores.
+- [ ] Golpes direcionais acertam recursos mesmo sem clique exato na malha, mas não alcançam alvos atrás/fora do cone.
+- [ ] Q consome 10 alimentos e cura até 32 de vida; botão CURAR também funciona no celular.
+- [ ] HUD mostra vida atual e máxima.
 - [ ] Modelos naturais dão recursos indefinidamente.
 - [ ] Câmera em terceira pessoa e mouse para mirar.
 - [ ] Sem erros vermelhos no console.

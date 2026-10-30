@@ -14,6 +14,35 @@ local folder=nil
 local states={}
 local mapResources=nil
 local running=false
+-- Spatial hash estático: recursos naturais não somem no MooMoo.io.
+-- Evita examinar centenas de partes a cada passo de cada lobo.
+local obstacleCells = {}
+local obstacleTile = 15
+local function cellIndex(v)
+    return math.floor(v/obstacleTile)
+end
+local function cellKey(x,z)
+    return tostring(x)..":"..tostring(z)
+end
+local function indexObstacles(resources)
+    obstacleCells={}
+    local total=0
+    for _,node in ipairs(resources:GetChildren()) do
+        local kind=node:GetAttribute("Kind")
+        local part=node.PrimaryPart
+        if part and (kind=="Tree" or kind=="Rock" or kind=="Gold") then
+            local position=part.Position
+            local key=cellKey(cellIndex(position.X),cellIndex(position.Z))
+            if not obstacleCells[key] then obstacleCells[key]={} end
+            table.insert(obstacleCells[key],{
+                point=position,
+                radius=if kind=="Tree" then 4.8 else 5.2,
+            })
+            total+=1
+        end
+    end
+    print("[RoMoo Lobos] Obstaculos indexados: "..total)
+end
 
 local function part(model,name,size,offset,color,shape)
     local p=Instance.new("Part")
@@ -98,16 +127,19 @@ local function imported(model,cf)
 end
 
 local function blockedByNaturalResource(position)
-    if not mapResources then return false end
-    for _,node in ipairs(mapResources:GetChildren()) do
-        local kind=node:GetAttribute("Kind")
-        if kind=="Tree" or kind=="Rock" or kind=="Gold" then
-            local center=node.PrimaryPart
-            if center then
-                local dx=center.Position.X-position.X
-                local dz=center.Position.Z-position.Z
-                local radius=if kind=="Tree" then 4.8 else 5.2
-                if dx*dx+dz*dz<radius*radius then return true end
+    local cx=cellIndex(position.X)
+    local cz=cellIndex(position.Z)
+    for ix=cx-1,cx+1 do
+        for iz=cz-1,cz+1 do
+            local cell=obstacleCells[cellKey(ix,iz)]
+            if cell then
+                for _,object in ipairs(cell) do
+                    local dx=object.point.X-position.X
+                    local dz=object.point.Z-position.Z
+                    if dx*dx+dz*dz<object.radius*object.radius then
+                        return true
+                    end
+                end
             end
         end
     end
@@ -155,7 +187,8 @@ local function spawn()
     model:SetAttribute("MaxHealth",Config.Wolf.Health)
     model.Parent=folder
     local cf=CFrame.new(point)
-    local core=part(model,"Core",Vector3.new(3.9,3.0,5.3),cf,
+    -- Hitbox ampliada para incluir cabeça, focinho e cauda 3D.
+    local core=part(model,"Core",Vector3.new(4.7,5.2,10.3),cf,
         Color3.fromRGB(129,132,135))
     core.Transparency=1
     core.CanQuery=true
@@ -189,7 +222,7 @@ local function spawn()
 end
 
 local function nearestPlayer(position)
-    local target,distance,hum=nil,Config.Wolf.DetectionRadius,nil
+    local target,distance,hum,bestRoot=nil,Config.Wolf.DetectionRadius,nil,nil
     for _,player in ipairs(Players:GetPlayers()) do
         local char=player.Character
         local human=char and char:FindFirstChildOfClass("Humanoid")
@@ -197,11 +230,11 @@ local function nearestPlayer(position)
         if root and human and human.Health>0 and not char:FindFirstChildOfClass("ForceField") then
             local delta=Vector3.new(root.Position.X-position.X,0,root.Position.Z-position.Z)
             if delta.Magnitude<distance then
-                target,distance,hum=delta,delta.Magnitude,human
+                target,distance,hum,bestRoot=delta,delta.Magnitude,human,root
             end
         end
     end
-    return target,distance,hum
+    return target,distance,hum,bestRoot
 end
 
 function Wolves.hit(model,damage)
@@ -231,6 +264,7 @@ function Wolves.start(world,resources)
     if running then return folder end
     running=true
     mapResources=resources
+    indexObstacles(resources)
     folder=Instance.new("Folder")
     folder.Name="Wolves"
     folder.Parent=world
@@ -245,7 +279,38 @@ function Wolves.start(world,resources)
                     continue
                 end
                 local position=model.PrimaryPart.Position
-                local delta,distance,hum=nearestPlayer(position)
+                local delta,distance,hum,targetRoot=nearestPlayer(position)
+                if targetRoot then
+                    state.packTarget=targetRoot
+                    state.packUntil=now+2.8
+                else
+                    -- Um lobo pode seguir por alguns segundos o alvo
+                    -- alertado por outro lobo próximo.
+                    local sharedTarget=nil
+                    for other,ally in pairs(states) do
+                        if other~=model and other.PrimaryPart and ally.packTarget
+                            and ally.packTarget.Parent and ally.packUntil
+                            and now<ally.packUntil
+                            and (other.PrimaryPart.Position-position).Magnitude<32 then
+                            sharedTarget=ally.packTarget
+                            break
+                        end
+                    end
+                    if sharedTarget then
+                        state.packTarget=sharedTarget
+                        state.packUntil=now+2
+                        local shift=sharedTarget.Position-position
+                        delta=Vector3.new(shift.X,0,shift.Z)
+                        distance=delta.Magnitude
+                        hum=sharedTarget.Parent:FindFirstChildOfClass("Humanoid")
+                    elseif state.packTarget and state.packTarget.Parent
+                        and state.packUntil and now<state.packUntil then
+                        local shift=state.packTarget.Position-position
+                        delta=Vector3.new(shift.X,0,shift.Z)
+                        distance=delta.Magnitude
+                        hum=state.packTarget.Parent:FindFirstChildOfClass("Humanoid")
+                    end
+                end
                 local dir=state.wander
                 local speed=Config.Wolf.WanderSpeed
                 if delta and delta.Magnitude>.1 then

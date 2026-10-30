@@ -20,3 +20,9 @@ Fonte do usuário: `SrTristeSad/ToonRoyale-Assets/android/server-lua/world/objec
 **Nota de fidelidade:** trata-se de um port adaptado do gerador, não uma cópia 1:1 de todos os números, distâncias, criaturas ou regras originais. O rio usa água visual/colisão nativa e fluxo por física em Luau. Nenhuma ponte existe nesta fase.
 
 Árvores, arbustos, rochas e ouro são recursos naturais permanentes; lobos são criaturas com vida e podem reaparecer.
+
+## Atualização de combate e matilha
+- A seleção exata de modelos por clique foi substituída por um cone de golpe (posição do avatar + direção do cursor) resolvido e validado no servidor Roblox.
+- O lobo mantém a IA hostil e agora compartilha perseguição por alguns segundos com vizinhos próximos, usando agrupamento de alvos; não é uma reprodução completa de todos os comportamentos do `wolf_pack.lua`.
+- Árvores e pedras são indexadas em uma grade espacial para consulta rápida de colisões dos lobos, já que esses recursos não desaparecem.
+- Comida coletada ou obtida ao caçar pode curar, enquanto a vida do personagem é gerenciada pelo Humanoid e validada no servidor.

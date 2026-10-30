@@ -13,6 +13,7 @@ local mouse = player:GetMouse()
 local remotes = ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Remotes")
 local strike = remotes:WaitForChild("Strike")
 local feedback = remotes:WaitForChild("Feedback")
+local eat = remotes:WaitForChild("Eat")
 local world = workspace:WaitForChild("RoMooWorld")
 local resources = world:WaitForChild("Resources")
 local wolves = world:WaitForChild("Wolves")
@@ -111,9 +112,47 @@ hint.BorderSizePixel = 0
 hint.TextColor3 = Color3.fromRGB(247, 248, 239)
 hint.Font = Enum.Font.GothamMedium
 hint.TextSize = 14
-hint.Text = "WASD: andar  |  Mouse: mirar  |  Direito: camera  |  Clique: coletar"
+hint.Text = "WASD: andar | Mouse: mirar | Clique: golpear | Q: curar"
 hint.Parent = ui
 rounded(hint, 8)
+
+-- Barra de vida essencial ao enfrentar lobos.
+local healthPanel = Instance.new("Frame")
+healthPanel.Name = "Vida"
+healthPanel.AnchorPoint = Vector2.new(0,1)
+healthPanel.Position = UDim2.new(0,14,1,-103)
+healthPanel.Size = UDim2.fromOffset(190,32)
+healthPanel.BackgroundColor3 = Color3.fromRGB(32,44,41)
+healthPanel.BackgroundTransparency = .13
+healthPanel.BorderSizePixel = 0
+healthPanel.Parent = ui
+rounded(healthPanel,7)
+local hpBarBack = Instance.new("Frame")
+hpBarBack.Name = "HealthTrack"
+hpBarBack.Position = UDim2.fromOffset(7,21)
+hpBarBack.Size = UDim2.new(1,-14,0,6)
+hpBarBack.BackgroundColor3 = Color3.fromRGB(78,74,74)
+hpBarBack.BorderSizePixel = 0
+hpBarBack.Parent = healthPanel
+rounded(hpBarBack,4)
+local hpBar = Instance.new("Frame")
+hpBar.Name = "HealthFill"
+hpBar.Size = UDim2.fromScale(1,1)
+hpBar.BackgroundColor3 = Color3.fromRGB(82,196,98)
+hpBar.BorderSizePixel = 0
+hpBar.Parent = hpBarBack
+rounded(hpBar,4)
+local hpText = Instance.new("TextLabel")
+hpText.Name = "HealthText"
+hpText.Size = UDim2.new(1,-14,0,18)
+hpText.Position = UDim2.fromOffset(7,2)
+hpText.BackgroundTransparency = 1
+hpText.TextColor3 = Color3.fromRGB(245,247,237)
+hpText.TextSize = 13
+hpText.Font = Enum.Font.GothamBold
+hpText.TextXAlignment = Enum.TextXAlignment.Left
+hpText.Text = "VIDA 100/100"
+hpText.Parent = healthPanel
 
 local hover = Instance.new("Highlight")
 hover.Name = "RecursoSelecionado"
@@ -197,20 +236,25 @@ end
 local function attack()
     local character = player.Character
     local tool = character and character:FindFirstChild("Marreta")
-    if not tool then return end
+    local root = getRoot()
+    if not tool or not root then return end
     local now = os.clock()
     if now - previous < cooldown then return end
-    local target = targetFromPointer()
-    if target then
-        previous = now
-        -- Animar cada golpe, inclusive quando o botão fica pressionado.
-        local anim = Instance.new("StringValue")
-        anim.Name = "toolanim"
-        anim.Value = "Slash"
-        anim.Parent = tool
-        Debris:AddItem(anim, toolAnimationExpiry)
-        strike:FireServer(target)
-    end
+    -- Mira envia apenas DIRECAO, nunca Model, HP ou recompensa.
+    -- O servidor procura recursos/lobos no cone frontal.
+    local direction = cursorDirection(root)
+    if not direction or direction.Magnitude < .7 then return end
+    previous = now
+    local anim = Instance.new("StringValue")
+    anim.Name = "toolanim"
+    anim.Value = "Slash"
+    anim.Parent = tool
+    Debris:AddItem(anim, toolAnimationExpiry)
+    strike:FireServer(direction.Unit)
+end
+
+local function consumeFood()
+    eat:FireServer()
 end
 
 local connectedTools = setmetatable({}, {__mode = "k"})
@@ -223,6 +267,18 @@ local function characterAdded(char)
     holding = false
     local humanoid = char:WaitForChild("Humanoid", 10)
     if humanoid then
+        local function refreshHP()
+            local maxHP=math.max(1,humanoid.MaxHealth)
+            local ratio=math.clamp(humanoid.Health/maxHP,0,1)
+            hpText.Text=("VIDA %d/%d"):format(math.ceil(humanoid.Health),math.ceil(maxHP))
+            hpBar.Size=UDim2.fromScale(ratio,1)
+            hpBar.BackgroundColor3=if ratio<.33 then Color3.fromRGB(215,75,66)
+                else if ratio<.65 then Color3.fromRGB(228,169,68)
+                else Color3.fromRGB(82,196,98)
+        end
+        humanoid.HealthChanged:Connect(refreshHP)
+        humanoid:GetPropertyChangedSignal("MaxHealth"):Connect(refreshHP)
+        refreshHP()
         humanoid.AutoRotate = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
         cameraWasInitialized = false
         local camera = workspace.CurrentCamera
@@ -243,6 +299,7 @@ UserInputService.InputBegan:Connect(function(input, consumed)
         return
     end
     if consumed then return end
+    if input.KeyCode == Enum.KeyCode.Q then consumeFood() end
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         holding = true
     end
@@ -298,6 +355,19 @@ if UserInputService.TouchEnabled then
     button.Parent = ui
     rounded(button, 13)
     button.Activated:Connect(attack)
+    local healButton=Instance.new("TextButton")
+    healButton.Name="Curar"
+    healButton.AnchorPoint=Vector2.new(1,1)
+    healButton.Position=UDim2.new(1,-20,1,-166)
+    healButton.Size=UDim2.fromOffset(96,55)
+    healButton.Text="CURAR"
+    healButton.TextColor3=Color3.new(1,1,1)
+    healButton.Font=Enum.Font.GothamBold
+    healButton.TextSize=15
+    healButton.BackgroundColor3=Color3.fromRGB(84,152,90)
+    healButton.Parent=ui
+    rounded(healButton,12)
+    healButton.Activated:Connect(consumeFood)
 end
 
 
@@ -341,17 +411,17 @@ RunService.RenderStepped:Connect(function()
         hover.Adornee = target
         hover.Enabled = true
         hint.Text = if target.Parent == wolves then "LOBO • SEGURE PARA ATACAR"
-            else (labels[target.Name] or "RECURSO") .. " • SEGURE PARA COLETAR"
+            else (labels[target.Name] or "RECURSO") .. " • SEGURE PARA GOLPEAR"
         hover.OutlineColor = if target.Parent == wolves
             then Color3.fromRGB(249,95,78) else Color3.fromRGB(255,216,95)
     elseif target then
         hover.Enabled = false
         hover.Adornee = nil
-        hint.Text = "Aproxime-se para coletar " .. (labels[target.Name] or "recurso")
+        hint.Text = "Aproxime-se para golpear " .. (labels[target.Name] or "recurso")
     else
         hover.Enabled = false
         hover.Adornee = nil
-        hint.Text = "WASD: andar  |  Mouse: mirar  |  Direito: camera  |  Clique: coletar"
+        hint.Text = "WASD: andar | Mouse: mirar | Clique: golpear | Q: curar"
     end
 end)
 
@@ -389,6 +459,12 @@ end
 feedback.OnClientEvent:Connect(function(kind, position, resourceKind, _broken)
     if kind == "Gather" then
         popupGather(position, resourceKind, _broken)
+        return
+    elseif kind == "Healed" then
+        hint.Text="+" .. tostring(position) .. " vida recuperada"
+        return
+    elseif kind == "Notice" then
+        hint.Text=tostring(position)
         return
     end
     if kind ~= "Impact" then
