@@ -5,8 +5,15 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local World = require(script.Parent:WaitForChild("World"))
 local Avatar = require(script.Parent:WaitForChild("Avatar"))
+local Wolves = require(script.Parent:WaitForChild("Wolves"))
+local RiverFlow = require(script.Parent:WaitForChild("RiverFlow"))
+local Boundaries = require(script.Parent:WaitForChild("Boundaries"))
 
 local resources = World.create()
+local world = resources.Parent
+local wolves = Wolves.start(world,resources)
+RiverFlow.start(Config)
+Boundaries.start(Config)
 local namespace = ReplicatedStorage:WaitForChild("RoMoo")
 local former = namespace:FindFirstChild("Remotes")
 if former then former:Destroy() end
@@ -36,14 +43,14 @@ end
 local function firstResourceOnPath(origin, destination)
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Include
-    params.FilterDescendantsInstances = {resources}
+    params.FilterDescendantsInstances = {resources,wolves}
     return workspace:Raycast(origin, destination - origin, params)
 end
 
 strike.OnServerEvent:Connect(function(player, candidate)
     local profile = profiles[player]
     if not profile or typeof(candidate) ~= "Instance" or not candidate:IsA("Model")
-        or candidate.Parent ~= resources then return end
+        or (candidate.Parent ~= resources and candidate.Parent ~= wolves) then return end
     local character = player.Character
     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
     local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -65,7 +72,19 @@ strike.OnServerEvent:Connect(function(player, candidate)
     if not hit or not hit.Instance:IsDescendantOf(candidate) then return end
     profile.lastStrike = now
 
-    -- Um golpe sempre coleta; árvores, pedras e ouro NUNCA são destruídos.
+    if candidate.Parent == wolves then
+        -- Animais possuem vida e podem morrer; recursos naturais permanecem eternos.
+        local killed = Wolves.hit(candidate, Config.Wolf.HammerDamage)
+        feedback:FireAllClients("Impact",core.Position,"Wolf",false)
+        if killed then
+            profile.stock.Food += Config.Wolf.FoodOnKill
+            player:SetAttribute("Food",profile.stock.Food)
+            feedback:FireClient(player,"Gather",core.Position,"Wolf",Config.Wolf.FoodOnKill)
+        end
+        return
+    end
+
+    -- Arvores, arbustos, pedras e ouro NUNCA sao destruídos.
     local stats = World.hitNode(candidate)
     if not stats then return end
 
@@ -86,12 +105,16 @@ end
 
 local function playerAdded(player)
     profiles[player] = {
-        stock = {Wood = Config.StartingWood, Stone = Config.StartingStone, Gold = Config.StartingGold},
+        stock = {
+            Wood = Config.StartingWood, Stone = Config.StartingStone,
+            Gold = Config.StartingGold, Food = Config.StartingFood,
+        },
         lastStrike = -1e8,
     }
     player:SetAttribute("Wood", Config.StartingWood)
     player:SetAttribute("Stone", Config.StartingStone)
     player:SetAttribute("Gold", Config.StartingGold)
+    player:SetAttribute("Food", Config.StartingFood)
     player.CharacterAdded:Connect(function(character)
         task.spawn(characterReady, player, character)
     end)
@@ -104,4 +127,4 @@ Players.PlayerAdded:Connect(playerAdded)
 for _, player in ipairs(Players:GetPlayers()) do playerAdded(player) end
 Players.PlayerRemoving:Connect(function(player) profiles[player] = nil end)
 
-print("[RoMoo 3D] Marreta equipada; arvores, pedras e ouro permanentes: coleta infinita por golpe.")
+print("[RoMoo 3D] Mapa Moo-IO por setores, rio com correnteza, lobos 3D e coleta infinita.")

@@ -1,5 +1,5 @@
 {
-  "name": "RoMoo io — teste de mundo 3D",
+  "name": "RoMoo io - Mapa 3D Moo-IO",
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
@@ -15,7 +15,12 @@
         "$className": "Folder",
         "Game": {"$path": "src/server/Game.server.luau"},
         "World": {"$path": "src/server/World.luau"},
-        "Avatar": {"$path": "src/server/Avatar.luau"}
+        "Avatar": {"$path": "src/server/Avatar.luau"},
+        "MapRules": {"$path": "src/server/MapRules.luau"},
+        "RiverFlow": {"$path": "src/server/RiverFlow.luau"},
+        "Boundaries": {"$path": "src/server/Boundaries.luau"},
+        "Wolves": {"$path": "src/server/Wolves.luau"},
+        "CreatorAssets": {"$path": "src/server/CreatorAssets.luau"}
       }
     },
     "StarterPlayer": {

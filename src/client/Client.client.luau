@@ -15,12 +15,13 @@ local strike = remotes:WaitForChild("Strike")
 local feedback = remotes:WaitForChild("Feedback")
 local world = workspace:WaitForChild("RoMooWorld")
 local resources = world:WaitForChild("Resources")
+local wolves = world:WaitForChild("Wolves")
 local holding = false
 local previous = -1e8
 local cooldown = .43
 local clientRayParams = RaycastParams.new()
 clientRayParams.FilterType = Enum.RaycastFilterType.Include
-clientRayParams.FilterDescendantsInstances = {resources}
+clientRayParams.FilterDescendantsInstances = {resources,wolves}
 local toolAnimationExpiry = .23
 
 -- Camara elevada ATRAS do avatar, mas ainda terceira pessoa.
@@ -55,9 +56,9 @@ local top = Instance.new("Frame")
 top.Name = "Inventario"
 top.AnchorPoint = Vector2.new(.5, 0)
 top.Position = UDim2.new(.5, 0, 0, 8)
-top.Size = UDim2.new(.94, 0, 0, 43)
+top.Size = UDim2.new(.96, 0, 0, 43)
 local topSizeLimit = Instance.new("UISizeConstraint")
-topSizeLimit.MaxSize = Vector2.new(390, 43)
+topSizeLimit.MaxSize = Vector2.new(520, 43)
 topSizeLimit.Parent = top
 top.BackgroundColor3 = Color3.fromRGB(31, 45, 40)
 top.BackgroundTransparency = .12
@@ -76,11 +77,12 @@ for index, entry in ipairs({
     {key = "Wood", title = "MADEIRA", color = Color3.fromRGB(149, 104, 65)},
     {key = "Stone", title = "PEDRA", color = Color3.fromRGB(111, 124, 137)},
     {key = "Gold", title = "OURO", color = Color3.fromRGB(196, 152, 48)},
+    {key = "Food", title = "COMIDA", color = Color3.fromRGB(168, 93, 72)},
 }) do
     local cell = Instance.new("TextLabel")
     cell.Name = entry.key
     cell.LayoutOrder = index
-    cell.Size = UDim2.new(.315, 0, 0, 34)
+    cell.Size = UDim2.new(.242, 0, 0, 34)
     cell.BackgroundColor3 = entry.color
     cell.BorderSizePixel = 0
     cell.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -122,7 +124,7 @@ hover.DepthMode = Enum.HighlightDepthMode.Occluded
 hover.Enabled = false
 hover.Parent = workspace
 
-local labels = {Tree = "ÁRVORE", Rock = "PEDRA", Gold = "OURO"}
+local labels = {Tree = "ÁRVORE", Rock = "PEDRA", Gold = "OURO", Bush = "ARBUSTO", Wolf = "LOBO"}
 local function getRoot()
     local character = player.Character
     return character and character:FindFirstChild("HumanoidRootPart")
@@ -152,12 +154,12 @@ local function targetFromPointer()
     if not ray then return nil end
     local hit = workspace:Raycast(ray.Origin, ray.Direction * 240, clientRayParams)
     local model = hit and hit.Instance:FindFirstAncestorOfClass("Model")
-    while model and model.Parent ~= resources do
+    while model and model.Parent ~= resources and model.Parent ~= wolves do
         local parent = model.Parent
         if not parent then break end
         model = if parent:IsA("Model") then parent else parent:FindFirstAncestorOfClass("Model")
     end
-    return if model and model.Parent == resources then model else nil
+    return if model and (model.Parent == resources or model.Parent == wolves) then model else nil
 end
 
 -- Mirar no solo, na copa das árvores ou nas rochas. O personagem se vira
@@ -338,7 +340,10 @@ RunService.RenderStepped:Connect(function()
     if target and closeEnough(target) then
         hover.Adornee = target
         hover.Enabled = true
-        hint.Text = (labels[target.Name] or "RECURSO") .. "  •  SEGURE PARA COLETAR"
+        hint.Text = if target.Parent == wolves then "LOBO • SEGURE PARA ATACAR"
+            else (labels[target.Name] or "RECURSO") .. " • SEGURE PARA COLETAR"
+        hover.OutlineColor = if target.Parent == wolves
+            then Color3.fromRGB(249,95,78) else Color3.fromRGB(255,216,95)
     elseif target then
         hover.Enabled = false
         hover.Adornee = nil
@@ -370,7 +375,8 @@ local function popupGather(position, kind, amount)
     counter.TextSize = 23
     counter.Font = Enum.Font.GothamBold
     counter.Text = "+" .. tostring(amount) .. " " ..
-        (if kind == "Tree" then "MADEIRA" else if kind == "Rock" then "PEDRA" else "OURO")
+        (if kind == "Tree" then "MADEIRA" else if kind == "Rock" then "PEDRA"
+            else if kind == "Gold" then "OURO" else "COMIDA")
     counter.Parent = ui
     TweenService:Create(counter, TweenInfo.new(.64, Enum.EasingStyle.Quad), {
         Position = UDim2.fromOffset(point.X, point.Y - 39),
@@ -392,6 +398,8 @@ feedback.OnClientEvent:Connect(function(kind, position, resourceKind, _broken)
     if typeof(position) ~= "Vector3" then return end
     local baseColor = if resourceKind == "Tree" then Color3.fromRGB(142, 102, 67)
         else if resourceKind == "Gold" then Color3.fromRGB(244, 196, 68)
+        else if resourceKind == "Wolf" then Color3.fromRGB(229, 96, 75)
+        else if resourceKind == "Bush" then Color3.fromRGB(98, 185, 99)
         else Color3.fromRGB(156, 166, 170)
     local particles = 4
     for i = 1, particles do
