@@ -101,7 +101,7 @@ strike.OnServerEvent:Connect(function(player, aim)
     local stats = World.hitNode(candidate)
     if not stats then return end
     local key = stats.inventory
-    profile.stock[key]+=stats.yield
+    profile.stock[key] += stats.yield
     player:SetAttribute(key,profile.stock[key])
     feedback:FireClient(player,"Gather",position,candidate:GetAttribute("Kind"),stats.yield)
     feedback:FireAllClients("Impact",position,candidate:GetAttribute("Kind"),false)
