@@ -13,8 +13,9 @@
 - **Lobos hostis 3D**, ID 4 do Moo-IO. Perseguem jogadores, compartilham alertas entre membros da matilha, contornam obstáculos por índice espacial, atacam de perto, têm barra de vida, podem morrer e reaparecem.
 - **Golpes por direção, como no MooMoo.io**: clique/segure com a marreta; o servidor encontra o alvo no alcance e no cone frontal, sem exigir clicar exatamente na superfície de cada árvore ou lobo. Envie apenas o vetor de mira (controle validado no servidor).
 - **Cura com comida:** pressione **Q** ou o botão **CURAR** no celular; gaste 10 alimentos e recupere até 32 de vida. O servidor valida saldo, vida e intervalo de 1,25 s; há uma barra de vida compacta no HUD.
-- **Construções 3D de sobrevivência:** parede de madeira, espinhos e moinho com custos, limites por jogador, vida e posicionamento validados pelo servidor. Espinhos ferem lobos e jogadores inimigos; moinho produz ouro periodicamente. Lobos podem atacar paredes e moinhos.
-- **Barra de construção e prévia no terreno:** teclas **1 marreta, 2 parede, 3 espinhos, 4 moinho**; seleção por botões no celular/PC. O fantasma de posicionamento indica áreas inválidas em vermelho (a verificação final é do servidor).
+- **Progressão por idade e experiência:** cada golpe de coleta concede XP igual ao recurso recebido; derrotar um lobo rende 80 XP e construir concede 15 XP. Barra de idade no HUD; os requisitos de experiência crescem com a idade.
+- **Construções 3D de sobrevivência:** parede de madeira (idade 1), espinhos (idade 2), moinho (idade 3) e **muro de pedra reforçado (idade 4)** com custos, limites por jogador, vida e posicionamento validados pelo servidor. Espinhos ferem lobos e adversários; moinho produz ouro periodicamente. Lobos podem atacar construções.
+- **Barra de construção e prévia no terreno:** teclas **1 marreta, 2 parede, 3 espinhos, 4 moinho e 5 muro de pedra**. Os bloqueados mostram a idade necessária. A prévia indica áreas inválidas em vermelho; a validação final é sempre do servidor.
 - **Modelos alternativos de árvores/lobos da Creator Store** disponíveis para importar pelo Studio; a geometria procedural padrão mantém o jogo funcionando sem download ou compra de malhas.
 - HUD compacta para madeira, pedra, ouro e comida; destaque do alvo e recompensa flutuante por golpe.
 - Regras e recompensas verificadas no servidor, não calculadas pelo cliente.
@@ -26,9 +27,10 @@
 3. Extraia `RoMoo-io-Teste.rbxlx` e abra no Roblox Studio.
 4. Pressione **F5**. Use WASD para mover, mouse para apontar e clique/segure para golpear **na direção do mouse**, mesmo sem clicar exatamente sobre um objeto. Colete frutas nos arbustos e pressione Q para curar a vida perdida contra lobos.
 5. Encontre o rio horizontal, entre na água para sentir a corrente; tente andar além do limite do mapa; enfrente lobos.
-6. Colete **10 madeiras**, pressione **2** e clique no chão livre para construir uma parede. Com **20 madeiras + 5 pedras**, a tecla **3** coloca espinhos. Com **50 madeiras + 10 pedras**, a tecla **4** constrói um moinho; ele produz ouro de tempos em tempos. Pressione **1** para voltar à marreta. Os lobos podem danificar estruturas.
+6. Colete materiais com a marreta. Os golpes fornecem XP e, ao atingir **100 XP**, você chega à **idade 2**, liberando os espinhos. Na idade **3**, libera o moinho; na **4**, libera o muro de pedra. O servidor impede construir antes do desbloqueio.
+7. Use os atalhos **1 = marreta**, **2 = parede (10 madeiras)**, **3 = espinhos (20 madeiras + 5 pedras)**, **4 = moinho (50 madeiras + 10 pedras)**, **5 = muro de pedra (30 pedras + 10 madeiras)**. A prévia fica verde quando a posição parece livre e vermelha quando bloqueada. Construções têm vida e podem ser destruídas; recursos naturais continuam permanentes.
 
-Teste do mapa: `tests/StudioWorldSmokeTest.luau`. Teste de combate e cura: `tests/StudioMeleeHealingSmokeTest.luau`. Teste das construções: `tests/StudioBuildingSmokeTest.luau`. Execute na Command Bar **do servidor** durante Play.
+Testes para o **Command Bar do servidor em Play**: `tests/StudioWorldSmokeTest.luau` (mundo), `tests/StudioMeleeHealingSmokeTest.luau` (combate), `tests/StudioBuildingSmokeTest.luau` (construções) e `tests/StudioProgressionSmokeTest.luau` (XP, idade, desbloqueios).
 
 ## Modelos 3D disponíveis na Creator Store (importação opcional)
 
@@ -55,14 +57,15 @@ Os modelos são armazenados em `ServerStorage/RoMooResourceModels/Tree` e `Serve
 - `src/server/CreatorAssets.luau` — importação opcional segura da Creator Store.
 - `src/server/Game.server.luau` — processamento de golpes, coleta, cura, lobos e inventário.
 - `src/server/Melee.luau` — teste de mira, cone de golpe, distância e oclusão pelo servidor, inclusive paredes.
-- `src/server/Structures.luau` — posicionamento 3D, custos, limites, dano, espinhos e produção de ouro dos moinhos.
+- `src/server/Structures.luau` — posicionamento 3D, custos, limites, idade mínima, dano, espinhos e moinhos.
+- `src/server/Progression.luau` — XP, crescimento da idade, desbloqueios e atributos replicados ao cliente.
 - `src/server/Avatar.luau` — avatar e Tool.
 - `src/client/Client.client.luau` — mira do mouse, câmera 3D, HUD e efeitos.
 - `docs/COMO_TESTAR.md` — checklist de teste.
 - `docs/MAPA_MOO_IO.md` — comparação objetiva com gerador Lua original.
 - `docs/DEPRECACOES_ROBLOX.md` — APIs antigas e recursos sendo substituídos.
 
-**Outros sistemas ainda não retomados:** clãs, upgrades avançados e outras espécies. Os módulos antigos continuam no histórico e no repositório, mas não foram ligados à build atual. Parede, espinhos e moinho já estão ativos nesta etapa. Os custos são uma adaptação inicial para a escala 3D, não uma cópia 1:1 de todo o catálogo original.
+**Outros sistemas ainda não retomados:** clãs, escolhas alternativas de upgrades e outras espécies. Os módulos antigos continuam no histórico e no repositório, mas não foram ligados à build atual. Parede, espinhos e moinho já estão ativos nesta etapa. Os custos são uma adaptação inicial para a escala 3D, não uma cópia 1:1 de todo o catálogo original.
 
 ## Compatibilidade e licenças
 

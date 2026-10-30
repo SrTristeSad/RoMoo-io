@@ -9,12 +9,19 @@ return {
     EatCost = 10, EatHeal = 32, EatCooldown = 1.25,
     -- Estruturas iniciais, com requisitos de madeira/pedra e limites por jogador.
     BuildDistance = 12, BuildCooldown = .4,
+    -- A idade aumenta com coleta e combate (mecanica adaptada do MooMoo.io).
+    Progression = {
+        BaseXP = 100, Growth = 1.2, MaxAge = 9,
+        XPFromWolf = 80, XPFromBuild = 15,
+    },
     Buildings = {
-        Wall = {label="PAREDE",cost={Wood=10},health=380,limit=30},
+        Wall = {label="PAREDE",cost={Wood=10},health=380,limit=30,minAge=1},
         Spikes = {label="ESPINHOS",cost={Wood=20,Stone=5},health=260,
-            limit=15,damage=20},
+            limit=15,damage=20,minAge=2},
         Windmill = {label="MOINHO",cost={Wood=50,Stone=10},
-            health=450,limit=5,goldPerTick=2,interval=4},
+            health=450,limit=5,goldPerTick=2,interval=4,minAge=3},
+        StoneWall = {label="MURO DE PEDRA",cost={Stone=30,Wood=10},
+            health=1100,limit=22,minAge=4},
     },
     -- Original: areaCount=7, treesPerArea=9, bushesPerArea=3,
     -- totalRocks=32, goldOres=7 num mapa 14400; quantidades reduzidas

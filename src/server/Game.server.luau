@@ -10,6 +10,7 @@ local RiverFlow = require(script.Parent:WaitForChild("RiverFlow"))
 local Boundaries = require(script.Parent:WaitForChild("Boundaries"))
 local Melee = require(script.Parent:WaitForChild("Melee"))
 local Structures = require(script.Parent:WaitForChild("Structures"))
+local Progression = require(script.Parent:WaitForChild("Progression"))
 
 local resources = World.create()
 local world = resources.Parent
@@ -38,6 +39,14 @@ build.Parent = remotes
 -- Cura somente no servidor: o cliente não pode inventar comida nem vida.
 local profiles = {}
 
+local function awardXP(player,profile,amount)
+    local newAge=Progression.award(player,profile,amount,Config)
+    if newAge then
+        feedback:FireClient(player,"LevelUp",newAge)
+        print(("[RoMoo Idade] %s alcancou a idade %d"):format(player.Name,newAge))
+    end
+end
+
 -- Todas as estruturas são produzidas e atualizadas no servidor.
 local buildings = Structures.start(world, resources, wolves, Config,
     function(player, amount)
@@ -52,6 +61,7 @@ local buildings = Structures.start(world, resources, wolves, Config,
         if not profile then return end
         profile.stock.Food += amount
         player:SetAttribute("Food",profile.stock.Food)
+        awardXP(player,profile,Config.Progression.XPFromWolf)
         feedback:FireClient(player,"Notice","Espinhos derrotaram um lobo: +"..amount.." comida")
     end,
     function(wolf, amount)
@@ -66,8 +76,9 @@ build.OnServerEvent:Connect(function(player, kind, direction)
     local now=os.clock()
     if now - (profile.lastBuild or -1e8) < Config.BuildCooldown then return end
     profile.lastBuild=now -- inclusive em tentativas rejeitadas: limita spam remoto
-    local result,err=Structures.tryBuild(player,kind,direction,profile.stock)
+    local result,err=Structures.tryBuild(player,kind,direction,profile.stock,profile.age)
     if result then
+        awardXP(player,profile,Config.Progression.XPFromBuild)
         feedback:FireClient(player,"Built",kind)
     else
         feedback:FireClient(player,"Notice",err or "Nao foi possivel construir")
@@ -143,6 +154,7 @@ strike.OnServerEvent:Connect(function(player, aim)
         if killed then
             profile.stock.Food+=Config.Wolf.FoodOnKill
             player:SetAttribute("Food",profile.stock.Food)
+            awardXP(player,profile,Config.Progression.XPFromWolf)
             feedback:FireClient(player,"Gather",position,"Wolf",Config.Wolf.FoodOnKill)
         end
         return
@@ -153,6 +165,7 @@ strike.OnServerEvent:Connect(function(player, aim)
     local key = stats.inventory
     profile.stock[key] += stats.yield
     player:SetAttribute(key,profile.stock[key])
+    awardXP(player,profile,stats.yield)
     feedback:FireClient(player,"Gather",position,candidate:GetAttribute("Kind"),stats.yield)
     feedback:FireAllClients("Impact",position,candidate:GetAttribute("Kind"),false)
 end)
@@ -174,6 +187,7 @@ local function playerAdded(player)
         lastEat = -1e8,
         lastBuild = -1e8,
     }
+    Progression.initialize(player,profiles[player],Config)
     player:SetAttribute("Wood", Config.StartingWood)
     player:SetAttribute("Stone", Config.StartingStone)
     player:SetAttribute("Gold", Config.StartingGold)

@@ -22,6 +22,7 @@
         "Wolves": {"$path": "src/server/Wolves.luau"},
         "Melee": {"$path": "src/server/Melee.luau"},
         "Structures": {"$path": "src/server/Structures.luau"},
+        "Progression": {"$path": "src/server/Progression.luau"},
         "CreatorAssets": {"$path": "src/server/CreatorAssets.luau"}
       }
     },

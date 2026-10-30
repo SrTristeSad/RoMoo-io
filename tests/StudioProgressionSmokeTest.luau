@@ -1,43 +1,47 @@
--- RoMoo.io: colar no Command Bar do Roblox Studio (Server), em Play.
--- Verifica apenas regras estáticas. Não testa alcance, IA nem multiplayer.
-local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
-assert(#Config.AgeThresholds >= 9, "Menos de 9 idades")
-for age = 2, 9 do
-    local choices = Config.UpgradeChoices[age]
-    assert(choices and #choices == 2, "Escolha ausente na idade " .. age)
-    assert(choices[1] ~= choices[2], "Alternativas duplicadas")
-    for _, name in ipairs(choices) do
-        assert(Config.Items[name], "Item faltando: " .. name)
-        assert(Config.Items[name].upgrade == age, "Upgrade errado: " .. name)
-        local category = Config.Items[name].category
-        assert(category == "Weapon" or category == "Building" or category == "Food",
-            "Categoria inválida: " .. name)
-    end
+--!nonstrict
+-- No Command Bar do servidor em Play: valida experiencia, idades
+-- e desbloqueios usando um jogador ficticio (sem alterar perfis reais).
+local Replicated=game:GetService("ReplicatedStorage")
+local scripts=game:GetService("ServerScriptService"):WaitForChild("RoMoo")
+local Config=require(Replicated:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
+local Progression=require(scripts:WaitForChild("Progression"))
+
+assert(Progression.threshold(1,Config)==100,"XP inicial divergente")
+assert(Progression.threshold(2,Config)==120,"XP idade 2 divergente")
+assert(Progression.threshold(3,Config)==144,"XP idade 3 divergente")
+
+local dummy=Instance.new("Folder")
+dummy.Name="RoMooProgressionTest"
+dummy.Parent=workspace
+local p={}
+Progression.initialize(dummy,p,Config)
+assert(p.age==1 and p.xp==0 and dummy:GetAttribute("Age")==1)
+assert(dummy:GetAttribute("XPToNext")==100)
+assert(Progression.canUse(p,Config.Buildings.Wall))
+assert(not Progression.canUse(p,Config.Buildings.Spikes))
+assert(not Progression.canUse(p,Config.Buildings.Windmill))
+assert(not Progression.canUse(p,Config.Buildings.StoneWall))
+
+-- A cada golpe de madeira/pedra/ouro, +5 XP: 20 golpes = idade 2.
+for i=1,19 do
+    assert(Progression.award(dummy,p,5,Config)==nil)
 end
-local seen = {}
-for _, name in ipairs(Config.ItemOrder) do
-    assert(not seen[name], "Item duplicado na hotbar: " .. name)
-    assert(Config.Items[name], "Item inexistente na hotbar: " .. name)
-    seen[name] = true
-end
-for name, item in pairs(Config.Items) do
-    assert(seen[name], "Item faltando na hotbar: " .. name)
-    if item.category == "Building" then
-        assert(item.health > 0 and item.limit > 0, "Construção sem vida/limite: " .. name)
-        assert(type(item.cost) == "table", "Construção sem custo: " .. name)
-    elseif item.category == "Weapon" then
-        assert(item.damage > 0 and item.range > 0, "Arma incompleta: " .. name)
-    elseif item.category == "Food" then
-        assert(item.heal > 0 and item.foodCost > 0, "Comida incompleta: " .. name)
-    end
-end
-assert(#Config.ItemOrder == 22, "Esperados 22 itens cadastrados")
-assert(Config.Items.Bow.minAge == 6, "Arco deveria desbloquear na idade 6")
-assert(Config.Items.Bow.projectile and Config.Items.Bow.projectileSpeed > 0, "Arco sem projétil")
-assert(Config.Items.Bow.ammo.Wood > 0, "Arco sem custo de flecha")
-local initial = 0
-for _, name in ipairs(Config.ItemOrder) do
-    if not Config.Items[name].upgrade and not Config.Items[name].minAge then initial += 1 end
-end
-assert(initial == 5, "Esperados 5 itens iniciais")
-print("[RoMoo] PASS: 22 itens, 8 escolhas, até 14 itens visíveis na barra.")
+assert(p.xp==95 and dummy:GetAttribute("XP")==95)
+assert(Progression.award(dummy,p,5,Config)==2)
+assert(p.age==2 and p.xp==0 and dummy:GetAttribute("XPToNext")==120)
+assert(Progression.canUse(p,Config.Buildings.Spikes))
+assert(not Progression.canUse(p,Config.Buildings.Windmill))
+assert(Progression.award(dummy,p,120,Config)==3)
+assert(Progression.canUse(p,Config.Buildings.Windmill))
+assert(not Progression.canUse(p,Config.Buildings.StoneWall))
+assert(Progression.award(dummy,p,144,Config)==4)
+assert(Progression.canUse(p,Config.Buildings.StoneWall))
+assert(Config.Buildings.StoneWall.health>Config.Buildings.Wall.health)
+local before=p.xp
+assert(Progression.award(dummy,p,-1,Config)==nil and p.xp==before)
+assert(Progression.award(dummy,p,math.huge,Config)==nil and p.xp==before)
+assert(Progression.award(dummy,p,0/0,Config)==nil and p.xp==before)
+assert(Progression.award(dummy,p,"cheat",Config)==nil and p.xp==before)
+dummy:Destroy()
+
+print("[RoMoo] PASS: 100/120/144 XP, desbloqueios idades 2/3/4 e antiabuso.")

@@ -8,8 +8,9 @@
 6. Ande até a borda: paredes invisíveis devem impedir que o personagem caia. Se algo o derrubar abaixo do mapa, o servidor o reposiciona.
 7. Encontre lobos. Eles possuem corpo 3D, perseguem, **avisam lobos próximos**, atacam e podem ser derrotados com a marreta. Ao morrerem, fornecem comida. **Os lobos são criaturas, não recursos naturais permanentes.**
 8. Após perder vida para um lobo, colete comida nos arbustos e pressione **Q** para curar (10 comidas, até 32 pontos de vida, intervalo de 1,25 s). No celular, use **CURAR**.
-9. Colete materiais e teste a barra: **1 marreta**, **2 parede (10 madeiras)**, **3 espinhos (20 madeiras + 5 pedras)** e **4 moinho (50 madeiras + 10 pedras)**. A prévia fica verde em áreas livres e vermelha nas zonas bloqueadas. Depois de construir, o moinho deve produzir **2 ouros a cada 4 segundos**; os espinhos ferem inimigos e os lobos atacam paredes.
-10. No Command Bar do **servidor** em Play, execute `tests/StudioWorldSmokeTest.luau`, `tests/StudioMeleeHealingSmokeTest.luau` e `tests/StudioBuildingSmokeTest.luau`. Verifique mensagens PASS e o painel **Saída**.
+9. Acompanhe a **barra de XP e idade** abaixo do inventário. Após 20 golpes de recurso (+5 XP por golpe), alcance idade 2 e libere os espinhos. Na idade 3, libere o moinho; na 4, libere o muro de pedra. Ao desbloquear, aparece um aviso.
+10. Teste a barra: **1 marreta**, **2 parede (10 madeiras)**, **3 espinhos (20 madeiras + 5 pedras)**, **4 moinho (50 madeiras + 10 pedras)** e **5 muro de pedra (30 pedras + 10 madeiras)**. Botões bloqueados informam a idade necessária. O moinho produz **2 ouros a cada 4 segundos**. Construções podem ser destruídas, mas recursos naturais nunca.
+11. No Command Bar do **servidor** em Play, execute `tests/StudioWorldSmokeTest.luau`, `tests/StudioMeleeHealingSmokeTest.luau`, `tests/StudioBuildingSmokeTest.luau` e `tests/StudioProgressionSmokeTest.luau`. Verifique mensagens PASS e o painel **Saída**.
 
 ## Modelos gratuitos da Creator Store (opcionais)
 
@@ -39,8 +40,12 @@ Depois salve o place no Studio. **O ZIP pronto não incorpora automaticamente ma
 - [ ] Golpes direcionais acertam recursos mesmo sem clique exato na malha, mas não alcançam alvos atrás/fora do cone.
 - [ ] Q consome 10 alimentos e cura até 32 de vida; botão CURAR também funciona no celular.
 - [ ] HUD mostra vida atual e máxima.
-- [ ] Hotbar 1–4 e clique selecionam marreta, parede, espinhos e moinho.
-- [ ] Parede custa 10 madeiras, espinhos 20 madeiras + 5 pedras e moinho 50 madeiras + 10 pedras.
+- [ ] Hotbar 1–5 e clique selecionam marreta, parede, espinhos, moinho e muro de pedra.
+- [ ] A idade começa em 1; coleta dá XP e faz subir de idade.
+- [ ] Idade 2 desbloqueia espinhos; 3 desbloqueia moinho; 4 desbloqueia muro de pedra.
+- [ ] A tentativa de construir antes da idade exigida é rejeitada pelo servidor.
+- [ ] O muro de pedra é mais resistente do que a parede de madeira.
+- [ ] Parede custa 10 madeiras, espinhos 20 madeiras + 5 pedras, moinho 50 madeiras + 10 pedras, muro 30 pedras + 10 madeiras.
 - [ ] Construções não podem ser colocadas dentro do rio, em recursos naturais ou na área de nascimento.
 - [ ] Espinhos causam dano a lobos e adversários; não ferem o dono.
 - [ ] O moinho paga 2 ouros a cada 4 segundos enquanto pertence a um jogador na partida.

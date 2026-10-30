@@ -53,6 +53,26 @@ local function buildShape(kind, position, direction, userId)
         geometry(model, "Reforco", Vector3.new(10.7, .72, 2.5),
             cf * CFrame.new(0, 5.5, 0), Color3.fromRGB(105, 74, 46),
             Enum.Material.Wood, true)
+    elseif kind == "StoneWall" then
+        -- Muro resistente com blocos de pedra nativa, desbloqueado na idade 4.
+        local wall = geometry(model, "Core", Vector3.new(11.5, 7, 2.8),
+            cf * CFrame.new(0, 3.5, 0), Color3.fromRGB(118, 126, 132),
+            Enum.Material.Slate, true)
+        model.PrimaryPart = wall
+        for layer = 0, 2 do
+            for column = -1, 1 do
+                local x = column * 3.55 + (if layer % 2 == 0 then 0 else .45)
+                geometry(model, "PedraTalhada",
+                    Vector3.new(3.36, 2.08, 3.05),
+                    cf * CFrame.new(x, 1.13 + layer * 2.18, -.04),
+                    if (layer + column) % 2 == 0 then Color3.fromRGB(146, 151, 152)
+                    else Color3.fromRGB(106, 114, 120),
+                    Enum.Material.Rock, true)
+            end
+        end
+        geometry(model, "TopoDePedra", Vector3.new(12.4, .75, 3.4),
+            cf * CFrame.new(0, 7.1, 0), Color3.fromRGB(98, 108, 112),
+            Enum.Material.Slate, true)
     elseif kind == "Spikes" then
         local base = geometry(model, "Core", Vector3.new(8, .7, 8),
             cf * CFrame.new(0, .35, 0), Color3.fromRGB(95, 80, 59),
@@ -207,10 +227,13 @@ local function placementCheck(player,kind,direction)
 end
 
 -- Pureza da posição: custos/contagens não são alterados até todos os checks.
-function Structures.tryBuild(player,kind,direction,stock)
+function Structures.tryBuild(player,kind,direction,stock,age)
     if typeof(stock)~="table" then return nil,"Inventario invalido" end
     local blueprint = typeof(kind)=="string" and config.Buildings[kind]
     if not blueprint then return nil,"Construcao desconhecida" end
+    if typeof(age) ~= "number" or age < (blueprint.minAge or 1) then
+        return nil,"Desbloqueia na idade "..tostring(blueprint.minAge or 1)
+    end
     local count = ownerCounts[player.UserId] or {}
     if (count[kind] or 0)>=blueprint.limit then return nil,"Limite de "..kind.." atingido" end
     for material,price in pairs(blueprint.cost) do

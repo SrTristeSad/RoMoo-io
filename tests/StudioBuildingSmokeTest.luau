@@ -16,15 +16,21 @@ local oldWood,oldStone=player:GetAttribute("Wood"),player:GetAttribute("Stone")
 local buildings=workspace:WaitForChild("RoMooWorld"):WaitForChild("Buildings")
 local natural=workspace.RoMooWorld:WaitForChild("Resources")
 local wolfFolder=workspace.RoMooWorld:WaitForChild("Wolves")
-assert(Config.Buildings.Wall and Config.Buildings.Spikes and Config.Buildings.Windmill)
+assert(Config.Buildings.Wall and Config.Buildings.Spikes
+    and Config.Buildings.Windmill and Config.Buildings.StoneWall)
+assert(Config.Buildings.StoneWall.minAge==4)
+assert(Config.Buildings.StoneWall.health>Config.Buildings.Wall.health)
 assert(Config.Buildings.Wall.cost.Wood > 0)
 assert(Config.Buildings.Spikes.cost.Stone > 0)
 assert(Config.Buildings.Windmill.goldPerTick > 0)
 assert(Structures.folder()==buildings,"Instancia incorreta de Buildings")
-local invalid,err=Structures.tryBuild(player,"Wall",Vector3.new(1,0,0),{Wood=0,Stone=0})
+local invalid,err=Structures.tryBuild(player,"Wall",Vector3.new(1,0,0),{Wood=0,Stone=0},9)
 assert(invalid==nil and err,"Construcao gratuita com inventario vazio")
-local nilModel=Structures.tryBuild(player,"NaoExiste",Vector3.new(1,0,0),stock)
+local nilModel=Structures.tryBuild(player,"NaoExiste",Vector3.new(1,0,0),stock,9)
 assert(nilModel==nil,"Aceitou estrutura desconhecida")
+local locked,reason=Structures.tryBuild(player,"StoneWall",Vector3.new(1,0,0),stock,1)
+assert(not locked and reason and reason:find("idade"),
+    "Muro de pedra desbloqueado antes da idade 4")
 
 local function sample(kind)
     for x=-160,160,19 do
@@ -45,7 +51,7 @@ local function sample(kind)
                 end
                 if clear then
                     char:PivotTo(CFrame.new(x,4,z))
-                    local a,b=Structures.tryBuild(player,kind,Vector3.new(1,0,0),stock)
+                    local a,b=Structures.tryBuild(player,kind,Vector3.new(1,0,0),stock,9)
                     if a then return a end
                 end
             end
@@ -54,7 +60,7 @@ local function sample(kind)
     return nil
 end
 
-for _,kind in ipairs({"Wall","Spikes","Windmill"}) do
+for _,kind in ipairs({"Wall","Spikes","Windmill","StoneWall"}) do
     local before=stock.Wood
     local built=sample(kind)
     assert(built and built.Parent==buildings,"Nao conseguiu construir "..kind)
@@ -73,4 +79,4 @@ end
 char:PivotTo(original)
 player:SetAttribute("Wood",oldWood or 0)
 player:SetAttribute("Stone",oldStone or 0)
-print("[RoMoo] PASS: parede, espinhos, moinho, custos, limites, dano e recursos infinitos.")
+print("[RoMoo] PASS: parede, espinhos, moinho, muro de pedra, requisitos de idade, custos e recursos infinitos.")

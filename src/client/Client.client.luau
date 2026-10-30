@@ -19,13 +19,14 @@ local eat = remotes:WaitForChild("Eat")
 local world = workspace:WaitForChild("RoMooWorld")
 local resources = world:WaitForChild("Resources")
 local wolves = world:WaitForChild("Wolves")
+local buildings = world:WaitForChild("Buildings")
 local holding = false
 local previous = -1e8
 local cooldown = .43
 local selectedMode = "Hammer"
 local clientRayParams = RaycastParams.new()
 clientRayParams.FilterType = Enum.RaycastFilterType.Include
-clientRayParams.FilterDescendantsInstances = {resources,wolves}
+clientRayParams.FilterDescendantsInstances = {resources,wolves,buildings}
 local toolAnimationExpiry = .23
 
 -- Camara elevada ATRAS do avatar, mas ainda terceira pessoa.
@@ -102,6 +103,51 @@ for index, entry in ipairs({
     refresh()
 end
 
+-- Progresso de idade: dados replicados pelo servidor, nunca calculados no cliente.
+local xpPanel=Instance.new("Frame")
+xpPanel.Name="ProgressoIdade"
+xpPanel.AnchorPoint=Vector2.new(.5,0)
+xpPanel.Position=UDim2.new(.5,0,0,55)
+xpPanel.Size=UDim2.new(.9,0,0,25)
+xpPanel.BackgroundColor3=Color3.fromRGB(34,44,39)
+xpPanel.BackgroundTransparency=.08
+xpPanel.BorderSizePixel=0
+xpPanel.Parent=ui
+rounded(xpPanel,7)
+local xpLimit=Instance.new("UISizeConstraint")
+xpLimit.MaxSize=Vector2.new(500,25)
+xpLimit.Parent=xpPanel
+local xpFill=Instance.new("Frame")
+xpFill.Name="XPFill"
+xpFill.Size=UDim2.fromScale(0,1)
+xpFill.BackgroundColor3=Color3.fromRGB(90,191,112)
+xpFill.BorderSizePixel=0
+xpFill.Parent=xpPanel
+rounded(xpFill,7)
+local xpText=Instance.new("TextLabel")
+xpText.Name="XPTexto"
+xpText.Size=UDim2.fromScale(1,1)
+xpText.BackgroundTransparency=1
+xpText.TextColor3=Color3.new(1,1,1)
+xpText.TextStrokeTransparency=.55
+xpText.TextSize=13
+xpText.Font=Enum.Font.GothamBold
+xpText.Text="IDADE 1   0/100 XP"
+xpText.Parent=xpPanel
+local function refreshXP()
+    local age=player:GetAttribute("Age") or 1
+    local experience=player:GetAttribute("XP") or 0
+    local required=player:GetAttribute("XPToNext") or 100
+    xpText.Text=if required<=0 then ("IDADE "..age.."  MAX")
+        else ("IDADE "..age.."  "..experience.."/"..required.." XP")
+    xpFill.Size=UDim2.fromScale(if required<=0 then 1
+        else math.clamp(experience/math.max(1,required),0,1),1)
+end
+for _,attribute in ipairs({"Age","XP","XPToNext"}) do
+    player:GetAttributeChangedSignal(attribute):Connect(refreshXP)
+end
+refreshXP()
+
 -- Hotbar de construções: a marreta segue equipada; trocar de slot muda
 -- apenas o comando enviado. O servidor valida custos e local da construção.
 local buildBar = Instance.new("Frame")
@@ -115,7 +161,7 @@ buildBar.BorderSizePixel = 0
 buildBar.Parent = ui
 rounded(buildBar,9)
 local widthLimit = Instance.new("UISizeConstraint")
-widthLimit.MaxSize = Vector2.new(530,54)
+widthLimit.MaxSize = Vector2.new(570,54)
 widthLimit.Parent = buildBar
 local barLayout = Instance.new("UIListLayout")
 barLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -129,24 +175,38 @@ local choices = {
     {mode="Wall",label="2 PAREDE 10M"},
     {mode="Spikes",label="3 ESPINHOS 20M/5P"},
     {mode="Windmill",label="4 MOINHO 50M/10P"},
+    {mode="StoneWall",label="5 MURO PEDRA 30P/10M"},
 }
 local buttons = {}
 local function setMode(mode)
+    local blueprint=Config.Buildings[mode]
+    local age=player:GetAttribute("Age") or 1
+    if blueprint and age < (blueprint.minAge or 1) then return end
     selectedMode=mode
-    for name,button in pairs(buttons) do
-        button.BackgroundColor3 = if name==mode
-            then Color3.fromRGB(60,158,92) else Color3.fromRGB(77,87,81)
+    for _,choice in ipairs(choices) do
+        local button=buttons[choice.mode]
+        local data=Config.Buildings[choice.mode]
+        local unlocked=not data or age >= (data.minAge or 1)
+        if button then
+            button.Text=if unlocked then choice.label
+                else ("IDADE "..tostring(data.minAge).." - "..choice.label)
+            button.BackgroundColor3=if not unlocked then Color3.fromRGB(62,64,65)
+                else if choice.mode==mode then Color3.fromRGB(60,158,92)
+                else Color3.fromRGB(77,87,81)
+            button.TextColor3=if unlocked then Color3.new(1,1,1)
+                else Color3.fromRGB(178,181,179)
+        end
     end
 end
 for i,item in ipairs(choices) do
     local button=Instance.new("TextButton")
     button.Name=item.mode
     button.LayoutOrder=i
-    button.Size=UDim2.new(.238,0,0,44)
+    button.Size=UDim2.new(.188,0,0,44)
     button.BackgroundColor3=Color3.fromRGB(77,87,81)
     button.BorderSizePixel=0
     button.TextColor3=Color3.new(1,1,1)
-    button.TextSize=12
+    button.TextSize=11
     button.TextWrapped=true
     button.Font=Enum.Font.GothamBold
     button.Text=item.label
@@ -158,6 +218,9 @@ for i,item in ipairs(choices) do
     end)
 end
 setMode("Hammer")
+player:GetAttributeChangedSignal("Age"):Connect(function()
+    setMode(selectedMode)
+end)
 local preview = Instance.new("Part")
 preview.Name = "RoMooBuildPreview"
 preview.Anchored = true
@@ -234,7 +297,10 @@ hover.DepthMode = Enum.HighlightDepthMode.Occluded
 hover.Enabled = false
 hover.Parent = workspace
 
-local labels = {Tree = "ÁRVORE", Rock = "PEDRA", Gold = "OURO", Bush = "ARBUSTO", Wolf = "LOBO"}
+local labels = {
+    Tree="ÁRVORE",Rock="PEDRA",Gold="OURO",Bush="ARBUSTO",Wolf="LOBO",
+    Wall="PAREDE",Spikes="ESPINHOS",Windmill="MOINHO",StoneWall="MURO DE PEDRA",
+}
 local function getRoot()
     local character = player.Character
     return character and character:FindFirstChild("HumanoidRootPart")
@@ -264,12 +330,14 @@ local function targetFromPointer()
     if not ray then return nil end
     local hit = workspace:Raycast(ray.Origin, ray.Direction * 240, clientRayParams)
     local model = hit and hit.Instance:FindFirstAncestorOfClass("Model")
-    while model and model.Parent ~= resources and model.Parent ~= wolves do
+    while model and model.Parent ~= resources and model.Parent ~= wolves
+        and model.Parent ~= buildings do
         local parent = model.Parent
         if not parent then break end
         model = if parent:IsA("Model") then parent else parent:FindFirstAncestorOfClass("Model")
     end
-    return if model and (model.Parent == resources or model.Parent == wolves) then model else nil
+    return if model and (model.Parent == resources or model.Parent == wolves
+        or model.Parent == buildings) then model else nil
 end
 
 -- Mirar no solo, na copa das árvores ou nas rochas. O personagem se vira
@@ -380,6 +448,7 @@ UserInputService.InputBegan:Connect(function(input, consumed)
         [Enum.KeyCode.Two]="Wall",
         [Enum.KeyCode.Three]="Spikes",
         [Enum.KeyCode.Four]="Windmill",
+        [Enum.KeyCode.Five]="StoneWall",
     }
     local choice=hotkeys[input.KeyCode]
     if choice then setMode(choice) return end
@@ -509,6 +578,7 @@ local function previewBuild(dt)
     local pos=root.Position+direction*Config.BuildDistance
     pos=Vector3.new(math.floor(pos.X/2+.5)*2,0,math.floor(pos.Z/2+.5)*2)
     local size=if selectedMode=="Wall" then Vector3.new(10,6,2)
+        else if selectedMode=="StoneWall" then Vector3.new(11.5,7,2.8)
         else if selectedMode=="Spikes" then Vector3.new(8,.7,8)
         else Vector3.new(3.8,9,3.8)
     local half=Config.MapSize*.5-14
@@ -557,10 +627,19 @@ RunService.RenderStepped:Connect(function()
     if target and closeEnough(target) then
         hover.Adornee = target
         hover.Enabled = true
-        hint.Text = if target.Parent == wolves then "LOBO • SEGURE PARA ATACAR"
-            else (labels[target.Name] or "RECURSO") .. " • SEGURE PARA GOLPEAR"
-        hover.OutlineColor = if target.Parent == wolves
-            then Color3.fromRGB(249,95,78) else Color3.fromRGB(255,216,95)
+        if target.Parent==buildings then
+            local owned=target:GetAttribute("OwnerUserId")==player.UserId
+            hint.Text=if owned then "SUA CONSTRUCAO"
+                else (labels[target.Name] or "ESTRUTURA").." • GOLPEAR"
+            hover.OutlineColor=if owned then Color3.fromRGB(95,211,122)
+                else Color3.fromRGB(249,95,78)
+        elseif target.Parent==wolves then
+            hint.Text="LOBO • SEGURE PARA ATACAR"
+            hover.OutlineColor=Color3.fromRGB(249,95,78)
+        else
+            hint.Text=(labels[target.Name] or "RECURSO").." • SEGURE PARA GOLPEAR"
+            hover.OutlineColor=Color3.fromRGB(255,216,95)
+        end
     elseif target then
         hover.Enabled = false
         hover.Adornee = nil
@@ -618,6 +697,32 @@ feedback.OnClientEvent:Connect(function(kind, position, resourceKind, _broken)
         return
     elseif kind=="Income" then
         hint.Text="Moinho: +"..tostring(position).." ouro"
+        return
+    elseif kind=="LevelUp" then
+        local age=tonumber(position) or 1
+        local announce=Instance.new("TextLabel")
+        announce.Name="NovaIdade"
+        announce.AnchorPoint=Vector2.new(.5,.5)
+        announce.Position=UDim2.new(.5,0,.24,0)
+        announce.Size=UDim2.new(.85,0,0,53)
+        announce.BackgroundColor3=Color3.fromRGB(40,102,64)
+        announce.BackgroundTransparency=.08
+        announce.BorderSizePixel=0
+        local unlocked=if age==2 then "ESPINHOS"
+            else if age==3 then "MOINHO"
+            else if age==4 then "MURO DE PEDRA"
+            else "NOVO NIVEL"
+        announce.Text="IDADE "..age.."!  "..unlocked
+        announce.TextScaled=true
+        announce.Font=Enum.Font.GothamBlack
+        announce.TextColor3=Color3.new(1,1,1)
+        announce.Parent=ui
+        rounded(announce,9)
+        TweenService:Create(announce,TweenInfo.new(1.6),{
+            BackgroundTransparency=1,TextTransparency=1,
+            Position=UDim2.new(.5,0,.18,0),
+        }):Play()
+        Debris:AddItem(announce,1.7)
         return
     end
     if kind ~= "Impact" then

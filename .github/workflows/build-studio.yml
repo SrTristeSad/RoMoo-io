@@ -104,7 +104,20 @@ jobs:
           assert 'Buildings = {' in cfg and 'goldPerTick=2' in cfg
           assert 'build:FireServer(selectedMode,direction.Unit)' in client
           assert 'previewBuild' in client and 'BarraConstrucoes' in client
-          assert 'for _,kind in ipairs({"Wall","Spikes","Windmill"}) do' in buildtest
+          assert 'for _,kind in ipairs({"Wall","Spikes","Windmill","StoneWall"}) do' in buildtest
+          progression = Path('src/server/Progression.luau').read_text()
+          progtest = Path('tests/StudioProgressionSmokeTest.luau').read_text()
+          assert '"Progression":' in project and 'Progression.initialize' in game
+          assert 'Progression.award' in game and 'awardXP(player,profile,stats.yield)' in game
+          assert 'XPFromWolf = 80' in cfg and 'XPFromBuild = 15' in cfg
+          assert 'StoneWall = {' in cfg and 'minAge=4' in cfg
+          assert 'function Progression.threshold' in progression
+          assert 'function Progression.award' in progression
+          assert 'function Progression.canUse' in progression
+          assert 'typeof(age) ~= "number"' in structures
+          assert 'ProgressoIdade' in client and 'XPFill' in client and 'StoneWall' in client
+          assert 'for i=1,19 do' in progtest
+          assert 'Progression.canUse(p,Config.Buildings.StoneWall)' in progtest
           assert 'RoMooCameraAndAim' in client
           assert 'hover.Enabled = false' in client
           assert 'humanoid.AutoRotate = false' in avatar
