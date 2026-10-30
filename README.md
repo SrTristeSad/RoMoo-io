@@ -65,10 +65,26 @@ Os modelos são armazenados em `ServerStorage/RoMooResourceModels/Tree` e `Serve
 - `docs/MAPA_MOO_IO.md` — comparação objetiva com gerador Lua original.
 - `docs/DEPRECACOES_ROBLOX.md` — APIs antigas e recursos sendo substituídos.
 
-**Outros sistemas ainda não retomados:** clãs, escolhas alternativas de upgrades e outras espécies. Os módulos antigos continuam no histórico e no repositório, mas não foram ligados à build atual. Parede, espinhos e moinho já estão ativos nesta etapa. Os custos são uma adaptação inicial para a escala 3D, não uma cópia 1:1 de todo o catálogo original.
+**Outros sistemas ainda não retomados:** clãs, escolhas alternativas de upgrades e outras espécies. O balanceamento das novas armas é provisório para Roblox 3D. Os módulos antigos continuam no histórico e no repositório, mas não foram ligados à build atual. Parede, espinhos e moinho já estão ativos nesta etapa. Os custos são uma adaptação inicial para a escala 3D, não uma cópia 1:1 de todo o catálogo original.
 
 ## Compatibilidade e licenças
 
 Este projeto independente referencia código do Moo-IO Lua sob AGPL-3.0-only: ver `LICENSE` e `NOTICE.md`. Não é afiliado ao MooMoo.io oficial. O jogo usa APIs Roblox atuais como `Terrain:FillBlock` e `AssetService:LoadAssetAsync` para importação opcional, não os métodos antigos de voxels ou dependência de Compatibility Lighting.
 
 Compilação automatizada verifica sintaxe Luau, integração dos módulos, presença das regras de coleta infinita e geração de arquivo Roblox XML. **Não substitui teste jogável no Studio.**
+
+
+## Nova fase — Armas 3D e combate jogador contra jogador
+
+- **Marreta (idade 1)**: coleta natural ilimitada, 12 de dano PvP, 25 contra lobos; ataques a cada 0,42 s.
+- **Machado (idade 3, tecla 6)**: arma 3D com lâmina metálica, bônus de 60% nos recursos coletados, 18 de dano PvP e 38 contra lobos; ataques a cada 0,53 s.
+- **Espada (idade 5, tecla 7)**: lâmina metálica 3D, 34 de dano PvP e 60 contra lobos; golpes a cada 0,38 s, com penalidade de coleta.
+- O avatar padrão R15 continua intacto. Apenas a geometria da `Tool` na mão muda, sem baixar modelos ou substituir corpo e roupas.
+- A barra inferior agora é **rolável horizontalmente** com 7 opções: 1–5 ferramentas/construções anteriores, 6 machado, 7 espada. Itens com idade insuficiente permanecem bloqueados.
+- **PvP autoritativo**: o cliente envia direção do golpe; o servidor determina alcance, cooldown, alvo e dano. `ForceField` inicial protege contra ataques. Ao derrotar outro jogador, +100 XP, mais 1 abate; o alvo contabiliza morte.
+- O HUD mostra **abates e mortes**. A arma escolhida é reaplicada após o personagem reaparecer.
+- A coleta de árvores, arbustos, ouro e pedras continua INFINITA, mesmo com machado ou espada; esses recursos não têm HP, não desaparecem e não reaparecem.
+
+**Teste:** no Roblox Studio, inicie **Test > Server & Clients** com 2 jogadores. Entre na idade 3 para selecionar o machado e na 5 para selecionar a espada. Confira danos PvP, proteção de nascimento, respawn, recolhimento e HUD. `tests/StudioWeaponsSmokeTest.luau` verifica geometria, idade e parâmetros básicos na Command Bar do servidor.
+
+Este é um ajuste de balanceamento do protótipo 3D, não a reprodução exata das estatísticas originais do MooMoo.io. Compilação de scripts não comprova que o PvP funciona no Studio.

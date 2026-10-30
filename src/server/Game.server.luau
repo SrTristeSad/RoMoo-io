@@ -35,9 +35,35 @@ eat.Parent = remotes
 local build = Instance.new("RemoteEvent")
 build.Name = "Build"
 build.Parent = remotes
+local selectWeapon = Instance.new("RemoteEvent")
+selectWeapon.Name = "SelectWeapon"
+selectWeapon.Parent = remotes
 
 -- Cura somente no servidor: o cliente não pode inventar comida nem vida.
 local profiles = {}
+
+-- Apenas o servidor escolhe dano, alcance e tempo de recarga.
+selectWeapon.OnServerEvent:Connect(function(player,id)
+    local profile=profiles[player]
+    if not profile or typeof(id)~="string" then return end
+    local settings=Config.Weapons[id]
+    if not settings or profile.age<settings.minAge then
+        feedback:FireClient(player,"Notice","Arma ainda bloqueada")
+        return
+    end
+    if profile.weapon==id then return end
+    local now=os.clock()
+    if now - (profile.lastWeaponSelect or -1e8)<.2 then return end
+    local char=player.Character
+    local tool=char and char:FindFirstChild("Marreta")
+    if not tool or not tool:IsA("Tool") then return end
+    if Avatar.applyWeaponVisual(tool,id) then
+        profile.weapon=id
+        profile.lastWeaponSelect=now
+        player:SetAttribute("WeaponId",id)
+        feedback:FireClient(player,"WeaponEquipped",id)
+    end
+end)
 
 local function awardXP(player,profile,amount)
     local newAge=Progression.award(player,profile,amount,Config)
@@ -108,15 +134,17 @@ eat.OnServerEvent:Connect(function(player)
     feedback:FireClient(player,"Healed",math.floor(humanoid.Health-before+.5))
 end)
 
-local function distance2D(a, b)
-    local dx, dz = a.X-b.X, a.Z-b.Z
-    return math.sqrt(dx*dx + dz*dz)
-end
-
-local function validEquippedHammer(player, character)
-    local tool = character:FindFirstChild("Marreta")
-    return tool and tool:IsA("Tool") and tool:FindFirstChild("Handle") ~= nil
-        and player.Character == character
+local function equippedWeapon(player,character,profile)
+    local tool=character and character:FindFirstChild("Marreta")
+    if not tool or not tool:IsA("Tool") or not tool:FindFirstChild("Handle")
+        or player.Character~=character then return nil end
+    local id=profile.weapon or "Hammer"
+    local config=Config.Weapons[id]
+    if not config or profile.age<config.minAge then return nil end
+    -- Se um exploit alterar a Tool localmente, o servidor continua verificando
+    -- o valor que ele próprio atribuiu ao equipamento replicado.
+    if tool:GetAttribute("WeaponId") ~= id then return nil end
+    return config
 end
 
 -- Os alvos são resolvidos por Melee.choose; nada de confiar no clique exato.
@@ -129,19 +157,37 @@ strike.OnServerEvent:Connect(function(player, aim)
     local character = player.Character
     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
     local root = character and character:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not root or humanoid.Health <= 0
-        or not validEquippedHammer(player,character) then return end
+    if not humanoid or not root or humanoid.Health <= 0 then return end
+    local weapon = equippedWeapon(player,character,profile)
+    if not weapon then return end
     local now = os.clock()
-    if now-profile.lastStrike<Config.HitCooldown then return end
+    if now-profile.lastStrike<weapon.cooldown then return end
     profile.lastStrike=now
-    local candidate = Melee.choose(root,facing,resources,wolves,Config,buildings)
+    local candidate = Melee.choose(root,facing,resources,wolves,Config,buildings,weapon,player)
     if not candidate then return end
     local core = candidate.PrimaryPart
     if not core then return end
     local position = core.Position
+    local opponent=Players:GetPlayerFromCharacter(candidate)
+    if opponent and opponent~=player then
+        local victimHum=candidate:FindFirstChildOfClass("Humanoid")
+        if not victimHum or victimHum.Health<=0
+            or candidate:FindFirstChildOfClass("ForceField") then return end
+        local oldHealth=victimHum.Health
+        victimHum:TakeDamage(weapon.pvpDamage)
+        feedback:FireAllClients("Impact",position,"Player",false)
+        feedback:FireClient(player,"PlayerHit",weapon.pvpDamage)
+        if oldHealth>0 and victimHum.Health<=0 then
+            profile.kills+=1
+            player:SetAttribute("Kills",profile.kills)
+            awardXP(player,profile,Config.Progression.XPFromPlayer)
+            feedback:FireClient(player,"Notice","Adversario derrotado! +XP")
+        end
+        return
+    end
     if candidate.Parent == buildings then
         if candidate:GetAttribute("OwnerUserId") ~= player.UserId then
-            Structures.damage(candidate,Config.Wolf.HammerDamage)
+            Structures.damage(candidate,weapon.structureDamage)
             feedback:FireAllClients("Impact",position,"Building",false)
         else
             feedback:FireClient(player,"Notice","Sua construcao esta protegida")
@@ -149,7 +195,7 @@ strike.OnServerEvent:Connect(function(player, aim)
         return
     end
     if candidate.Parent == wolves then
-        local killed = Wolves.hit(candidate,Config.Wolf.HammerDamage)
+        local killed = Wolves.hit(candidate,weapon.wolfDamage)
         feedback:FireAllClients("Impact",position,"Wolf",false)
         if killed then
             profile.stock.Food+=Config.Wolf.FoodOnKill
@@ -163,17 +209,26 @@ strike.OnServerEvent:Connect(function(player, aim)
     local stats = World.hitNode(candidate)
     if not stats then return end
     local key = stats.inventory
-    profile.stock[key] += stats.yield
+    local amount=math.max(1,math.floor(stats.yield*weapon.gatherMultiplier+.5))
+    profile.stock[key] += amount
     player:SetAttribute(key,profile.stock[key])
-    awardXP(player,profile,stats.yield)
-    feedback:FireClient(player,"Gather",position,candidate:GetAttribute("Kind"),stats.yield)
+    awardXP(player,profile,amount)
+    feedback:FireClient(player,"Gather",position,candidate:GetAttribute("Kind"),amount)
     feedback:FireAllClients("Impact",position,candidate:GetAttribute("Kind"),false)
 end)
 
 local function characterReady(player, character)
     local humanoid = character:WaitForChild("Humanoid", 10)
     if humanoid and humanoid:IsA("Humanoid") then
-        Avatar.equip(player, character, humanoid)
+        local profile=profiles[player]
+        Avatar.equip(player,character,humanoid,profile and profile.weapon or "Hammer")
+        humanoid.Died:Connect(function()
+            local current=profiles[player]
+            if current then
+                current.deaths += 1
+                player:SetAttribute("Deaths",current.deaths)
+            end
+        end)
     end
 end
 
@@ -186,8 +241,15 @@ local function playerAdded(player)
         lastStrike = -1e8,
         lastEat = -1e8,
         lastBuild = -1e8,
+        weapon = "Hammer",
+        lastWeaponSelect = -1e8,
+        kills = 0,
+        deaths = 0,
     }
     Progression.initialize(player,profiles[player],Config)
+    player:SetAttribute("WeaponId","Hammer")
+    player:SetAttribute("Kills",0)
+    player:SetAttribute("Deaths",0)
     player:SetAttribute("Wood", Config.StartingWood)
     player:SetAttribute("Stone", Config.StartingStone)
     player:SetAttribute("Gold", Config.StartingGold)

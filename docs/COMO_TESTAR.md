@@ -56,3 +56,18 @@ Depois salve o place no Studio. **O ZIP pronto não incorpora automaticamente ma
 - [ ] Sem erros vermelhos no console.
 
 A compilação de scripts não substitui testar a jogabilidade no Roblox Studio.
+
+
+## Teste da nova fase de armas 3D e PvP
+
+- [ ] Testar a marreta inicial com avatar R15 padrão.
+- [ ] A idade 3 libera **6 MACHADO**; o item substitui visualmente a cabeça da marreta por lâmina metálica.
+- [ ] A idade 5 libera **7 ESPADA**; a Tool exibe lâmina e guarda de espada.
+- [ ] Machado rende mais madeira/pedra/ouro/comida por golpe; espada é melhor para dano e pior para coleta.
+- [ ] Os itens 6 e 7 não podem ser equipados antes da idade certa, nem pelo RemoteEvent.
+- [ ] A hotbar rola horizontalmente em tela estreita e mantém os itens 1–5.
+- [ ] Em **Test > Server & Clients**, dois jogadores conseguem lutar; ForceField inicial impede dano.
+- [ ] PvP usa alcance e cadência próprios da arma. Abates e mortes aparecem no HUD.
+- [ ] Ao morrer, o personagem reaparece com o avatar normal e sua arma escolhida.
+- [ ] Os recursos naturais permanecem sem HP e não desaparecem com qualquer arma.
+- [ ] Executar `tests/StudioWeaponsSmokeTest.luau` no Command Bar do servidor e conferir PASS.

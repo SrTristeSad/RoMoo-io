@@ -32,3 +32,7 @@ Fonte do usuário: `SrTristeSad/ToonRoyale-Assets/android/server-lua/world/objec
 - Moinhos rendem +2 ouros a cada 4 segundos; espinhos atacam criaturas e jogadores que não sejam donos. Lobos contornam ou atacam obstáculos construídos.
 - Uma construção pode ser destruída e consumir recursos; **árvores, rochas, ouro e arbustos não têm HP, não são destruídos nem reaparecem**.
 - O catálogo de custos e modelos foi ajustado para a escala Roblox; ainda não é a conversão integral do catálogo de itens do Moo-IO.
+
+## Armas 3D / PvP
+
+Adicionadas marreta, machado e espada. A Tool permanece no personagem padrão R15; o `Avatar.luau` troca apenas suas peças 3D. O servidor valida desbloqueio por idade, alcance, velocidade e dano, e o módulo `Melee.luau` também reconhece adversários vivos dentro do cone frontal, respeitando o `ForceField` inicial. Os custos e danos são uma adaptação do protótipo, ainda não uma conversão 1:1 dos valores do Moo-IO Lua.

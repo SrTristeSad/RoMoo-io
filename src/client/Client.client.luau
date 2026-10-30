@@ -14,6 +14,7 @@ local remotes = ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Remotes")
 local strike = remotes:WaitForChild("Strike")
 local feedback = remotes:WaitForChild("Feedback")
 local build = remotes:WaitForChild("Build")
+local selectWeapon = remotes:WaitForChild("SelectWeapon")
 local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local eat = remotes:WaitForChild("Eat")
 local world = workspace:WaitForChild("RoMooWorld")
@@ -23,10 +24,29 @@ local buildings = world:WaitForChild("Buildings")
 local holding = false
 local previous = -1e8
 local cooldown = .43
+local lastWeaponSelection = "Hammer"
 local selectedMode = "Hammer"
 local clientRayParams = RaycastParams.new()
 clientRayParams.FilterType = Enum.RaycastFilterType.Include
-clientRayParams.FilterDescendantsInstances = {resources,wolves,buildings}
+local function updateRayTargets()
+    local targets={resources,wolves,buildings}
+    for _,other in ipairs(Players:GetPlayers()) do
+        if other~=player and other.Character then table.insert(targets,other.Character) end
+    end
+    clientRayParams.FilterDescendantsInstances=targets
+end
+local function watchPlayer(other)
+    if other==player then return end
+    other.CharacterAdded:Connect(updateRayTargets)
+    other.CharacterRemoving:Connect(updateRayTargets)
+end
+Players.PlayerAdded:Connect(function(other)
+    watchPlayer(other)
+    updateRayTargets()
+end)
+Players.PlayerRemoving:Connect(updateRayTargets)
+for _,other in ipairs(Players:GetPlayers()) do watchPlayer(other) end
+updateRayTargets()
 local toolAnimationExpiry = .23
 
 -- Camara elevada ATRAS do avatar, mas ainda terceira pessoa.
@@ -134,6 +154,28 @@ xpText.TextSize=13
 xpText.Font=Enum.Font.GothamBold
 xpText.Text="IDADE 1   0/100 XP"
 xpText.Parent=xpPanel
+-- Placar da partida para o jogador local.
+local matchStats=Instance.new("TextLabel")
+matchStats.Name="AbatesMortes"
+matchStats.AnchorPoint=Vector2.new(1,0)
+matchStats.Position=UDim2.new(1,-12,0,88)
+matchStats.Size=UDim2.fromOffset(155,25)
+matchStats.BackgroundColor3=Color3.fromRGB(32,45,42)
+matchStats.BackgroundTransparency=.12
+matchStats.BorderSizePixel=0
+matchStats.TextColor3=Color3.fromRGB(244,245,234)
+matchStats.TextSize=12
+matchStats.Font=Enum.Font.GothamBold
+matchStats.Parent=ui
+rounded(matchStats,7)
+local function refreshMatchStats()
+    matchStats.Text=("ABATES %d  |  MORTES %d"):format(
+        player:GetAttribute("Kills") or 0, player:GetAttribute("Deaths") or 0)
+end
+player:GetAttributeChangedSignal("Kills"):Connect(refreshMatchStats)
+player:GetAttributeChangedSignal("Deaths"):Connect(refreshMatchStats)
+refreshMatchStats()
+
 local function refreshXP()
     local age=player:GetAttribute("Age") or 1
     local experience=player:GetAttribute("XP") or 0
@@ -150,18 +192,23 @@ refreshXP()
 
 -- Hotbar de construções: a marreta segue equipada; trocar de slot muda
 -- apenas o comando enviado. O servidor valida custos e local da construção.
-local buildBar = Instance.new("Frame")
+local buildBar = Instance.new("ScrollingFrame")
 buildBar.Name = "BarraConstrucoes"
 buildBar.AnchorPoint = Vector2.new(.5,1)
 buildBar.Position = UDim2.new(.5,0,1,-113)
 buildBar.Size = UDim2.new(.96,0,0,54)
+buildBar.CanvasSize = UDim2.fromOffset(0,0)
+buildBar.AutomaticCanvasSize = Enum.AutomaticSize.X
+buildBar.ScrollingDirection = Enum.ScrollingDirection.X
+buildBar.ScrollBarThickness = 3
+buildBar.BorderSizePixel = 0
 buildBar.BackgroundColor3 = Color3.fromRGB(29,42,37)
 buildBar.BackgroundTransparency = .08
 buildBar.BorderSizePixel = 0
 buildBar.Parent = ui
 rounded(buildBar,9)
 local widthLimit = Instance.new("UISizeConstraint")
-widthLimit.MaxSize = Vector2.new(570,54)
+widthLimit.MaxSize = Vector2.new(790,54)
 widthLimit.Parent = buildBar
 local barLayout = Instance.new("UIListLayout")
 barLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -171,21 +218,28 @@ barLayout.Padding = UDim.new(0,4)
 barLayout.SortOrder = Enum.SortOrder.LayoutOrder
 barLayout.Parent = buildBar
 local choices = {
-    {mode="Hammer", label="1 MARRETA"},
+    {mode="Hammer",label="1 MARRETA"},
     {mode="Wall",label="2 PAREDE 10M"},
     {mode="Spikes",label="3 ESPINHOS 20M/5P"},
     {mode="Windmill",label="4 MOINHO 50M/10P"},
     {mode="StoneWall",label="5 MURO PEDRA 30P/10M"},
+    {mode="Axe",label="6 MACHADO"},
+    {mode="Sword",label="7 ESPADA"},
 }
 local buttons = {}
-local function setMode(mode)
-    local blueprint=Config.Buildings[mode]
+local function setMode(mode,skipRemote)
+    local blueprint=Config.Buildings[mode] or Config.Weapons[mode]
+    if not blueprint then return end
     local age=player:GetAttribute("Age") or 1
-    if blueprint and age < (blueprint.minAge or 1) then return end
+    if age<(blueprint.minAge or 1) then return end
     selectedMode=mode
+    if Config.Weapons[mode] then
+        lastWeaponSelection=mode
+        if not skipRemote then selectWeapon:FireServer(mode) end
+    end
     for _,choice in ipairs(choices) do
         local button=buttons[choice.mode]
-        local data=Config.Buildings[choice.mode]
+        local data=Config.Buildings[choice.mode] or Config.Weapons[choice.mode]
         local unlocked=not data or age >= (data.minAge or 1)
         if button then
             button.Text=if unlocked then choice.label
@@ -202,7 +256,7 @@ for i,item in ipairs(choices) do
     local button=Instance.new("TextButton")
     button.Name=item.mode
     button.LayoutOrder=i
-    button.Size=UDim2.new(.188,0,0,44)
+    button.Size=UDim2.fromOffset(107,44)
     button.BackgroundColor3=Color3.fromRGB(77,87,81)
     button.BorderSizePixel=0
     button.TextColor3=Color3.new(1,1,1)
@@ -217,9 +271,16 @@ for i,item in ipairs(choices) do
         setMode(item.mode)
     end)
 end
-setMode("Hammer")
+setMode("Hammer",true)
 player:GetAttributeChangedSignal("Age"):Connect(function()
-    setMode(selectedMode)
+    setMode(selectedMode,true)
+end)
+player:GetAttributeChangedSignal("WeaponId"):Connect(function()
+    local serverWeapon=player:GetAttribute("WeaponId")
+    if Config.Weapons[serverWeapon] then
+        lastWeaponSelection=serverWeapon
+        if Config.Weapons[selectedMode] then setMode(serverWeapon,true) end
+    end
 end)
 local preview = Instance.new("Part")
 preview.Name = "RoMooBuildPreview"
@@ -331,13 +392,15 @@ local function targetFromPointer()
     local hit = workspace:Raycast(ray.Origin, ray.Direction * 240, clientRayParams)
     local model = hit and hit.Instance:FindFirstAncestorOfClass("Model")
     while model and model.Parent ~= resources and model.Parent ~= wolves
-        and model.Parent ~= buildings do
+        and model.Parent ~= buildings and not Players:GetPlayerFromCharacter(model) do
         local parent = model.Parent
         if not parent then break end
         model = if parent:IsA("Model") then parent else parent:FindFirstAncestorOfClass("Model")
     end
     return if model and (model.Parent == resources or model.Parent == wolves
-        or model.Parent == buildings) then model else nil
+        or model.Parent == buildings or (
+            Players:GetPlayerFromCharacter(model) and model ~= player.Character))
+        then model else nil
 end
 
 -- Mirar no solo, na copa das árvores ou nas rochas. O personagem se vira
@@ -369,7 +432,8 @@ local function closeEnough(model)
     if not root or not core then return false end
     local dx = root.Position.X - core.Position.X
     local dz = root.Position.Z - core.Position.Z
-    return dx*dx + dz*dz <= 17*17
+    local weapon=Config.Weapons[selectedMode] or Config.Weapons.Hammer
+    return dx*dx + dz*dz <= weapon.range*weapon.range
 end
 
 local function attack()
@@ -378,13 +442,15 @@ local function attack()
     local root = getRoot()
     if not tool or not root then return end
     local now = os.clock()
-    if now - previous < cooldown then return end
+    local weapon=Config.Weapons[selectedMode]
+    local delayTime=if weapon then weapon.cooldown else Config.BuildCooldown
+    if now - previous < delayTime then return end
     -- Mira envia apenas DIRECAO, nunca Model, HP ou recompensa.
     -- O servidor procura recursos/lobos no cone frontal.
     local direction = cursorDirection(root)
     if not direction or direction.Magnitude < .7 then return end
     previous = now
-    if selectedMode ~= "Hammer" then
+    if not weapon then
         build:FireServer(selectedMode,direction.Unit)
         return
     end
@@ -449,11 +515,13 @@ UserInputService.InputBegan:Connect(function(input, consumed)
         [Enum.KeyCode.Three]="Spikes",
         [Enum.KeyCode.Four]="Windmill",
         [Enum.KeyCode.Five]="StoneWall",
+        [Enum.KeyCode.Six]="Axe",
+        [Enum.KeyCode.Seven]="Sword",
     }
     local choice=hotkeys[input.KeyCode]
     if choice then setMode(choice) return end
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        if selectedMode=="Hammer" then
+        if Config.Weapons[selectedMode] then
             holding=true
         else
             attack()
@@ -512,7 +580,7 @@ if UserInputService.TouchEnabled then
     rounded(button, 13)
     button.Activated:Connect(attack)
     RunService.RenderStepped:Connect(function()
-        button.Text=if selectedMode=="Hammer" then "GOLPEAR" else "CONSTRUIR"
+        button.Text=if Config.Weapons[selectedMode] then "GOLPEAR" else "CONSTRUIR"
     end)
     local healButton=Instance.new("TextButton")
     healButton.Name="Curar"
@@ -564,7 +632,7 @@ end)
 -- Fantasma visual para construções. É apenas uma previsão do cliente:
 -- o servidor verifica colisões, alcance, recursos e limites de verdade.
 local function previewBuild(dt)
-    if selectedMode == "Hammer" then
+    if Config.Weapons[selectedMode] then
         preview.Transparency=1
         return
     end
@@ -617,7 +685,7 @@ RunService.Heartbeat:Connect(function()
     if holding then attack() end
 end)
 RunService.RenderStepped:Connect(function()
-    if selectedMode ~= "Hammer" then
+    if not Config.Weapons[selectedMode] then
         hover.Enabled = false
         hover.Adornee = nil
         hint.Text="Clique para colocar "..selectedMode.." | 1: voltar à marreta"
@@ -627,7 +695,10 @@ RunService.RenderStepped:Connect(function()
     if target and closeEnough(target) then
         hover.Adornee = target
         hover.Enabled = true
-        if target.Parent==buildings then
+        if Players:GetPlayerFromCharacter(target) then
+            hint.Text="ADVERSARIO • GOLPEAR PARA ATACAR"
+            hover.OutlineColor=Color3.fromRGB(238,74,68)
+        elseif target.Parent==buildings then
             local owned=target:GetAttribute("OwnerUserId")==player.UserId
             hint.Text=if owned then "SUA CONSTRUCAO"
                 else (labels[target.Name] or "ESTRUTURA").." • GOLPEAR"
@@ -698,6 +769,12 @@ feedback.OnClientEvent:Connect(function(kind, position, resourceKind, _broken)
     elseif kind=="Income" then
         hint.Text="Moinho: +"..tostring(position).." ouro"
         return
+    elseif kind=="WeaponEquipped" then
+        hint.Text="Arma equipada: "..tostring(position)
+        return
+    elseif kind=="PlayerHit" then
+        hint.Text="Golpe em adversario: "..tostring(position).." de dano"
+        return
     elseif kind=="LevelUp" then
         local age=tonumber(position) or 1
         local announce=Instance.new("TextLabel")
@@ -709,8 +786,9 @@ feedback.OnClientEvent:Connect(function(kind, position, resourceKind, _broken)
         announce.BackgroundTransparency=.08
         announce.BorderSizePixel=0
         local unlocked=if age==2 then "ESPINHOS"
-            else if age==3 then "MOINHO"
+            else if age==3 then "MOINHO E MACHADO"
             else if age==4 then "MURO DE PEDRA"
+            else if age==5 then "ESPADA"
             else "NOVO NIVEL"
         announce.Text="IDADE "..age.."!  "..unlocked
         announce.TextScaled=true

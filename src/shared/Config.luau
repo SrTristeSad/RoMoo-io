@@ -5,6 +5,15 @@ return {
     Seed = 20261030,
     StartingWood = 0, StartingStone = 0, StartingGold = 0, StartingFood = 0,
     HitRange = 17, HitCooldown = .42, HitArcDot = .38,
+    -- Armas primarias 3D. Todas mantem a coleta ilimitada dos recursos naturais.
+    Weapons = {
+        Hammer = {label="MARRETA",minAge=1,range=17,cooldown=.42,
+            wolfDamage=25,structureDamage=25,pvpDamage=12,gatherMultiplier=1},
+        Axe = {label="MACHADO",minAge=3,range=16,cooldown=.53,
+            wolfDamage=38,structureDamage=31,pvpDamage=18,gatherMultiplier=1.6},
+        Sword = {label="ESPADA",minAge=5,range=19,cooldown=.38,
+            wolfDamage=60,structureDamage=39,pvpDamage=34,gatherMultiplier=.5},
+    },
     -- Alimento cura vida, como nas mecânicas clássicas.
     EatCost = 10, EatHeal = 32, EatCooldown = 1.25,
     -- Estruturas iniciais, com requisitos de madeira/pedra e limites por jogador.
@@ -12,7 +21,7 @@ return {
     -- A idade aumenta com coleta e combate (mecanica adaptada do MooMoo.io).
     Progression = {
         BaseXP = 100, Growth = 1.2, MaxAge = 9,
-        XPFromWolf = 80, XPFromBuild = 15,
+        XPFromWolf = 80, XPFromBuild = 15, XPFromPlayer = 100,
     },
     Buildings = {
         Wall = {label="PAREDE",cost={Wood=10},health=380,limit=30,minAge=1},

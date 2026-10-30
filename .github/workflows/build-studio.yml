@@ -63,6 +63,7 @@ jobs:
           wolf = Path('src/server/Wolves.luau').read_text()
           melee = Path('src/server/Melee.luau').read_text()
           structures = Path('src/server/Structures.luau').read_text()
+          weapon_test = Path('tests/StudioWeaponsSmokeTest.luau').read_text()
           buildtest = Path('tests/StudioBuildingSmokeTest.luau').read_text()
           project = Path('default.project.json').read_text()
           rules = Path('src/server/MapRules.luau').read_text()
@@ -117,6 +118,22 @@ jobs:
           assert 'typeof(age) ~= "number"' in structures
           assert 'ProgressoIdade' in client and 'XPFill' in client and 'StoneWall' in client
           assert 'for i=1,19 do' in progtest
+          assert 'Hammer = {' in cfg and 'Axe = {' in cfg and 'Sword = {' in cfg
+          assert 'SelectWeapon' in game and 'selectWeapon.OnServerEvent' in game
+          assert 'tool:GetAttribute("WeaponId") ~= id' in game
+          assert 'victimHum:TakeDamage(weapon.pvpDamage)' in game
+          assert 'not char:FindFirstChildOfClass("ForceField")' in melee
+          assert 'characters[char] = player' in melee
+          assert 'Avatar.applyWeaponVisual' in game
+          assert 'function Avatar.applyWeaponVisual' in avatar
+          assert 'id=="Hammer"' in avatar and 'id=="Axe"' in avatar
+          assert 'tool:SetAttribute("WeaponId",id)' in avatar
+          assert 'mode="Axe"' in client and 'mode="Sword"' in client
+          assert 'Enum.KeyCode.Six' in client and 'Enum.KeyCode.Seven' in client
+          assert 'selectWeapon:FireServer(mode)' in client
+          assert 'ABATES %d' in client
+          assert 'Avatar.createHammer()' in weapon_test
+          assert 'Config.Weapons.Sword.minAge==5' in weapon_test
           assert 'Progression.canUse(p,Config.Buildings.StoneWall)' in progtest
           assert 'RoMooCameraAndAim' in client
           assert 'hover.Enabled = false' in client
