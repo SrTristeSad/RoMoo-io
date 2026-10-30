@@ -16,7 +16,9 @@ for _, node in ipairs(nodes:GetChildren()) do
     assert(node:GetAttribute("Health") == nil, "Recurso natural não deve ter HP")
     assert(node:FindFirstChild("Durability") == nil, "Recurso com barra de durabilidade")
 end
-assert(count.Tree > 0 and count.Rock > 0 and count.Gold > 0, "Falta recurso essencial")
+assert(count.Tree >= 120, "Floresta escassa: esperadas 120 ou mais arvores, obtidas " .. count.Tree)
+assert(count.Rock >= 35, "Esperadas 35 ou mais pedras, obtidas " .. count.Rock)
+assert(count.Gold >= 12, "Esperados 12 ou mais minérios de ouro, obtidos " .. count.Gold)
 
 local testFolder = Instance.new("Folder")
 testFolder.Name = "TesteTemporario"
@@ -46,4 +48,4 @@ if player and player.Character then
     assert(hammer and hammer:IsA("Tool") and hammer:FindFirstChild("Handle"),
         "Marreta não está equipada no personagem")
 end
-print("[RoMoo 3D] PASS: Terrain, ponte, árvore, pedra, ouro e marreta.")
+print(string.format("[RoMoo 3D] PASS: Terrain, pontes, %d arvores, %d pedras, %d ouros e marreta.", count.Tree, count.Rock, count.Gold))

@@ -62,7 +62,8 @@ end
 function Avatar.equip(player, character, humanoid)
     -- Manter corpo, roupas, rosto e animações originais do Roblox.
     humanoid.WalkSpeed = 16
-    humanoid.AutoRotate = true
+    -- A rotação é controlada pelo cursor no cliente (o movimento padrão permanece).
+    humanoid.AutoRotate = false
     if character:FindFirstChild("Marreta") then return end
     local backpack = player:WaitForChild("Backpack", 10)
     if not backpack then return end

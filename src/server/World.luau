@@ -104,57 +104,77 @@ local function createRiver(terrain, folder)
     return bridges
 end
 
+-- Três silhuetas de árvore, com escala compatível com o avatar R15.
+-- Peças e materiais nativos do Studio; não há meshes externos obrigatórios.
 local function createTree(model, pos)
-    local variation = rng:NextNumber(.85, 1.15)
-    local trunkH = 8 * variation
-    local trunk = makePart(model, "Core", Vector3.new(trunkH, 2.6, 2.6),
-        CFrame.new(pos + Vector3.new(0, trunkH/2, 0)) * CFrame.Angles(0, 0, math.rad(90)),
-        Color3.fromRGB(116, 82, 54), Enum.Material.Wood, {shape = Enum.PartType.Cylinder, collide = true})
-    -- Copa com volumes separados, não uma esfera substituindo a árvore.
-    for i, offset in ipairs({
-        Vector3.new(0, 9.0, 0), Vector3.new(-3.5, 8.5, .8),
-        Vector3.new(3.2, 8.7, -1), Vector3.new(0, 11.8, 1.1),
-    }) do
-        makePart(model, "Folhas", Vector3.new(7.5, 5.4, 7.4) * variation,
-            CFrame.new(pos + offset * variation),
-            if i % 2 == 0 then Color3.fromRGB(59, 129, 66) else Color3.fromRGB(73, 150, 80),
-            Enum.Material.Grass, {shape = Enum.PartType.Ball})
+    local scale = rng:NextNumber(.85, 1.25)
+    local pine = rng:NextInteger(1, 5) == 1
+    local height = (if pine then 7.2 else 5.7) * scale
+    local tone = rng:NextInteger(-9, 9)
+    local bark = Color3.fromRGB(114 + tone, 83 + tone, 55 + tone)
+    local trunk = makePart(model, "Core",
+        Vector3.new(height, 1.6 * scale, 1.6 * scale),
+        CFrame.new(pos + Vector3.new(0, height / 2, 0)) * CFrame.Angles(0, 0, math.rad(90)),
+        bark, Enum.Material.Wood, {shape = Enum.PartType.Cylinder, collide = true})
+    local palette
+    if pos.Z < -Config.MapSize / 2 + 110 then
+        palette = {Color3.fromRGB(61, 117, 95), Color3.fromRGB(55, 105, 88)}
+    elseif pos.Z > Config.MapSize / 2 - 110 then
+        palette = {Color3.fromRGB(121, 144, 83), Color3.fromRGB(144, 156, 91)}
+    else
+        palette = {Color3.fromRGB(54, 139, 65), Color3.fromRGB(74, 162, 72)}
     end
-    for _, side in ipairs({-1, 1}) do
-        local branch = makePart(model, "Galho", Vector3.new(1.25, 4.1, 1.25),
-            CFrame.new(pos + Vector3.new(side * 1.4, 6.7, 0)) *
-            CFrame.Angles(0, 0, math.rad(side * 37)),
-            Color3.fromRGB(116, 82, 54), Enum.Material.Wood)
-        branch.CanQuery = false
+    if pine then
+        for layer = 1, 3 do
+            local radius = (5.6 - layer * 1.05) * scale
+            makePart(model, "RamoPinheiro", Vector3.new(radius, 3.6 * scale, radius),
+                CFrame.new(pos + Vector3.new(0, height * (.64 + layer * .18), 0)),
+                palette[layer % 2 + 1], Enum.Material.Grass, {shape = Enum.PartType.Ball})
+        end
+    else
+        for i, offset in ipairs({
+            Vector3.new(0, 2.1, 0), Vector3.new(-2.05, .9, 0),
+            Vector3.new(2.0, 1.0, -.4), Vector3.new(0, .8, 2.0),
+        }) do
+            makePart(model, "Copa", Vector3.new(5.25, 4.0, 5.0) * scale,
+                CFrame.new(pos + Vector3.new(0, height, 0) + offset * scale),
+                palette[(i % 2) + 1], Enum.Material.Grass, {shape = Enum.PartType.Ball})
+        end
     end
     return trunk
 end
 
 local function createRock(model, pos, gold)
-    local body = makePart(model, "Core", Vector3.new(7.5, 5, 6.8),
-        CFrame.new(pos + Vector3.new(0, 2.5, 0)) * CFrame.Angles(0, math.rad(18), 0),
-        Color3.fromRGB(110, 121, 130), Enum.Material.Slate, {collide = true})
-    for index, offset in ipairs({
-        Vector3.new(-2.7, 1.4, 2.2), Vector3.new(2.8, 1.5, -1.9),
-        Vector3.new(0, 2.5, -3.2)
-    }) do
-        makePart(model, "Rochoso", Vector3.new(3.6, 3.8, 4.5),
-            CFrame.new(pos + offset) * CFrame.Angles(0, math.rad(index * 53), math.rad(8)),
-            if index == 1 then Color3.fromRGB(138, 147, 150) else Color3.fromRGB(117, 126, 131),
-            Enum.Material.Rock, {wedge = true})
+    local scale = rng:NextNumber(.80, 1.2)
+    local stone = if gold then Color3.fromRGB(108, 103, 99) else Color3.fromRGB(120, 130, 139)
+    local core = makePart(model, "Core", Vector3.new(5.2, 3.5, 5) * scale,
+        CFrame.new(pos + Vector3.new(0, 1.75 * scale, 0)) *
+        CFrame.Angles(0, rng:NextNumber(-.5, .5), 0),
+        stone, Enum.Material.Slate, {collide = true})
+    local shapes = {
+        {Vector3.new(-1.9, 1.5, 1.9), Vector3.new(2.6, 2.7, 3.2)},
+        {Vector3.new(1.7, 1.4, -1.7), Vector3.new(2.8, 2.4, 2.8)},
+    }
+    for i, item in ipairs(shapes) do
+        makePart(model, "FaceRochosa", item[2] * scale,
+            CFrame.new(pos + item[1] * scale) *
+            CFrame.Angles(0, math.rad(i * 48), math.rad(9)),
+            if gold then Color3.fromRGB(139, 131, 118)
+                else Color3.fromRGB(142, 149, 151), Enum.Material.Rock,
+            {wedge = true})
     end
     if gold then
-        for index, offset in ipairs({
-            Vector3.new(-2.2, 4.4, .4),
-            Vector3.new(1.6, 3.8, -2.2),
-            Vector3.new(1.7, 2.1, 2.1),
+        for i, offset in ipairs({
+            Vector3.new(-1.6, 3.1, -.5), Vector3.new(1.5, 2.7, 1.5),
+            Vector3.new(0, 3.6, -1.0),
         }) do
-            makePart(model, "VeioDeOuro", Vector3.new(1.25, 2.2, 1.4),
-                CFrame.new(pos + offset) * CFrame.Angles(0, math.rad(index * 35), math.rad(18)),
-                Color3.fromRGB(236, 183, 39), Enum.Material.Metal, {wedge = true})
+            makePart(model, "VeioDeOuro", Vector3.new(.95, 1.7, 1.3) * scale,
+                CFrame.new(pos + offset * scale) *
+                CFrame.Angles(0, math.rad(i * 37), math.rad(15)),
+                Color3.fromRGB(235, 182, 46), Enum.Material.Metal, {wedge = true})
         end
     end
-    return body
+    return core
 end
 
 local function importedResource(kind, model, pos)
@@ -256,36 +276,77 @@ function World.create()
     resources.Name = "Resources"
     resources.Parent = folder
 
+    -- 170 árvores, 66 rochas e 22 minérios espalhados em grupos.
+    -- Separação menor que a versão anterior, mas com espaço para caminhar.
     local spots = {}
     local function add(kind, x, z)
+        if math.abs(x) > Config.MapSize / 2 - 17 or math.abs(z) > Config.MapSize / 2 - 17 then
+            return false
+        end
         local pos = Vector3.new(x, 0, z)
         if not clearFromRiver(x, z) then return false end
-        if Vector2.new(x, z + 64).Magnitude < 11 then return false end
+        if Vector2.new(x, z + 64).Magnitude < 10 then return false end
         for _, other in ipairs(spots) do
-            if (other - pos).Magnitude < 16 then return false end
+            if (other - pos).Magnitude < 10.5 then return false end
         end
         table.insert(spots, pos)
         World.spawnNode(kind, pos, resources)
         return true
     end
 
-    -- Recursos garantidos a curta distância do ponto inicial: teste imediato.
-    add("Tree", -19, -67)
-    add("Rock", 18, -72)
-    add("Gold", 5, -91)
-    add("Tree", -33, -94)
-    add("Rock", 30, -104)
+    -- Próximo ao spawn: todos os recursos em vista, mais árvores ao redor.
+    for _, item in ipairs({
+        {"Tree",-17,-64}, {"Tree",-31,-68}, {"Tree",-27,-91},
+        {"Tree",20,-57}, {"Tree",33,-71}, {"Tree",38,-88},
+        {"Tree",-47,-79}, {"Tree",-46,-104}, {"Tree",50,-106},
+        {"Rock",12,-83}, {"Rock",-11,-88}, {"Rock",27,-100},
+        {"Gold",5,-109}, {"Gold",-24,-115},
+    }) do
+        add(item[1], item[2], item[3])
+    end
 
-    local desired = {Tree = 25, Rock = 18, Gold = 8}
-    for kind, count in pairs(desired) do
-        for _ = 1, count do
-            for _try = 1, 90 do
-                local x = rng:NextInteger(-Config.MapSize/2 + 24, Config.MapSize/2 - 24)
-                local z = rng:NextInteger(-Config.MapSize/2 + 24, Config.MapSize/2 - 24)
-                if add(kind, x, z) then break end
+    local groves = {
+        Vector2.new(-80,-85), Vector2.new(88,-98),
+        Vector2.new(-149,-158), Vector2.new(-44,-163),
+        Vector2.new(64,-190), Vector2.new(166,-174),
+        Vector2.new(-160,-48), Vector2.new(153,-38),
+        Vector2.new(-165,77), Vector2.new(-70,98),
+        Vector2.new(46,97), Vector2.new(145,143),
+        Vector2.new(-132,181), Vector2.new(0,187),
+        Vector2.new(163,195), Vector2.new(-29,-211),
+    }
+    for _, center in ipairs(groves) do
+        local created = 0
+        for _try = 1, 120 do
+            if created >= 10 then break end
+            local angle = rng:NextNumber(-math.pi, math.pi)
+            local radius = math.sqrt(rng:NextNumber()) * 38
+            if add("Tree", center.X + math.cos(angle)*radius,
+                center.Y + math.sin(angle)*radius) then
+                created += 1
             end
         end
     end
+    local function scatter(kind, goal)
+        local made = 0
+        for _try = 1, goal * 60 do
+            if made >= goal then break end
+            local x = rng:NextNumber(-Config.MapSize/2 + 20, Config.MapSize/2 - 20)
+            local z = rng:NextNumber(-Config.MapSize/2 + 20, Config.MapSize/2 - 20)
+            if add(kind,x,z) then made += 1 end
+        end
+    end
+    scatter("Tree", 35)
+    scatter("Rock", 63)
+    scatter("Gold", 20)
+
+    local count = {Tree = 0, Rock = 0, Gold = 0}
+    for _, model in ipairs(resources:GetChildren()) do
+        local kind = model:GetAttribute("Kind")
+        if count[kind] then count[kind] += 1 end
+    end
+    print(string.format("[RoMoo] Floresta 3D: %d arvores, %d pedras e %d ouros permanentes.",
+        count.Tree, count.Rock, count.Gold))
 
     Lighting.ClockTime = 14
     Lighting.Brightness = 2.4

@@ -6,6 +6,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
@@ -22,9 +23,19 @@ clientRayParams.FilterType = Enum.RaycastFilterType.Include
 clientRayParams.FilterDescendantsInstances = {resources}
 local toolAnimationExpiry = .23
 
+-- Camara elevada ATRAS do avatar, mas ainda terceira pessoa.
+-- Mouse livre: o avatar gira para o cursor; botao direito orbita a camera.
 player.CameraMode = Enum.CameraMode.Classic
-player.CameraMinZoomDistance = 7
-player.CameraMaxZoomDistance = 20
+local yaw = 0
+local orbitDistance = 21
+local rightMouseHeld = false
+local cameraWasInitialized = false
+local lastTouchPosition = nil
+task.defer(function()
+    pcall(function()
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
+    end)
+end)
 
 local ui = Instance.new("ScreenGui")
 ui.Name = "RoMooPrototypeHUD"
@@ -55,18 +66,20 @@ top.Parent = ui
 rounded(top, 10)
 local layout = Instance.new("UIListLayout")
 layout.FillDirection = Enum.FillDirection.Horizontal
+layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Padding = UDim.new(0, 4)
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 layout.VerticalAlignment = Enum.VerticalAlignment.Center
 layout.Parent = top
 
-for _, entry in ipairs({
+for index, entry in ipairs({
     {key = "Wood", title = "MADEIRA", color = Color3.fromRGB(149, 104, 65)},
     {key = "Stone", title = "PEDRA", color = Color3.fromRGB(111, 124, 137)},
     {key = "Gold", title = "OURO", color = Color3.fromRGB(196, 152, 48)},
 }) do
     local cell = Instance.new("TextLabel")
     cell.Name = entry.key
+    cell.LayoutOrder = index
     cell.Size = UDim2.new(.315, 0, 0, 34)
     cell.BackgroundColor3 = entry.color
     cell.BorderSizePixel = 0
@@ -96,7 +109,7 @@ hint.BorderSizePixel = 0
 hint.TextColor3 = Color3.fromRGB(247, 248, 239)
 hint.Font = Enum.Font.GothamMedium
 hint.TextSize = 14
-hint.Text = "WASD: andar  •  Mouse: mirar  •  Clique: marreta"
+hint.Text = "WASD: andar  |  Mouse: mirar  |  Direito: camera  |  Clique: coletar"
 hint.Parent = ui
 rounded(hint, 8)
 
@@ -106,6 +119,7 @@ hover.FillTransparency = 1
 hover.OutlineColor = Color3.fromRGB(255, 216, 95)
 hover.OutlineTransparency = .1
 hover.DepthMode = Enum.HighlightDepthMode.Occluded
+hover.Enabled = false
 hover.Parent = workspace
 
 local labels = {Tree = "ÁRVORE", Rock = "PEDRA", Gold = "OURO"}
@@ -121,17 +135,21 @@ end
 
 -- Hit-test direto nos recursos 3D. Mouse.Target pode selecionar Terrain,
 -- acessórios e peças decorativas, mas o raio filtrado prioriza o recurso.
-local function targetFromPointer()
+local function pointerRay()
     local camera = workspace.CurrentCamera
     if not camera then return nil end
-    local ray
     if UserInputService.TouchEnabled and not UserInputService.MouseEnabled then
         local viewport = camera.ViewportSize
-        ray = camera:ViewportPointToRay(viewport.X * .5, viewport.Y * .5)
-    else
-        local point = UserInputService:GetMouseLocation()
-        ray = camera:ScreenPointToRay(point.X, point.Y)
+        return camera:ViewportPointToRay(viewport.X * .5, viewport.Y * .5)
     end
+    -- GetMouseLocation usa pixels da tela, compatíveis com ViewportPointToRay.
+    local mousePoint = UserInputService:GetMouseLocation()
+    return camera:ViewportPointToRay(mousePoint.X, mousePoint.Y)
+end
+
+local function targetFromPointer()
+    local ray = pointerRay()
+    if not ray then return nil end
     local hit = workspace:Raycast(ray.Origin, ray.Direction * 240, clientRayParams)
     local model = hit and hit.Instance:FindFirstAncestorOfClass("Model")
     while model and model.Parent ~= resources do
@@ -140,6 +158,29 @@ local function targetFromPointer()
         model = if parent:IsA("Model") then parent else parent:FindFirstAncestorOfClass("Model")
     end
     return if model and model.Parent == resources then model else nil
+end
+
+-- Mirar no solo, na copa das árvores ou nas rochas. O personagem se vira
+-- no plano XZ; é a correção da versão em que só andava de frente.
+local aimParams = RaycastParams.new()
+aimParams.FilterType = Enum.RaycastFilterType.Exclude
+local function cursorDirection(root)
+    local camera = workspace.CurrentCamera
+    local ray = pointerRay()
+    if not camera or not ray then return nil end
+    local character = player.Character
+    aimParams.FilterDescendantsInstances = if character then {character} else {}
+    local hit = workspace:Raycast(ray.Origin, ray.Direction * 700, aimParams)
+    local point = hit and hit.Position
+    if not point and math.abs(ray.Direction.Y) > .005 then
+        local t = (root.Position.Y - ray.Origin.Y) / ray.Direction.Y
+        if t > 0 then point = ray.Origin + ray.Direction*t end
+    end
+    local flat = point and Vector3.new(point.X-root.Position.X,0,point.Z-root.Position.Z)
+    if flat and flat.Magnitude > .8 then return flat.Unit end
+    local forward = camera.CFrame.LookVector
+    flat = Vector3.new(forward.X,0,forward.Z)
+    return if flat.Magnitude > .02 then flat.Unit else nil
 end
 
 local function closeEnough(model)
@@ -179,10 +220,14 @@ end
 local function characterAdded(char)
     holding = false
     local humanoid = char:WaitForChild("Humanoid", 10)
-    if humanoid and workspace.CurrentCamera then
-        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
-        workspace.CurrentCamera.CameraSubject = humanoid
-        workspace.CurrentCamera.FieldOfView = 73
+    if humanoid then
+        humanoid.AutoRotate = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+        cameraWasInitialized = false
+        local camera = workspace.CurrentCamera
+        if camera then
+            camera.CameraType = Enum.CameraType.Scriptable
+            camera.FieldOfView = 68
+        end
     end
     char.ChildAdded:Connect(toolAdded)
     for _, inst in ipairs(char:GetChildren()) do toolAdded(inst) end
@@ -191,14 +236,51 @@ player.CharacterAdded:Connect(characterAdded)
 if player.Character then task.spawn(characterAdded, player.Character) end
 
 UserInputService.InputBegan:Connect(function(input, consumed)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        rightMouseHeld = true
+        return
+    end
     if consumed then return end
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         holding = true
     end
 end)
+UserInputService.InputChanged:Connect(function(input)
+    if rightMouseHeld and input.UserInputType == Enum.UserInputType.MouseMovement then
+        yaw -= input.Delta.X * .006
+    elseif input.UserInputType == Enum.UserInputType.MouseWheel then
+        orbitDistance = math.clamp(orbitDistance - input.Position.Z * 2, 12, 32)
+    end
+end)
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then holding = false end
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then rightMouseHeld = false end
 end)
+
+-- Arrastar na metade direita da tela orbita a câmera em dispositivos móveis.
+local touchOrbitInput = nil
+local touchLastPosition = nil
+UserInputService.TouchStarted:Connect(function(input, processed)
+    local camera = workspace.CurrentCamera
+    if processed or not camera or touchOrbitInput then return end
+    if input.Position.X > camera.ViewportSize.X * .58 then
+        touchOrbitInput = input
+        touchLastPosition = input.Position
+    end
+end)
+UserInputService.TouchMoved:Connect(function(input)
+    if touchOrbitInput ~= input or not touchLastPosition then return end
+    local delta = input.Position - touchLastPosition
+    yaw -= delta.X * .006
+    touchLastPosition = input.Position
+end)
+UserInputService.TouchEnded:Connect(function(input)
+    if touchOrbitInput == input then
+        touchOrbitInput = nil
+        touchLastPosition = nil
+    end
+end)
+
 
 if UserInputService.TouchEnabled then
     local button = Instance.new("TextButton")
@@ -216,6 +298,38 @@ if UserInputService.TouchEnabled then
     button.Activated:Connect(attack)
 end
 
+
+-- Mouse e avatar não estão presos à mesma orientação da câmera.
+-- O plano do jogo fica mais visível com ângulo alto, mantendo profundidade 3D.
+RunService:BindToRenderStep("RoMooCameraAndAim", Enum.RenderPriority.Camera.Value + 1, function(dt)
+    local root = getRoot()
+    local camera = workspace.CurrentCamera
+    if not root or not camera then return end
+    local character = player.Character
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then return end
+    camera.CameraType = Enum.CameraType.Scriptable
+    local forward = Vector3.new(math.sin(yaw),0,-math.cos(yaw))
+    local position = root.Position - forward * orbitDistance +
+        Vector3.new(0, orbitDistance * .72, 0)
+    local target = root.Position + forward * 5 + Vector3.new(0, 1.8, 0)
+    local desired = CFrame.lookAt(position, target)
+    if not cameraWasInitialized then
+        camera.CFrame = desired
+        cameraWasInitialized = true
+    else
+        camera.CFrame = camera.CFrame:Lerp(desired, math.clamp(dt*11, 0, 1))
+    end
+    camera.Focus = CFrame.new(root.Position)
+    if not (UserInputService.TouchEnabled and not UserInputService.MouseEnabled) then
+        local aim = cursorDirection(root)
+        if aim then
+            local facing = CFrame.lookAt(root.Position, root.Position + aim)
+            root.CFrame = root.CFrame:Lerp(facing, math.clamp(dt*15, 0, 1))
+        end
+    end
+end)
+
 RunService.Heartbeat:Connect(function()
     if holding then attack() end
 end)
@@ -223,13 +337,16 @@ RunService.RenderStepped:Connect(function()
     local target = targetFromPointer()
     if target and closeEnough(target) then
         hover.Adornee = target
+        hover.Enabled = true
         hint.Text = (labels[target.Name] or "RECURSO") .. "  •  SEGURE PARA COLETAR"
     elseif target then
+        hover.Enabled = false
         hover.Adornee = nil
         hint.Text = "Aproxime-se para coletar " .. (labels[target.Name] or "recurso")
     else
+        hover.Enabled = false
         hover.Adornee = nil
-        hint.Text = "WASD: andar  •  Mouse: mirar  •  Clique: marreta"
+        hint.Text = "WASD: andar  |  Mouse: mirar  |  Direito: camera  |  Clique: coletar"
     end
 end)
 

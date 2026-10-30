@@ -67,6 +67,10 @@ jobs:
           assert 'candidate:Destroy()' not in game
           assert 'for i = 1, 100 do' in tests
           assert 'BridgeXs = {-150, 0, 150}' in cfg
+          assert 'local groves = {' in world and 'scatter("Tree", 35)' in world
+          assert 'RoMooCameraAndAim' in client, 'Camara 3D/mira por mouse ausente'
+          assert 'hover.Enabled = false' in client, 'Bug de destacar o mapa todo'
+          assert 'humanoid.AutoRotate = false' in avatar, 'Rotacao para mouse desligada'
           print('Coleta de arvore, pedra e ouro permanente: OK')
           PY
 
