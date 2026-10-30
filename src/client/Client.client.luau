@@ -17,6 +17,10 @@ local resources = world:WaitForChild("Resources")
 local holding = false
 local previous = -1e8
 local cooldown = .43
+local clientRayParams = RaycastParams.new()
+clientRayParams.FilterType = Enum.RaycastFilterType.Include
+clientRayParams.FilterDescendantsInstances = {resources}
+local toolAnimationExpiry = .23
 
 player.CameraMode = Enum.CameraMode.Classic
 player.CameraMinZoomDistance = 7
@@ -115,27 +119,25 @@ local function equipped()
     return char and char:FindFirstChild("Marreta") ~= nil
 end
 
+-- Hit-test direto nos recursos 3D. Mouse.Target pode selecionar Terrain,
+-- acessórios e peças decorativas, mas o raio filtrado prioriza o recurso.
 local function targetFromPointer()
-    local hitPart
+    local camera = workspace.CurrentCamera
+    if not camera then return nil end
+    local ray
     if UserInputService.TouchEnabled and not UserInputService.MouseEnabled then
-        local camera = workspace.CurrentCamera
-        if not camera then return nil end
         local viewport = camera.ViewportSize
-        local ray = camera:ViewportPointToRay(viewport.X*.5, viewport.Y*.5)
-        local params = RaycastParams.new()
-        params.FilterType = Enum.RaycastFilterType.Include
-        params.FilterDescendantsInstances = {resources}
-        local result = workspace:Raycast(ray.Origin, ray.Direction * 140, params)
-        hitPart = result and result.Instance
+        ray = camera:ViewportPointToRay(viewport.X * .5, viewport.Y * .5)
     else
-        hitPart = mouse.Target
+        local point = UserInputService:GetMouseLocation()
+        ray = camera:ScreenPointToRay(point.X, point.Y)
     end
-    local model = hitPart and hitPart:FindFirstAncestorOfClass("Model")
+    local hit = workspace:Raycast(ray.Origin, ray.Direction * 240, clientRayParams)
+    local model = hit and hit.Instance:FindFirstAncestorOfClass("Model")
     while model and model.Parent ~= resources do
-        local ancestor = model.Parent
-        if not ancestor then break end
-        model = if ancestor:IsA("Model") then ancestor
-            else ancestor:FindFirstAncestorOfClass("Model")
+        local parent = model.Parent
+        if not parent then break end
+        model = if parent:IsA("Model") then parent else parent:FindFirstAncestorOfClass("Model")
     end
     return if model and model.Parent == resources then model else nil
 end
@@ -150,12 +152,20 @@ local function closeEnough(model)
 end
 
 local function attack()
-    if not equipped() then return end
+    local character = player.Character
+    local tool = character and character:FindFirstChild("Marreta")
+    if not tool then return end
     local now = os.clock()
     if now - previous < cooldown then return end
     local target = targetFromPointer()
     if target then
         previous = now
+        -- Animar cada golpe, inclusive quando o botão fica pressionado.
+        local anim = Instance.new("StringValue")
+        anim.Name = "toolanim"
+        anim.Value = "Slash"
+        anim.Parent = tool
+        Debris:AddItem(anim, toolAnimationExpiry)
         strike:FireServer(target)
     end
 end
@@ -164,15 +174,7 @@ local connectedTools = setmetatable({}, {__mode = "k"})
 local function toolAdded(inst)
     if not inst:IsA("Tool") or inst.Name ~= "Marreta" or connectedTools[inst] then return end
     connectedTools[inst] = true
-    inst.Activated:Connect(function()
-        -- O Tool nativo informa ao Animate do Roblox a ação de golpear.
-        local action = Instance.new("StringValue")
-        action.Name = "toolanim"
-        action.Value = "Slash"
-        action.Parent = inst
-        Debris:AddItem(action, .25)
-        attack()
-    end)
+    inst.Activated:Connect(attack)
 end
 local function characterAdded(char)
     holding = false
@@ -221,7 +223,7 @@ RunService.RenderStepped:Connect(function()
     local target = targetFromPointer()
     if target and closeEnough(target) then
         hover.Adornee = target
-        hint.Text = labels[target.Name] .. "  •  CLIQUE PARA COLETAR"
+        hint.Text = (labels[target.Name] or "RECURSO") .. "  •  SEGURE PARA COLETAR"
     elseif target then
         hover.Adornee = nil
         hint.Text = "Aproxime-se para coletar " .. (labels[target.Name] or "recurso")
@@ -231,7 +233,41 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- Indicador flutuante da recompensa, em tela (sem criar Parts persistentes).
+local function popupGather(position, kind, amount)
+    if typeof(position) ~= "Vector3" or typeof(amount) ~= "number" then return end
+    local camera = workspace.CurrentCamera
+    if not camera then return end
+    local point, onScreen = camera:WorldToViewportPoint(position + Vector3.new(0, 5, 0))
+    if not onScreen then return end
+    local counter = Instance.new("TextLabel")
+    counter.Name = "Coleta"
+    counter.AnchorPoint = Vector2.new(.5, .5)
+    counter.Size = UDim2.fromOffset(135, 32)
+    counter.Position = UDim2.fromOffset(point.X, point.Y)
+    counter.BackgroundTransparency = 1
+    counter.TextStrokeTransparency = .2
+    counter.TextColor3 = if kind == "Gold" then Color3.fromRGB(255, 219, 91)
+        else if kind == "Tree" then Color3.fromRGB(189, 244, 158)
+        else Color3.fromRGB(230, 237, 243)
+    counter.TextSize = 23
+    counter.Font = Enum.Font.GothamBold
+    counter.Text = "+" .. tostring(amount) .. " " ..
+        (if kind == "Tree" then "MADEIRA" else if kind == "Rock" then "PEDRA" else "OURO")
+    counter.Parent = ui
+    TweenService:Create(counter, TweenInfo.new(.64, Enum.EasingStyle.Quad), {
+        Position = UDim2.fromOffset(point.X, point.Y - 39),
+        TextTransparency = 1,
+        TextStrokeTransparency = 1,
+    }):Play()
+    Debris:AddItem(counter, .7)
+end
+
 feedback.OnClientEvent:Connect(function(kind, position, resourceKind, _broken)
+    if kind == "Gather" then
+        popupGather(position, resourceKind, _broken)
+        return
+    end
     if kind ~= "Impact" then
         if kind == "Muito longe! Aproxime-se do recurso." then hint.Text = kind end
         return

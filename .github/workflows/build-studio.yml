@@ -57,6 +57,16 @@ jobs:
           assert 'candidate:Destroy()' not in game
           assert 'task.delay(Config.RespawnSeconds' not in game
           assert 'profile.stock[key] += stats.yield' in game
+          avatar = Path('src/server/Avatar.luau').read_text()
+          client = Path('src/client/Client.client.luau').read_text()
+          tests = Path('tests/StudioWorldSmokeTest.luau').read_text()
+          assert 'Enum.Material.Leather' not in avatar, 'Material invalido na marreta'
+          assert 'Enum.Material.Fabric' in avatar
+          assert 'World.hitNode(candidate)' in game
+          assert 'ScreenPointToRay' in client and 'popupGather' in client
+          assert 'candidate:Destroy()' not in game
+          assert 'for i = 1, 100 do' in tests
+          assert 'BridgeXs = {-150, 0, 150}' in cfg
           print('Coleta de arvore, pedra e ouro permanente: OK')
           PY
 

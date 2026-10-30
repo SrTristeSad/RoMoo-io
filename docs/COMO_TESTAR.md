@@ -5,7 +5,7 @@ Abra o `.rbxlx`, clique em **Continuar** se o Studio exibir aviso de migração 
 ## Conferir visual
 - [ ] O personagem é o **avatar Roblox padrão**, não uma bola.
 - [ ] A **marreta aparece na mão** ao nascer.
-- [ ] O chão usa **Terrain Grass** e há um rio azul com ondas, margens de areia e ponte de madeira.
+- [ ] O chão usa **Terrain Grass** e há um rio azul com ondas, margens de areia e **três pontes de madeira**.
 - [ ] Árvores têm tronco e folhagem; pedra tem formas angulares; ouro tem veios dourados.
 
 ## Conferir ação
@@ -16,7 +16,10 @@ Abra o `.rbxlx`, clique em **Continuar** se o Studio exibir aviso de migração 
 - [ ] Minério dá +3 ouro por golpe e nunca desaparece.
 - [ ] Não existe respawn para esses recursos: todos permanecem presentes o tempo inteiro.
 - [ ] A marreta não minera um recurso distante, nem ataca rápido demais.
-- [ ] Rio permite natação e a ponte permite a travessia a pé.
+- [ ] Segurar clique repete golpes e anima a marreta a cada coleta.
+- [ ] Números flutuantes +5/+3 aparecem no recurso e o contador do HUD aumenta.
+- [ ] Mirar nas folhas, na rocha ou nos veios de ouro permite selecionar o recurso 3D.
+- [ ] Rio permite natação e as três pontes permitem travessia a pé.
 - [ ] HUD mostra apenas madeira, pedra e ouro. Não há painel de clãs nem dezenas de itens.
 
 ## Conferir console

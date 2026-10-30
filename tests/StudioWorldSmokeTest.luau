@@ -34,8 +34,12 @@ for _, kind in ipairs({"Tree", "Rock", "Gold"}) do
 end
 testFolder:Destroy()
 assert(workspace.Terrain.WaterWaveSize > 0, "Água sem ondas")
-local bridge = world:FindFirstChild("PonteDeMadeira")
-assert(bridge and #bridge:GetChildren() > 5, "Ponte não criada")
+local bridges = world:FindFirstChild("Pontes")
+assert(bridges and #bridges:GetChildren() == 3, "Devem existir tres pontes")
+for _, bridge in ipairs(bridges:GetChildren()) do
+    assert(bridge.Name == "PonteDeMadeira" and bridge.PrimaryPart
+        and #bridge:GetChildren() > 5, "Ponte incompleta")
+end
 local player = game:GetService("Players"):GetPlayers()[1]
 if player and player.Character then
     local hammer = player.Character:FindFirstChild("Marreta")

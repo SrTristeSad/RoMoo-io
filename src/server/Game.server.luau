@@ -72,6 +72,8 @@ strike.OnServerEvent:Connect(function(player, candidate)
     local key = stats.inventory
     profile.stock[key] += stats.yield
     player:SetAttribute(key, profile.stock[key])
+    -- Resposta privada confirma a recompensa; impacto público é somente visual.
+    feedback:FireClient(player, "Gather", core.Position, candidate:GetAttribute("Kind"), stats.yield)
     feedback:FireAllClients("Impact", core.Position, candidate:GetAttribute("Kind"), false)
 end)
 

@@ -13,5 +13,5 @@ return {
         Rock = {label = "PEDRA", inventory = "Stone", yield = 5},
         Gold = {label = "MINÉRIO DE OURO", inventory = "Gold", yield = 3},
     },
-    River = {Width = 28, Depth = 6, BridgeX = 0, BridgeWidth = 13},
+    River = {Width = 28, Depth = 6, BridgeX = 0, BridgeXs = {-150, 0, 150}, BridgeWidth = 13},
 }

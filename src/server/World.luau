@@ -59,31 +59,49 @@ local function createRiver(terrain, folder)
                 Vector3.new(18, 1.5, 6), Enum.Material.Sand)
         end
     end
-    local bridge = Instance.new("Model")
-    bridge.Name = "PonteDeMadeira"
-    bridge.Parent = folder
+    local bridges = Instance.new("Folder")
+    bridges.Name = "Pontes"
+    bridges.Parent = folder
     local bWidth = Config.River.BridgeWidth
     local length = width + 22
-    local centerZ = riverZ(0)
-    for z = -length / 2, length / 2, 2.6 do
-        makePart(bridge, "Tabua", Vector3.new(bWidth, .8, 2.45),
-            CFrame.new(0, 1.12, centerZ + z),
-            if math.floor(z) % 2 == 0 then Color3.fromRGB(151, 104, 64)
-                else Color3.fromRGB(178, 126, 77),
-            Enum.Material.WoodPlanks, {collide = true})
-    end
-    for _, side in ipairs({-1, 1}) do
-        local railX = side * (bWidth/2 - .5)
-        makePart(bridge, "Corrimao", Vector3.new(.5, .7, length),
-            CFrame.new(railX, 3.2, centerZ),
-            Color3.fromRGB(108, 73, 46), Enum.Material.Wood, {collide = true})
-        for z = -length / 2 + 2, length / 2 - 2, 9 do
-            makePart(bridge, "Poste", Vector3.new(.7, 2.8, .7),
-                CFrame.new(railX, 2, centerZ + z),
-                Color3.fromRGB(111, 78, 48), Enum.Material.Wood, {collide = true})
+    for _, bridgeX in ipairs(Config.River.BridgeXs or {0}) do
+        local bridge = Instance.new("Model")
+        bridge.Name = "PonteDeMadeira"
+        bridge:SetAttribute("BridgeX", bridgeX)
+        bridge.Parent = bridges
+        local centerZ = riverZ(bridgeX)
+        local plankIndex = 0
+        for z = -length / 2, length / 2, 2.6 do
+            plankIndex += 1
+            local plank = makePart(bridge, "Tabua", Vector3.new(bWidth, .8, 2.45),
+                CFrame.new(bridgeX, 1.12, centerZ + z),
+                if plankIndex % 2 == 0 then Color3.fromRGB(151, 104, 64)
+                    else Color3.fromRGB(178, 126, 77),
+                Enum.Material.WoodPlanks, {collide = true})
+            if not bridge.PrimaryPart then bridge.PrimaryPart = plank end
+        end
+        for _, side in ipairs({-1, 1}) do
+            local railX = bridgeX + side * (bWidth/2 - .5)
+            makePart(bridge, "Corrimao", Vector3.new(.6, .7, length),
+                CFrame.new(railX, 3.05, centerZ),
+                Color3.fromRGB(108, 73, 46), Enum.Material.Wood, {collide = true})
+            makePart(bridge, "CorrimaoBaixo", Vector3.new(.5, .55, length),
+                CFrame.new(railX, 2.15, centerZ),
+                Color3.fromRGB(139, 98, 61), Enum.Material.Wood, {collide = true})
+            for z = -length / 2 + 2, length / 2 - 2, 9 do
+                makePart(bridge, "Poste", Vector3.new(.7, 2.8, .7),
+                    CFrame.new(railX, 2, centerZ + z),
+                    Color3.fromRGB(111, 78, 48), Enum.Material.Wood, {collide = true})
+            end
+        end
+        for _, side in ipairs({-1, 1}) do
+            local landZ = centerZ + side * (length / 2 + 2)
+            makePart(bridge, "Acesso", Vector3.new(bWidth, .7, 5),
+                CFrame.new(bridgeX, .8, landZ),
+                Color3.fromRGB(163, 114, 70), Enum.Material.WoodPlanks, {collide = true})
         end
     end
-    return bridge
+    return bridges
 end
 
 local function createTree(model, pos)
@@ -213,7 +231,9 @@ function World.create()
         local x = rng:NextNumber(-Config.MapSize/2 + 12, Config.MapSize/2 - 12)
         local side = if i % 2 == 0 then -1 else 1
         local z = riverZ(x) + side * (Config.River.Width / 2 + rng:NextNumber(5, 12))
-        if math.abs(x) > Config.River.BridgeWidth + 9 then
+        if math.abs(x) > Config.River.BridgeWidth + 9
+            and math.abs(x - 150) > Config.River.BridgeWidth + 9
+            and math.abs(x + 150) > Config.River.BridgeWidth + 9 then
             makePart(folder, "PedraMargem", Vector3.new(1.3, .8, 1.7),
                 CFrame.new(x, .1, z) * CFrame.Angles(0, rng:NextNumber(-3, 3), 0),
                 Color3.fromRGB(145, 150, 142), Enum.Material.Slate,

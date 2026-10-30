@@ -28,7 +28,7 @@ end
 function Avatar.createHammer()
     local tool = Instance.new("Tool")
     tool.Name = "Marreta"
-    tool.ToolTip = "Clique numa árvore, pedra ou minério de ouro para coletar"
+    tool.ToolTip = "Clique ou segure para coletar madeira, pedra e ouro infinitamente"
     tool.RequiresHandle = true
     tool.CanBeDropped = false
     tool.Grip = CFrame.new(0, -1.05, 0) * CFrame.Angles(0, 0, math.rad(-10))
@@ -55,7 +55,7 @@ function Avatar.createHammer()
         Enum.Material.Metal, nil, handle)
     piece(tool, "Empunhadura", Vector3.new(.59, 1.22, .59),
         Vector3.new(0, -1.04, 0), Color3.fromRGB(66, 63, 57),
-        Enum.Material.Leather, nil, handle)
+        Enum.Material.Fabric, nil, handle)
     return tool
 end
 
