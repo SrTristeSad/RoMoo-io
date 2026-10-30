@@ -55,7 +55,9 @@ jobs:
           assert 'node:SetAttribute("Health"' not in world
           assert 'candidate:Destroy()' not in game
           assert 'task.delay(Config.RespawnSeconds' not in game
-          assert 'profile.stock[key] += stats.yield' in game
+          assert 'profile.stock[key] += amount' in game
+          assert 'stats.yield*weapon.gatherMultiplier' in game
+          assert 'World.hitNode(candidate)' in game
           avatar = Path('src/server/Avatar.luau').read_text()
           client = Path('src/client/Client.client.luau').read_text()
           tests = Path('tests/StudioWorldSmokeTest.luau').read_text()
