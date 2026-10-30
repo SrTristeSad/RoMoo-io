@@ -169,7 +169,19 @@ local function importedResource(kind, model, pos)
         end
     end
     visual.Parent = model
-    local ok = pcall(function() visual:PivotTo(CFrame.new(pos)) end)
+    local ok = pcall(function()
+        local size=visual:GetExtentsSize()
+        local longest=math.max(size.X,size.Y,size.Z)
+        assert(longest>.02 and longest<5000,"Geometria invalida")
+        local wanted=if kind=="Tree" then 13 else if kind=="Bush" then 5.5 else 7.5
+        visual:ScaleTo(math.clamp(wanted/longest,.02,12))
+        local boundsCF,bounds=visual:GetBoundingBox()
+        -- Alinhar a base visivel ao chao; MeshParts importados variam de origem.
+        visual:PivotTo(CFrame.new(pos))
+        boundsCF,bounds=visual:GetBoundingBox()
+        local baseY=boundsCF.Position.Y-bounds.Y*.5
+        visual:PivotTo(visual:GetPivot()*CFrame.new(0,-baseY,0))
+    end)
     if not ok then visual:Destroy() return nil end
     local center = makePart(model, "Core", Vector3.new(6, 6, 6),
         CFrame.new(pos + Vector3.new(0, 3, 0)), Color3.fromRGB(112, 115, 116),
