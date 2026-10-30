@@ -139,7 +139,7 @@ jobs:
           assert 'Progression.canUse(p,Config.Buildings.StoneWall)' in progtest
           assert 'RoMooCameraAndAim' in client
           assert 'hover.Enabled = false' in client
-          assert 'humanoid.AutoRotate = false' in avatar
+          assert 'humanoid.AutoRotate=false' in avatar.replace(' ', '')
           print('Moo-IO: recursos permanentes, rio sem pontes, biomas, limites, lobos 3D: OK')
           PY
 
