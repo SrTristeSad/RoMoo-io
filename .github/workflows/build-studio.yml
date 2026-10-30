@@ -62,6 +62,8 @@ jobs:
           river = Path('src/server/RiverFlow.luau').read_text()
           wolf = Path('src/server/Wolves.luau').read_text()
           melee = Path('src/server/Melee.luau').read_text()
+          structures = Path('src/server/Structures.luau').read_text()
+          buildtest = Path('tests/StudioBuildingSmokeTest.luau').read_text()
           project = Path('default.project.json').read_text()
           rules = Path('src/server/MapRules.luau').read_text()
           assert 'Enum.Material.Leather' not in avatar
@@ -90,6 +92,19 @@ jobs:
           assert 'EatCost = 10' in cfg and 'EatHeal = 32' in cfg
           assert 'HealthFill' in client and 'KeyCode.Q' in client
           assert 'obstacleCells' in wolf and 'packTarget' in wolf
+          assert '"Structures":' in project and 'Structures.start' in game
+          assert 'build.OnServerEvent:Connect' in game
+          assert 'Structures.tryBuild' in game and 'Structures.damage' in game
+          assert 'Wolves.setStructures(buildings, Structures.damage)' in game
+          assert 'function Structures.tryBuild(' in structures
+          assert 'function Structures.damage(' in structures
+          assert 'OwnerUserId' in structures and 'limit' in structures
+          assert 'Rules.isRiver(config,placement,7)' in structures
+          assert 'Windmill' in structures and 'Spikes' in structures and 'Wall' in structures
+          assert 'Buildings = {' in cfg and 'goldPerTick=2' in cfg
+          assert 'build:FireServer(selectedMode,direction.Unit)' in client
+          assert 'previewBuild' in client and 'BarraConstrucoes' in client
+          assert 'for _,kind in ipairs({"Wall","Spikes","Windmill"}) do' in buildtest
           assert 'RoMooCameraAndAim' in client
           assert 'hover.Enabled = false' in client
           assert 'humanoid.AutoRotate = false' in avatar

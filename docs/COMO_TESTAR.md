@@ -8,7 +8,8 @@
 6. Ande até a borda: paredes invisíveis devem impedir que o personagem caia. Se algo o derrubar abaixo do mapa, o servidor o reposiciona.
 7. Encontre lobos. Eles possuem corpo 3D, perseguem, **avisam lobos próximos**, atacam e podem ser derrotados com a marreta. Ao morrerem, fornecem comida. **Os lobos são criaturas, não recursos naturais permanentes.**
 8. Após perder vida para um lobo, colete comida nos arbustos e pressione **Q** para curar (10 comidas, até 32 pontos de vida, intervalo de 1,25 s). No celular, use **CURAR**.
-9. No Command Bar do **servidor** em Play, execute `tests/StudioWorldSmokeTest.luau` e `tests/StudioMeleeHealingSmokeTest.luau`. Verifique mensagens PASS e o painel **Saída**.
+9. Colete materiais e teste a barra: **1 marreta**, **2 parede (10 madeiras)**, **3 espinhos (20 madeiras + 5 pedras)** e **4 moinho (50 madeiras + 10 pedras)**. A prévia fica verde em áreas livres e vermelha nas zonas bloqueadas. Depois de construir, o moinho deve produzir **2 ouros a cada 4 segundos**; os espinhos ferem inimigos e os lobos atacam paredes.
+10. No Command Bar do **servidor** em Play, execute `tests/StudioWorldSmokeTest.luau`, `tests/StudioMeleeHealingSmokeTest.luau` e `tests/StudioBuildingSmokeTest.luau`. Verifique mensagens PASS e o painel **Saída**.
 
 ## Modelos gratuitos da Creator Store (opcionais)
 
@@ -38,6 +39,13 @@ Depois salve o place no Studio. **O ZIP pronto não incorpora automaticamente ma
 - [ ] Golpes direcionais acertam recursos mesmo sem clique exato na malha, mas não alcançam alvos atrás/fora do cone.
 - [ ] Q consome 10 alimentos e cura até 32 de vida; botão CURAR também funciona no celular.
 - [ ] HUD mostra vida atual e máxima.
+- [ ] Hotbar 1–4 e clique selecionam marreta, parede, espinhos e moinho.
+- [ ] Parede custa 10 madeiras, espinhos 20 madeiras + 5 pedras e moinho 50 madeiras + 10 pedras.
+- [ ] Construções não podem ser colocadas dentro do rio, em recursos naturais ou na área de nascimento.
+- [ ] Espinhos causam dano a lobos e adversários; não ferem o dono.
+- [ ] O moinho paga 2 ouros a cada 4 segundos enquanto pertence a um jogador na partida.
+- [ ] Estruturas têm vida e podem ser destruídas, mas recursos naturais continuam permanentes.
+- [ ] Lobos desviam de construções ou atacam paredes quando a passagem está fechada.
 - [ ] Modelos naturais dão recursos indefinidamente.
 - [ ] Câmera em terceira pessoa e mouse para mirar.
 - [ ] Sem erros vermelhos no console.

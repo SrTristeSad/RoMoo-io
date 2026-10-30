@@ -9,6 +9,7 @@ local Wolves = require(script.Parent:WaitForChild("Wolves"))
 local RiverFlow = require(script.Parent:WaitForChild("RiverFlow"))
 local Boundaries = require(script.Parent:WaitForChild("Boundaries"))
 local Melee = require(script.Parent:WaitForChild("Melee"))
+local Structures = require(script.Parent:WaitForChild("Structures"))
 
 local resources = World.create()
 local world = resources.Parent
@@ -30,9 +31,49 @@ feedback.Parent = remotes
 local eat = Instance.new("RemoteEvent")
 eat.Name = "Eat"
 eat.Parent = remotes
+local build = Instance.new("RemoteEvent")
+build.Name = "Build"
+build.Parent = remotes
 
 -- Cura somente no servidor: o cliente não pode inventar comida nem vida.
 local profiles = {}
+
+-- Todas as estruturas são produzidas e atualizadas no servidor.
+local buildings = Structures.start(world, resources, wolves, Config,
+    function(player, amount)
+        local profile=profiles[player]
+        if not profile then return end
+        profile.stock.Gold += amount
+        player:SetAttribute("Gold",profile.stock.Gold)
+        feedback:FireClient(player,"Income",amount)
+    end,
+    function(player, amount)
+        local profile=profiles[player]
+        if not profile then return end
+        profile.stock.Food += amount
+        player:SetAttribute("Food",profile.stock.Food)
+        feedback:FireClient(player,"Notice","Espinhos derrotaram um lobo: +"..amount.." comida")
+    end,
+    function(wolf, amount)
+        return Wolves.hit(wolf,amount)
+    end
+)
+Wolves.setStructures(buildings, Structures.damage)
+
+build.OnServerEvent:Connect(function(player, kind, direction)
+    local profile=profiles[player]
+    if not profile or not Melee.validDirection(direction) then return end
+    local now=os.clock()
+    if now - (profile.lastBuild or -1e8) < Config.BuildCooldown then return end
+    profile.lastBuild=now -- inclusive em tentativas rejeitadas: limita spam remoto
+    local result,err=Structures.tryBuild(player,kind,direction,profile.stock)
+    if result then
+        feedback:FireClient(player,"Built",kind)
+    else
+        feedback:FireClient(player,"Notice",err or "Nao foi possivel construir")
+    end
+end)
+
 eat.OnServerEvent:Connect(function(player)
     local profile = profiles[player]
     local char = player.Character
@@ -82,11 +123,20 @@ strike.OnServerEvent:Connect(function(player, aim)
     local now = os.clock()
     if now-profile.lastStrike<Config.HitCooldown then return end
     profile.lastStrike=now
-    local candidate = Melee.choose(root,facing,resources,wolves,Config)
+    local candidate = Melee.choose(root,facing,resources,wolves,Config,buildings)
     if not candidate then return end
     local core = candidate.PrimaryPart
     if not core then return end
     local position = core.Position
+    if candidate.Parent == buildings then
+        if candidate:GetAttribute("OwnerUserId") ~= player.UserId then
+            Structures.damage(candidate,Config.Wolf.HammerDamage)
+            feedback:FireAllClients("Impact",position,"Building",false)
+        else
+            feedback:FireClient(player,"Notice","Sua construcao esta protegida")
+        end
+        return
+    end
     if candidate.Parent == wolves then
         local killed = Wolves.hit(candidate,Config.Wolf.HammerDamage)
         feedback:FireAllClients("Impact",position,"Wolf",false)
@@ -122,6 +172,7 @@ local function playerAdded(player)
         },
         lastStrike = -1e8,
         lastEat = -1e8,
+        lastBuild = -1e8,
     }
     player:SetAttribute("Wood", Config.StartingWood)
     player:SetAttribute("Stone", Config.StartingStone)

@@ -13,6 +13,8 @@ local mouse = player:GetMouse()
 local remotes = ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Remotes")
 local strike = remotes:WaitForChild("Strike")
 local feedback = remotes:WaitForChild("Feedback")
+local build = remotes:WaitForChild("Build")
+local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local eat = remotes:WaitForChild("Eat")
 local world = workspace:WaitForChild("RoMooWorld")
 local resources = world:WaitForChild("Resources")
@@ -20,6 +22,7 @@ local wolves = world:WaitForChild("Wolves")
 local holding = false
 local previous = -1e8
 local cooldown = .43
+local selectedMode = "Hammer"
 local clientRayParams = RaycastParams.new()
 clientRayParams.FilterType = Enum.RaycastFilterType.Include
 clientRayParams.FilterDescendantsInstances = {resources,wolves}
@@ -36,6 +39,7 @@ local lastTouchPosition = nil
 task.defer(function()
     pcall(function()
         StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
     end)
 end)
 
@@ -98,6 +102,73 @@ for index, entry in ipairs({
     refresh()
 end
 
+-- Hotbar de construções: a marreta segue equipada; trocar de slot muda
+-- apenas o comando enviado. O servidor valida custos e local da construção.
+local buildBar = Instance.new("Frame")
+buildBar.Name = "BarraConstrucoes"
+buildBar.AnchorPoint = Vector2.new(.5,1)
+buildBar.Position = UDim2.new(.5,0,1,-113)
+buildBar.Size = UDim2.new(.96,0,0,54)
+buildBar.BackgroundColor3 = Color3.fromRGB(29,42,37)
+buildBar.BackgroundTransparency = .08
+buildBar.BorderSizePixel = 0
+buildBar.Parent = ui
+rounded(buildBar,9)
+local widthLimit = Instance.new("UISizeConstraint")
+widthLimit.MaxSize = Vector2.new(530,54)
+widthLimit.Parent = buildBar
+local barLayout = Instance.new("UIListLayout")
+barLayout.FillDirection = Enum.FillDirection.Horizontal
+barLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+barLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+barLayout.Padding = UDim.new(0,4)
+barLayout.SortOrder = Enum.SortOrder.LayoutOrder
+barLayout.Parent = buildBar
+local choices = {
+    {mode="Hammer", label="1 MARRETA"},
+    {mode="Wall",label="2 PAREDE 10M"},
+    {mode="Spikes",label="3 ESPINHOS 20M/5P"},
+    {mode="Windmill",label="4 MOINHO 50M/10P"},
+}
+local buttons = {}
+local function setMode(mode)
+    selectedMode=mode
+    for name,button in pairs(buttons) do
+        button.BackgroundColor3 = if name==mode
+            then Color3.fromRGB(60,158,92) else Color3.fromRGB(77,87,81)
+    end
+end
+for i,item in ipairs(choices) do
+    local button=Instance.new("TextButton")
+    button.Name=item.mode
+    button.LayoutOrder=i
+    button.Size=UDim2.new(.238,0,0,44)
+    button.BackgroundColor3=Color3.fromRGB(77,87,81)
+    button.BorderSizePixel=0
+    button.TextColor3=Color3.new(1,1,1)
+    button.TextSize=12
+    button.TextWrapped=true
+    button.Font=Enum.Font.GothamBold
+    button.Text=item.label
+    button.Parent=buildBar
+    rounded(button,6)
+    buttons[item.mode]=button
+    button.Activated:Connect(function()
+        setMode(item.mode)
+    end)
+end
+setMode("Hammer")
+local preview = Instance.new("Part")
+preview.Name = "RoMooBuildPreview"
+preview.Anchored = true
+preview.CanCollide = false
+preview.CanTouch = false
+preview.CanQuery = false
+preview.Material = Enum.Material.ForceField
+preview.Transparency = 1
+preview.Parent = workspace
+local previewElapsed = 0
+
 local hint = Instance.new("TextLabel")
 hint.Name = "Dica"
 hint.AnchorPoint = Vector2.new(.5, 1)
@@ -120,7 +191,7 @@ rounded(hint, 8)
 local healthPanel = Instance.new("Frame")
 healthPanel.Name = "Vida"
 healthPanel.AnchorPoint = Vector2.new(0,1)
-healthPanel.Position = UDim2.new(0,14,1,-103)
+healthPanel.Position = UDim2.new(0,14,1,-171)
 healthPanel.Size = UDim2.fromOffset(190,32)
 healthPanel.BackgroundColor3 = Color3.fromRGB(32,44,41)
 healthPanel.BackgroundTransparency = .13
@@ -245,6 +316,10 @@ local function attack()
     local direction = cursorDirection(root)
     if not direction or direction.Magnitude < .7 then return end
     previous = now
+    if selectedMode ~= "Hammer" then
+        build:FireServer(selectedMode,direction.Unit)
+        return
+    end
     local anim = Instance.new("StringValue")
     anim.Name = "toolanim"
     anim.Value = "Slash"
@@ -300,8 +375,20 @@ UserInputService.InputBegan:Connect(function(input, consumed)
     end
     if consumed then return end
     if input.KeyCode == Enum.KeyCode.Q then consumeFood() end
+    local hotkeys={
+        [Enum.KeyCode.One]="Hammer",
+        [Enum.KeyCode.Two]="Wall",
+        [Enum.KeyCode.Three]="Spikes",
+        [Enum.KeyCode.Four]="Windmill",
+    }
+    local choice=hotkeys[input.KeyCode]
+    if choice then setMode(choice) return end
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        holding = true
+        if selectedMode=="Hammer" then
+            holding=true
+        else
+            attack()
+        end
     end
 end)
 UserInputService.InputChanged:Connect(function(input)
@@ -343,7 +430,7 @@ end)
 
 if UserInputService.TouchEnabled then
     local button = Instance.new("TextButton")
-    button.Name = "Golpear"
+    button.Name = "Acao"
     button.AnchorPoint = Vector2.new(1, 1)
     button.Position = UDim2.new(1, -20, 1, -95)
     button.Size = UDim2.fromOffset(96, 64)
@@ -355,6 +442,9 @@ if UserInputService.TouchEnabled then
     button.Parent = ui
     rounded(button, 13)
     button.Activated:Connect(attack)
+    RunService.RenderStepped:Connect(function()
+        button.Text=if selectedMode=="Hammer" then "GOLPEAR" else "CONSTRUIR"
+    end)
     local healButton=Instance.new("TextButton")
     healButton.Name="Curar"
     healButton.AnchorPoint=Vector2.new(1,1)
@@ -402,10 +492,67 @@ RunService:BindToRenderStep("RoMooCameraAndAim", Enum.RenderPriority.Camera.Valu
     end
 end)
 
+-- Fantasma visual para construções. É apenas uma previsão do cliente:
+-- o servidor verifica colisões, alcance, recursos e limites de verdade.
+local function previewBuild(dt)
+    if selectedMode == "Hammer" then
+        preview.Transparency=1
+        return
+    end
+    previewElapsed+=dt
+    if previewElapsed<.07 then return end
+    previewElapsed=0
+    local root=getRoot()
+    if not root then preview.Transparency=1 return end
+    local direction=cursorDirection(root)
+    if not direction then preview.Transparency=1 return end
+    local pos=root.Position+direction*Config.BuildDistance
+    pos=Vector3.new(math.floor(pos.X/2+.5)*2,0,math.floor(pos.Z/2+.5)*2)
+    local size=if selectedMode=="Wall" then Vector3.new(10,6,2)
+        else if selectedMode=="Spikes" then Vector3.new(8,.7,8)
+        else Vector3.new(3.8,9,3.8)
+    local half=Config.MapSize*.5-14
+    local canPlace=math.abs(pos.X)<=half and math.abs(pos.Z)<=half
+        and math.abs(pos.Z)>Config.River.Width*.5+7
+        and (pos-Vector3.new(0,0,-64)).Magnitude>=17
+    if canPlace then
+        for _,node in ipairs(resources:GetChildren()) do
+            local core=node.PrimaryPart
+            if core then
+                local dx=pos.X-core.Position.X
+                local dz=pos.Z-core.Position.Z
+                local radius=if node:GetAttribute("Kind")=="Tree" then 7.5 else 7
+                if dx*dx+dz*dz<radius*radius then canPlace=false break end
+            end
+        end
+    end
+    local buildingsFolder=world:FindFirstChild("Buildings")
+    if canPlace and buildingsFolder then
+        for _,node in ipairs(buildingsFolder:GetChildren()) do
+            local core=node.PrimaryPart
+            if core and (Vector2.new(pos.X-core.Position.X,pos.Z-core.Position.Z)).Magnitude<9 then
+                canPlace=false break
+            end
+        end
+    end
+    preview.Size=size
+    preview.CFrame=CFrame.lookAt(pos,pos+direction)*CFrame.new(0,size.Y*.5,0)
+    preview.Color=if canPlace then Color3.fromRGB(76,216,129)
+        else Color3.fromRGB(237,92,82)
+    preview.Transparency=.55
+end
+RunService.RenderStepped:Connect(previewBuild)
+
 RunService.Heartbeat:Connect(function()
     if holding then attack() end
 end)
 RunService.RenderStepped:Connect(function()
+    if selectedMode ~= "Hammer" then
+        hover.Enabled = false
+        hover.Adornee = nil
+        hint.Text="Clique para colocar "..selectedMode.." | 1: voltar à marreta"
+        return
+    end
     local target = targetFromPointer()
     if target and closeEnough(target) then
         hover.Adornee = target
@@ -465,6 +612,12 @@ feedback.OnClientEvent:Connect(function(kind, position, resourceKind, _broken)
         return
     elseif kind == "Notice" then
         hint.Text=tostring(position)
+        return
+    elseif kind=="Built" then
+        hint.Text=tostring(position).." construído!"
+        return
+    elseif kind=="Income" then
+        hint.Text="Moinho: +"..tostring(position).." ouro"
         return
     end
     if kind ~= "Impact" then

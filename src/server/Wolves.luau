@@ -14,6 +14,8 @@ local folder=nil
 local states={}
 local mapResources=nil
 local running=false
+local structuresFolder=nil
+local damageStructure=nil
 -- Spatial hash estático: recursos naturais não somem no MooMoo.io.
 -- Evita examinar centenas de partes a cada passo de cada lobo.
 local obstacleCells = {}
@@ -144,6 +146,30 @@ local function blockedByNaturalResource(position)
         end
     end
     return false
+end
+
+-- Edificacoes dinamicas podem bloquear lobos; espinhos nao bloqueiam,
+-- porque devem causar dano ao atravessar sua area.
+local function blockingStructure(position)
+    if not structuresFolder or not structuresFolder.Parent then return nil end
+    for _,model in ipairs(structuresFolder:GetChildren()) do
+        if model:GetAttribute("Kind") ~= "Spikes" then
+            local root=model.PrimaryPart
+            if root then
+                local localPoint=root.CFrame:PointToObjectSpace(position)
+                if math.abs(localPoint.X)<root.Size.X/2+2.1
+                    and math.abs(localPoint.Z)<root.Size.Z/2+2.1 then
+                    return model
+                end
+            end
+        end
+    end
+    return nil
+end
+
+function Wolves.setStructures(folderRef,damageCallback)
+    structuresFolder=folderRef
+    damageStructure=damageCallback
 end
 
 local function freeSpawn(position)
@@ -329,11 +355,20 @@ function Wolves.start(world,resources)
                     state.wander=-dir
                     state.nextTurn=now+1
                     newPos=position
-                elseif blockedByNaturalResource(newPos) then
+                elseif blockedByNaturalResource(newPos) or blockingStructure(newPos) then
+                    -- Contornar árvores, rochas e construções. Caso a muralha
+                    -- feche a passagem, o lobo pode destruí-la a golpes.
+                    local blockedBuilding=blockingStructure(newPos)
+                    if blockedBuilding and damageStructure
+                        and now-(state.lastStructureHit or 0)>=1.45 then
+                        state.lastStructureHit=now
+                        damageStructure(blockedBuilding,Config.Wolf.AttackDamage)
+                    end
                     -- Contornar troncos e rochas por uma tangente.
                     local tangent=Vector3.new(-dir.Z,0,dir.X)
                     local candidate=Rules.clampPoint(Config,position+tangent*speed*dt,19)
                     if not blockedByNaturalResource(candidate)
+                        and not blockingStructure(candidate)
                         and not Rules.isRiver(Config,candidate,8)
                         and not Rules.isDesert(Config,candidate) then
                         dir=tangent

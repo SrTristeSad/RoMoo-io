@@ -13,6 +13,8 @@
 - **Lobos hostis 3D**, ID 4 do Moo-IO. Perseguem jogadores, compartilham alertas entre membros da matilha, contornam obstáculos por índice espacial, atacam de perto, têm barra de vida, podem morrer e reaparecem.
 - **Golpes por direção, como no MooMoo.io**: clique/segure com a marreta; o servidor encontra o alvo no alcance e no cone frontal, sem exigir clicar exatamente na superfície de cada árvore ou lobo. Envie apenas o vetor de mira (controle validado no servidor).
 - **Cura com comida:** pressione **Q** ou o botão **CURAR** no celular; gaste 10 alimentos e recupere até 32 de vida. O servidor valida saldo, vida e intervalo de 1,25 s; há uma barra de vida compacta no HUD.
+- **Construções 3D de sobrevivência:** parede de madeira, espinhos e moinho com custos, limites por jogador, vida e posicionamento validados pelo servidor. Espinhos ferem lobos e jogadores inimigos; moinho produz ouro periodicamente. Lobos podem atacar paredes e moinhos.
+- **Barra de construção e prévia no terreno:** teclas **1 marreta, 2 parede, 3 espinhos, 4 moinho**; seleção por botões no celular/PC. O fantasma de posicionamento indica áreas inválidas em vermelho (a verificação final é do servidor).
 - **Modelos alternativos de árvores/lobos da Creator Store** disponíveis para importar pelo Studio; a geometria procedural padrão mantém o jogo funcionando sem download ou compra de malhas.
 - HUD compacta para madeira, pedra, ouro e comida; destaque do alvo e recompensa flutuante por golpe.
 - Regras e recompensas verificadas no servidor, não calculadas pelo cliente.
@@ -24,8 +26,9 @@
 3. Extraia `RoMoo-io-Teste.rbxlx` e abra no Roblox Studio.
 4. Pressione **F5**. Use WASD para mover, mouse para apontar e clique/segure para golpear **na direção do mouse**, mesmo sem clicar exatamente sobre um objeto. Colete frutas nos arbustos e pressione Q para curar a vida perdida contra lobos.
 5. Encontre o rio horizontal, entre na água para sentir a corrente; tente andar além do limite do mapa; enfrente lobos.
+6. Colete **10 madeiras**, pressione **2** e clique no chão livre para construir uma parede. Com **20 madeiras + 5 pedras**, a tecla **3** coloca espinhos. Com **50 madeiras + 10 pedras**, a tecla **4** constrói um moinho; ele produz ouro de tempos em tempos. Pressione **1** para voltar à marreta. Os lobos podem danificar estruturas.
 
-Teste do mapa: `tests/StudioWorldSmokeTest.luau`. Teste de combate e cura: `tests/StudioMeleeHealingSmokeTest.luau`. Execute ambos na Command Bar **do servidor** durante Play.
+Teste do mapa: `tests/StudioWorldSmokeTest.luau`. Teste de combate e cura: `tests/StudioMeleeHealingSmokeTest.luau`. Teste das construções: `tests/StudioBuildingSmokeTest.luau`. Execute na Command Bar **do servidor** durante Play.
 
 ## Modelos 3D disponíveis na Creator Store (importação opcional)
 
@@ -51,14 +54,15 @@ Os modelos são armazenados em `ServerStorage/RoMooResourceModels/Tree` e `Serve
 - `src/server/Wolves.luau` — modelos 3D e IA hostil.
 - `src/server/CreatorAssets.luau` — importação opcional segura da Creator Store.
 - `src/server/Game.server.luau` — processamento de golpes, coleta, cura, lobos e inventário.
-- `src/server/Melee.luau` — teste de mira, cone de golpe, distância e oclusão pelo servidor.
+- `src/server/Melee.luau` — teste de mira, cone de golpe, distância e oclusão pelo servidor, inclusive paredes.
+- `src/server/Structures.luau` — posicionamento 3D, custos, limites, dano, espinhos e produção de ouro dos moinhos.
 - `src/server/Avatar.luau` — avatar e Tool.
 - `src/client/Client.client.luau` — mira do mouse, câmera 3D, HUD e efeitos.
 - `docs/COMO_TESTAR.md` — checklist de teste.
 - `docs/MAPA_MOO_IO.md` — comparação objetiva com gerador Lua original.
 - `docs/DEPRECACOES_ROBLOX.md` — APIs antigas e recursos sendo substituídos.
 
-**Não ativamos o resto das mecânicas antigas (clãs, upgrades, estruturas e outras espécies) nesta build de foco.** Código anterior continua preservado no histórico e em módulos desativados; não considerar apagado.
+**Outros sistemas ainda não retomados:** clãs, upgrades avançados e outras espécies. Os módulos antigos continuam no histórico e no repositório, mas não foram ligados à build atual. Parede, espinhos e moinho já estão ativos nesta etapa. Os custos são uma adaptação inicial para a escala 3D, não uma cópia 1:1 de todo o catálogo original.
 
 ## Compatibilidade e licenças
 

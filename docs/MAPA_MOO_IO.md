@@ -26,3 +26,9 @@ Fonte do usuário: `SrTristeSad/ToonRoyale-Assets/android/server-lua/world/objec
 - O lobo mantém a IA hostil e agora compartilha perseguição por alguns segundos com vizinhos próximos, usando agrupamento de alvos; não é uma reprodução completa de todos os comportamentos do `wolf_pack.lua`.
 - Árvores e pedras são indexadas em uma grade espacial para consulta rápida de colisões dos lobos, já que esses recursos não desaparecem.
 - Comida coletada ou obtida ao caçar pode curar, enquanto a vida do personagem é gerenciada pelo Humanoid e validada no servidor.
+
+## Construções 3D da fase atual
+- Parede (10 madeiras, até 30), espinhos (20 madeiras + 5 pedras, até 15) e moinho (50 madeiras + 10 pedras, até 5) são construções autoritativas do servidor, com vida e proprietário.
+- Moinhos rendem +2 ouros a cada 4 segundos; espinhos atacam criaturas e jogadores que não sejam donos. Lobos contornam ou atacam obstáculos construídos.
+- Uma construção pode ser destruída e consumir recursos; **árvores, rochas, ouro e arbustos não têm HP, não são destruídos nem reaparecem**.
+- O catálogo de custos e modelos foi ajustado para a escala Roblox; ainda não é a conversão integral do catálogo de itens do Moo-IO.

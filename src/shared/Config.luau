@@ -7,6 +7,15 @@ return {
     HitRange = 17, HitCooldown = .42, HitArcDot = .38,
     -- Alimento cura vida, como nas mecânicas clássicas.
     EatCost = 10, EatHeal = 32, EatCooldown = 1.25,
+    -- Estruturas iniciais, com requisitos de madeira/pedra e limites por jogador.
+    BuildDistance = 12, BuildCooldown = .4,
+    Buildings = {
+        Wall = {label="PAREDE",cost={Wood=10},health=380,limit=30},
+        Spikes = {label="ESPINHOS",cost={Wood=20,Stone=5},health=260,
+            limit=15,damage=20},
+        Windmill = {label="MOINHO",cost={Wood=50,Stone=10},
+            health=450,limit=5,goldPerTick=2,interval=4},
+    },
     -- Original: areaCount=7, treesPerArea=9, bushesPerArea=3,
     -- totalRocks=32, goldOres=7 num mapa 14400; quantidades reduzidas
     -- ou adaptadas para modelos 3D no Roblox.
