@@ -6,12 +6,54 @@ local Rules = require(script.Parent:WaitForChild("MapRules"))
 local Melee = require(script.Parent:WaitForChild("Melee"))
 
 local Structures = {}
-local folder, resources, animals, config
-local grantGold, grantWolfFood, hitWolf
+local folder, resources, animals, wildlife, config
+local grantGold, grantWolfFood, hitWolf, hitWildlife, grantWildlifeFood
 local registered = {}
 local ownerCounts = {}
-local lastSpikeHit = {}
+-- Chaves fracas: animais abatidos e personagens antigos nao ficam retidos.
+local lastSpikeHit = setmetatable({}, {__mode = "k"})
 local running = false
+
+-- Recursos naturais nao mudam durante a partida. Indexar uma vez evita
+-- varrer centenas de arvore/pedra em cada pedido de construcao.
+local resourceCells={}
+local CELL_SIZE=16
+local function gridKey(x,z)
+    return tostring(math.floor(x/CELL_SIZE))..":"..tostring(math.floor(z/CELL_SIZE))
+end
+local function indexResources(nodes)
+    resourceCells={}
+    for _,node in ipairs(nodes:GetChildren()) do
+        local core=node.PrimaryPart
+        if core then
+            local p=core.Position
+            local key=gridKey(p.X,p.Z)
+            if not resourceCells[key] then resourceCells[key]={} end
+            table.insert(resourceCells[key],{
+                x=p.X, z=p.Z,
+                radius=if node:GetAttribute("Kind")=="Tree" then 7.5 else 7,
+            })
+        end
+    end
+end
+local function occupiedByResource(point)
+    local cx=math.floor(point.X/CELL_SIZE)
+    local cz=math.floor(point.Z/CELL_SIZE)
+    for x=cx-1,cx+1 do
+        for z=cz-1,cz+1 do
+            local entries=resourceCells[tostring(x)..":"..tostring(z)]
+            if entries then
+                for _,entry in ipairs(entries) do
+                    local dx,dz=point.X-entry.x,point.Z-entry.z
+                    if dx*dx+dz*dz < entry.radius*entry.radius then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
 
 local function geometry(parent, name, size, cf, color, material, collidable, shape)
     local p = Instance.new("Part")
@@ -22,9 +64,11 @@ local function geometry(parent, name, size, cf, color, material, collidable, sha
     p.Material = material
     p.Shape = shape or Enum.PartType.Block
     p.Anchored = true
-    p.CanCollide = collidable == true
+    -- Somente o Core e solido. No Roblox nao se deve desligar CanQuery
+    -- mantendo CanCollide=true nas decoracoes.
+    p.CanCollide = collidable == true and name == "Core"
     p.CanTouch = false
-    p.CanQuery = collidable == true
+    p.CanQuery = name == "Core"
     p.TopSurface = Enum.SurfaceType.Smooth
     p.BottomSurface = Enum.SurfaceType.Smooth
     p.Parent = parent
@@ -173,7 +217,8 @@ function Structures.clearOwner(userId)
 end
 
 function Structures.damage(model, amount)
-    if not registered[model] or typeof(amount) ~= "number" or amount <= 0 then return false end
+    if not registered[model] or typeof(amount) ~= "number" or amount ~= amount
+        or amount == math.huge or amount <= 0 then return false end
     local maxHp = model:GetAttribute("MaxHealth")
     local health = model:GetAttribute("Health")
     if typeof(health)~="number" or typeof(maxHp)~="number" then return false end
@@ -204,15 +249,8 @@ local function placementCheck(player,kind,direction)
     if (placement - Vector3.new(0,0,-64)).Magnitude<17 then
         return nil,"Nao bloqueie o nascimento"
     end
-    for _,item in ipairs(resources:GetChildren()) do
-        local p=item.PrimaryPart
-        if p then
-            local dx,dz=placement.X-p.Position.X,placement.Z-p.Position.Z
-            local clearance=if item:GetAttribute("Kind")=="Tree" then 7.5 else 7
-            if dx*dx+dz*dz < clearance*clearance then
-                return nil,"Afaste-se de arvores e pedras"
-            end
-        end
+    if occupiedByResource(placement) then
+        return nil,"Afaste-se de arvores e pedras"
     end
     for _,structure in ipairs(folder:GetChildren()) do
         if structure.PrimaryPart then
@@ -225,6 +263,16 @@ local function placementCheck(player,kind,direction)
         local p=wolf.PrimaryPart
         if p and (Vector2.new(placement.X-p.Position.X,placement.Z-p.Position.Z)).Magnitude<8 then
             return nil,"Lobo no local"
+        end
+    end
+    -- Evita criar paredes ou espinhos em cima de vacas, ovelhas e touros.
+    if wildlife then
+        for _,creature in ipairs(wildlife:GetChildren()) do
+            local p=creature.PrimaryPart
+            if p then
+                local dx,dz=placement.X-p.Position.X,placement.Z-p.Position.Z
+                if dx*dx+dz*dz < 8*8 then return nil,"Animal no local" end
+            end
         end
     end
     for _,other in ipairs(Players:GetPlayers()) do
@@ -267,15 +315,30 @@ function Structures.tryBuild(player,kind,direction,stock,age)
     return model,nil
 end
 
-function Structures.start(world,nodes,wolves,settings,onGold,onWolfFood,onHitWolf)
+-- A blindagem de spawn e validada no servidor para todas as armadilhas.
+-- Tambem usada nos testes, sem disparar dano de verdade.
+function Structures.canSpikeHitPlayer(player, ownerUserId)
+    if not player or player.UserId == ownerUserId then return false end
+    local character=player.Character
+    local human=character and character:FindFirstChildOfClass("Humanoid")
+    if not human or human.Health<=0
+        or character:FindFirstChildOfClass("ForceField") then return false end
+    return true
+end
+
+function Structures.start(world,nodes,wolves,settings,onGold,onWolfFood,onHitWolf,wildlifeFolder,onHitWildlife,onWildlifeFood)
     if running then return folder end
     running=true
     resources=nodes
+    indexResources(nodes)
     animals=wolves
+    wildlife=wildlifeFolder
     config=settings
     grantGold=onGold
     grantWolfFood=onWolfFood
     hitWolf=onHitWolf
+    hitWildlife=onHitWildlife
+    grantWildlifeFood=onWildlifeFood
     folder=Instance.new("Folder")
     folder.Name="Buildings"
     folder.Parent=world
@@ -284,9 +347,13 @@ function Structures.start(world,nodes,wolves,settings,onGold,onWolfFood,onHitWol
         while folder and folder.Parent do
             local dt = math.min(task.wait(.2),.4)
             local now=os.clock()
+            -- Snapshot unico por ciclo, em vez de criar varias listas por espinho.
+            local activeWolves=animals:GetChildren()
+            local activeWildlife=if wildlife then wildlife:GetChildren() else {}
+            local activePlayers=Players:GetPlayers()
             for model,info in pairs(registered) do
                 if not model.Parent then
-                    registered[model]=nil
+                    destroy(model) -- libera o limite quando o modelo foi apagado externamente
                     continue
                 end
                 if info.kind=="Windmill" then
@@ -307,7 +374,7 @@ function Structures.start(world,nodes,wolves,settings,onGold,onWolfFood,onHitWol
                     end
                 elseif info.kind=="Spikes" and model.PrimaryPart then
                     local position=model.PrimaryPart.Position
-                    for _,wolf in ipairs(animals:GetChildren()) do
+                    for _,wolf in ipairs(activeWolves) do
                         local p=wolf.PrimaryPart
                         if p and (Vector2.new(position.X-p.Position.X,position.Z-p.Position.Z)).Magnitude < 5.2 then
                             local last=lastSpikeHit[wolf] or 0
@@ -322,17 +389,41 @@ function Structures.start(world,nodes,wolves,settings,onGold,onWolfFood,onHitWol
                             end
                         end
                     end
-                    for _,other in ipairs(Players:GetPlayers()) do
-                        if other.UserId~=info.userId then
+                    -- Espinhos afetam toda a fauna que caminha sobre eles.
+                    -- Credito de comida/XP somente quando esta armadilha abate.
+                    if hitWildlife and grantWildlifeFood then
+                        for _,creature in ipairs(activeWildlife) do
+                            local p=creature.PrimaryPart
+                            if p and creature.Parent==wildlife then
+                                local dx,dz=position.X-p.Position.X,position.Z-p.Position.Z
+                                if dx*dx+dz*dz<5.2*5.2 then
+                                    local last=lastSpikeHit[creature] or -1e8
+                                    if now-last>=1.1 then
+                                        lastSpikeHit[creature]=now
+                                        local food,xp,killed=hitWildlife(creature,config.Buildings.Spikes.damage)
+                                        if killed then
+                                            local owner=Players:GetPlayerByUserId(info.userId)
+                                            if owner then grantWildlifeFood(owner,food,xp,creature.Name) end
+                                            lastSpikeHit[creature]=nil
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    for _,other in ipairs(activePlayers) do
+                        if Structures.canSpikeHitPlayer(other,info.userId) then
                             local char=other.Character
                             local p=char and char:FindFirstChild("HumanoidRootPart")
                             local hum=char and char:FindFirstChildOfClass("Humanoid")
-                            if p and hum and hum.Health>0 and
-                                (Vector2.new(position.X-p.Position.X,position.Z-p.Position.Z)).Magnitude<5 then
-                                local last=lastSpikeHit[hum] or 0
-                                if now-last>=1.1 then
-                                    lastSpikeHit[hum]=now
-                                    hum:TakeDamage(config.Buildings.Spikes.damage)
+                            if p then
+                                local dx,dz=position.X-p.Position.X,position.Z-p.Position.Z
+                                if dx*dx+dz*dz<5*5 then
+                                    local last=lastSpikeHit[hum] or -1e8
+                                    if now-last>=1.1 then
+                                        lastSpikeHit[hum]=now
+                                        hum:TakeDamage(config.Buildings.Spikes.damage)
+                                    end
                                 end
                             end
                         end

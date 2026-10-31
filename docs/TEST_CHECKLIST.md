@@ -114,6 +114,16 @@
 - [ ] Validar no servidor `tests/StudioCombatVisibilitySmokeTest.luau`.
 - [ ] Medir FPS e memoria em PC e emulador mobile.
 
+## Armadilhas e fauna (v0.88)
+- [ ] Colocar espinhos perto de vacas e touros: criatura perde vida e abate concede comida/XP ao dono.
+- [ ] Espinhos continuam atacando lobos, sem alterar o sistema original de dano.
+- [ ] Dois jogadores: armadilha nao fere o proprio dono.
+- [ ] Jogador que acabou de renascer com ForceField nao sofre dano da armadilha.
+- [ ] Depois de expirar o ForceField, armadilhas adversarias causam dano novamente.
+- [ ] Tentar construir em cima de vacas, ovelhas ou touros: servidor rejeita sem cobrar materiais.
+- [ ] Com muitas construcoes, mira reconhece apenas Core sem ignorar golpes.
+- [ ] Executar `tests/StudioSpikeSafetySmokeTest.luau` no Server Command Bar.
+
 ## Combate e segurança
 - [ ] Golpe contra jogador/animal atrás de muralha não atravessa a parede.
 - [ ] Armadilha de lentidão reaplicada não deixa velocidade travada em 10.

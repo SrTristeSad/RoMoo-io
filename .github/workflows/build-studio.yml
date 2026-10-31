@@ -101,6 +101,21 @@ jobs:
           assert 'Wolves.setStructures(buildings, Structures.damage)' in game
           assert 'function Structures.tryBuild(' in structures
           assert 'function Structures.damage(' in structures
+          spike_test = Path('tests/StudioSpikeSafetySmokeTest.luau').read_text()
+          assert 'Structures.canSpikeHitPlayer' in structures
+          assert 'character:FindFirstChildOfClass("ForceField")' in structures
+          assert 'hitWildlife(creature,config.Buildings.Spikes.damage)' in structures
+          assert 'creature.Parent==wildlife' in structures
+          assert 'activeWildlife=if wildlife then wildlife:GetChildren() else {}' in structures
+          assert 'if dx*dx+dz*dz < 8*8 then return nil,"Animal no local" end' in structures
+          assert 'onHitWildlife' in structures and 'onWildlifeFood' in structures
+          assert 'Animals.hit(creature,amount)' in game
+          assert 'game:GetService("Players")' in spike_test
+          assert 'p.CanCollide = collidable == true and name == "Core"' in structures
+          assert 'indexResources(nodes)' in structures
+          assert 'occupiedByResource(placement)' in structures
+          assert 'return nil,"Afaste-se de arvores e pedras"' in structures
+          assert 'p.CanQuery = name == "Core"' in structures
           assert 'OwnerUserId' in structures and 'limit' in structures
           assert 'Rules.isRiver(config,placement,7)' in structures
           assert 'Windmill' in structures and 'Spikes' in structures and 'Wall' in structures

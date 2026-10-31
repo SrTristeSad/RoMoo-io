@@ -66,6 +66,16 @@ for _,kind in ipairs({"Wall","Spikes","Windmill","StoneWall"}) do
     assert(built and built.Parent==buildings,"Nao conseguiu construir "..kind)
     assert(built:GetAttribute("OwnerUserId")==player.UserId,"Propriedade incorreta")
     assert(built:GetAttribute("Health")==Config.Buildings[kind].health,"Vida inicial incorreta")
+    for _,part in ipairs(built:GetDescendants()) do
+        if part:IsA("BasePart") then
+            if part==built.PrimaryPart then
+                assert(part.CanQuery,"Core nao pode perder deteccao de ataque")
+            else
+                assert(not part.CanQuery and not part.CanCollide,
+                    "Decoracao nao deve multiplicar colisoes ou consultas")
+            end
+        end
+    end
     assert(stock.Wood==before-Config.Buildings[kind].cost.Wood,"Custo de madeira incorreto")
     assert(Structures.damage(built,4)==false,"Destruicao com dano insuficiente")
     assert(built:GetAttribute("Health")==Config.Buildings[kind].health-4)

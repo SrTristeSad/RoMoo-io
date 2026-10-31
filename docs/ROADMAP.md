@@ -103,6 +103,16 @@
 - [x] Teste de caminhada/repouso e queries de recursos criado para Studio
 - [ ] Testar taxa de quadros e caminhada no Roblox Studio com modelos importados
 
+## 0.88 — Espinhos, fauna e seguranca de construcao (codigo implementado; teste pendente)
+- [x] Espinhos causam dano tambem a vacas, porcos, ovelhas, touros, javalis e yetis
+- [x] Abates por espinhos creditam comida e XP ao dono, sem duplicar recompensas
+- [x] Armadilhas respeitam ForceField de renascimento e nunca ferem o proprio dono
+- [x] Impedir construcao sobre animal vivo; evitar retencao de alvos mortos na memoria
+- [x] Reduzir custo de consulta de colisoes: so o Core das construcoes e selecionavel
+- [x] Corrigir limites de estruturas removidas por outros scripts
+- [x] Adicionar smoke test de seguranca para espinhos e integracao na CI
+- [ ] Validar interacao real de espinhos, fauna e multiplayer no Roblox Studio
+
 ## 0.9 — Multiplayer robusto
 - [ ] Integração de chat com políticas do Roblox, proteção de spawn
 - [ ] Exploits, colisões, ping e resistência a ataques automatizados

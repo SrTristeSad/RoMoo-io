@@ -97,6 +97,19 @@ local buildings = Structures.start(world, resources, wolves, Config,
     end,
     function(wolf, amount)
         return Wolves.hit(wolf,amount)
+    end,
+    wildlife,
+    function(creature, amount)
+        return Animals.hit(creature,amount)
+    end,
+    function(owner, food, xp, kind)
+        local profile=profiles[owner]
+        if not profile then return end
+        profile.stock.Food += food
+        owner:SetAttribute("Food",profile.stock.Food)
+        awardXP(owner,profile,xp)
+        feedback:FireClient(owner,"Notice",
+            "Espinhos abateram "..kind..": +"..food.." comida")
     end
 )
 Wolves.setStructures(buildings, Structures.damage)
