@@ -163,6 +163,17 @@ jobs:
           assert 'params.RespectCanCollide = true' in visible
           assert 'Melee.choose' in visibility_test
           assert 'WildlifeFarDistance = 155' in cfg
+          gait = Path('src/server/CreatureGait.luau').read_text()
+          gait_test = Path('tests/StudioCreatureGaitSmokeTest.luau').read_text()
+          animal_models = Path('src/server/AnimalModels.luau').read_text()
+          assert '"CreatureGait":' in project
+          assert 'function Gait.register(' in gait and 'function Gait.animate(' in gait
+          assert 'Gait.register(model,leg,hoof,hip,diagonal)' in animal_models
+          assert 'CreatureGait.animate(model,now,moveSpeed' in Path('src/server/Animals.luau').read_text()
+          assert 'CreatureGait.animate(model,now,speed' in wolf
+          assert 'AnimalModels.create' in gait_test and 'World.spawnNode' in gait_test
+          assert 'item.CanQuery = false' in world
+          assert 'TreeShadowPartBudget = 2' in cfg
           fauna = Path('src/server/Animals.luau').read_text()
           fauna_models = Path('src/server/AnimalModels.luau').read_text()
           fauna_test = Path('tests/StudioResource3DTest.luau').read_text()

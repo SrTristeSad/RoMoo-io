@@ -21,7 +21,8 @@ local function makePart(parent, name, size, cf, color, material, opts)
     p.Anchored = true
     p.CanCollide = opts.collide == true
     p.CanTouch = false
-    p.CanQuery = opts.query ~= false
+    -- So os Core e partes com colisao entram em consultas espaciais.
+    p.CanQuery = opts.query == true or opts.collide == true
     p.CastShadow = opts.shadow ~= false
     p.TopSurface = Enum.SurfaceType.Smooth
     p.BottomSurface = Enum.SurfaceType.Smooth
@@ -105,7 +106,8 @@ local function createTree(model, pos)
             local radius = (5.6 - layer * 1.05) * scale
             makePart(model, "RamoPinheiro", Vector3.new(radius, 3.6 * scale, radius),
                 CFrame.new(pos + Vector3.new(0, height * (.64 + layer * .18), 0)),
-                palette[layer % 2 + 1], Enum.Material.Grass, {shape = Enum.PartType.Ball})
+                palette[layer % 2 + 1], Enum.Material.Grass,
+                {shape = Enum.PartType.Ball,shadow=layer==1})
         end
     else
         for i, offset in ipairs({
@@ -114,7 +116,8 @@ local function createTree(model, pos)
         }) do
             makePart(model, "Copa", Vector3.new(5.25, 4.0, 5.0) * scale,
                 CFrame.new(pos + Vector3.new(0, height, 0) + offset * scale),
-                palette[(i % 2) + 1], Enum.Material.Grass, {shape = Enum.PartType.Ball})
+                palette[(i % 2) + 1], Enum.Material.Grass,
+                {shape = Enum.PartType.Ball,shadow=i<=2})
         end
     end
     return trunk
@@ -173,13 +176,18 @@ local function importedResource(kind, model, pos)
     if not template then return nil end
     local visual = template:Clone()
     visual.Name = "Visual3D"
+    local shadowParts=0
     for _, item in ipairs(visual:GetDescendants()) do
         if item:IsA("LuaSourceContainer") then item:Destroy() end
         if item:IsA("BasePart") then
             item.Anchored = true
             item.CanCollide = false
             item.CanTouch = false
-            item.CanQuery = true
+            -- A hitbox invisivel Core trata os golpes; nao consultar cada MeshPart.
+            item.CanQuery = false
+            -- Limite de sombras dinamicas por recurso para mapas densos/mobile.
+            shadowParts+=1
+            item.CastShadow = kind=="Tree" and shadowParts<=Config.TreeShadowPartBudget
         end
     end
     visual.Parent = model
@@ -208,7 +216,7 @@ local function createBush(model,pos)
     local core=makePart(model,"Core",Vector3.new(4.6,2.8,4.6),
         CFrame.new(pos+Vector3.new(0,1.4,0)),
         Color3.fromRGB(52,132,69),Enum.Material.Grass,
-        {shape=Enum.PartType.Ball,collide=false})
+        {shape=Enum.PartType.Ball,collide=false,query=true})
     for _,offset in ipairs({
         Vector3.new(-1.55,1.1,1.2),Vector3.new(1.8,1.7,-.4),
         Vector3.new(.3,2.6,1.0)

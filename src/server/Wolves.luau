@@ -9,6 +9,7 @@ local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local Config=require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local Rules=require(script.Parent:WaitForChild("MapRules"))
 local CombatVisibility=require(script.Parent:WaitForChild("CombatVisibility"))
+local CreatureGait=require(script.Parent:WaitForChild("CreatureGait"))
 local Wolves={}
 local rng=Random.new(Config.Seed+42)
 local folder=nil
@@ -90,10 +91,12 @@ local function fallback(model,cf)
             cf*CFrame.new(side*.94,2.3,-2.75)*
             CFrame.Angles(0,0,math.rad(side*13)),dark)
         for _,z in ipairs({-1.7,1.65}) do
-            part(model,"Perna",Vector3.new(.87,2.1,1.05),
+            local leg=part(model,"Perna",Vector3.new(.87,2.1,1.05),
                 cf*CFrame.new(side*1.13,-1.5,z),dark)
-            part(model,"Pata",Vector3.new(1.0,.58,1.3),
+            local paw=part(model,"Pata",Vector3.new(1.0,.58,1.3),
                 cf*CFrame.new(side*1.13,-2.43,z-.3),fur)
+            local hip=cf*CFrame.new(side*1.13,-.5,z)
+            CreatureGait.register(model,leg,paw,hip,if side*z>0 then 0 else math.pi)
         end
     end
     part(model,"Cauda",Vector3.new(1.16,1.25,3.2),
@@ -382,11 +385,13 @@ function Wolves.start(world,resources)
                         state.nextTurn=now+.4
                     end
                 end
-                if (newPos-position).Magnitude>.01 then
+                local moving=(Vector2.new(newPos.X-position.X,newPos.Z-position.Z)).Magnitude>.01
+                if moving then
                     local bounce=math.abs(math.sin(now*speed*.8+state.phase))*.12
                     newPos+=Vector3.new(0,bounce,0)
                     model:PivotTo(CFrame.lookAt(newPos,newPos+dir))
                 end
+                CreatureGait.animate(model,now,speed,if moving then 1 else 0)
                 if hum and hum.Health>0 and distance<Config.Wolf.AttackDistance
                     and now-state.lastAttack>=1.4 then
                     local char=hum.Parent

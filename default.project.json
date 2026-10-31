@@ -23,6 +23,7 @@
         "Wolves": {"$path": "src/server/Wolves.luau"},
         "Animals": {"$path": "src/server/Animals.luau"},
         "AnimalModels": {"$path": "src/server/AnimalModels.luau"},
+        "CreatureGait": {"$path": "src/server/CreatureGait.luau"},
         "Melee": {"$path": "src/server/Melee.luau"},
         "CombatVisibility": {"$path": "src/server/CombatVisibility.luau"},
         "Structures": {"$path": "src/server/Structures.luau"},

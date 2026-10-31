@@ -93,6 +93,16 @@
 - [ ] Executar `tests/StudioResource3DTest.luau` na Command Bar do servidor.
 - [ ] Monitorar FPS com 2 clientes, mapa cheio e 20 ou mais animais.
 
+## Animacao das patas e otimizacoes de recursos
+- [ ] Abrir jogo no Studio: vacas, porcos, ovelhas e lobos movem pernas ao andar.
+- [ ] Cascos/patas acompanham as pernas sem se desprender do corpo.
+- [ ] Animais parados voltam a pose de descanso.
+- [ ] Importacao de Cow/Bull/Sheep/Wolf nao quebra o movimento do animal.
+- [ ] Arvores/rochas/arbustos continuam coletaveis mesmo com detalhes CanQuery=false.
+- [ ] Mouse consegue mirar no tronco de arvores, nao apenas na copa.
+- [ ] Validar sombra e taxa de quadros com 100+ arvores no PC e mobile.
+- [ ] Rodar `tests/StudioCreatureGaitSmokeTest.luau` no Server Command Bar.
+
 ## Fauna e golpes: paredes, FPS e viradas
 - [ ] Com vaca atras de muro, marreta nao acerta atraves da parede.
 - [ ] Contra vaca sem muro, coleta de alimento e XP continua funcionando.

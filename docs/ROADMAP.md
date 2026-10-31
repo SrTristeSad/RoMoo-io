@@ -94,6 +94,15 @@
 - [x] Teste de linha de visao isolado e verificacoes na CI
 - [ ] Validar linha de visao, duas maquinas e FPS real no Roblox Studio
 
+## 0.87 — Animacao de patas e reducao de consultas no cenario (codigo implementado; teste pendente)
+- [x] Criar animação procedural de caminhada com pernas diagonais alternadas para fauna e lobos
+- [x] Cascos e patas acompanham o giro da perna; sem upload de AnimationId
+- [x] Modelos 3D reais importados continuam usando o movimento do modelo inteiro
+- [x] Geometria decorativa de recursos nao participa de overlap/raycast; apenas o Core de coleta
+- [x] Limitar sombras dinamicas de detalhes das arvores para reduzir custo em cenas densas
+- [x] Teste de caminhada/repouso e queries de recursos criado para Studio
+- [ ] Testar taxa de quadros e caminhada no Roblox Studio com modelos importados
+
 ## 0.9 — Multiplayer robusto
 - [ ] Integração de chat com políticas do Roblox, proteção de spawn
 - [ ] Exploits, colisões, ping e resistência a ataques automatizados

@@ -1,6 +1,7 @@
 --!nonstrict
 -- Personagens 3D originais para Roblox; independentes de upload de mesh.
 -- Quando uma malha CC0 importada estiver disponível ela tem prioridade.
+local Gait = require(script.Parent:WaitForChild("CreatureGait"))
 local Models = {}
 local E = Enum.PartType
 
@@ -57,11 +58,15 @@ function Models.create(model, anchor, kind, primary)
     for _, side in ipairs({-1,1}) do
         for _, z in ipairs({-2.65,2.4}) do
             local legColor = if wolf then dark else base
-            create(model, bodyAnchor, "Perna", Vector3.new(1.45,3.2,1.5)*scale,
+            local leg=create(model, bodyAnchor, "Perna", Vector3.new(1.45,3.2,1.5)*scale,
                 Vector3.new(side*2.05,-2.02,z), legColor, E.Block)
-            create(model, bodyAnchor, "Casco", Vector3.new(1.65,.7,1.9)*scale,
+            local hoof=create(model, bodyAnchor, "Casco", Vector3.new(1.65,.7,1.9)*scale,
                 Vector3.new(side*2.05,-3.25,z-.2),
                 if sheep or yeti then color(134,138,140) else dark, E.Block)
+            -- Pernas diagonais alternadas, com a junta acima dos cascos.
+            local hip=bodyAnchor*CFrame.new(side*2.05,-.65,z)
+            local diagonal=if side*z>0 then 0 else math.pi
+            Gait.register(model,leg,hoof,hip,diagonal)
         end
     end
     local headZ = if wolf or boar then -4.3 else -4.05

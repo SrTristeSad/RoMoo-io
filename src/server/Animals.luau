@@ -3,6 +3,7 @@
 local Players = game:GetService("Players")
 local ServerStorage = game:GetService("ServerStorage")
 local AnimalModels = require(script.Parent:WaitForChild("AnimalModels"))
+local CreatureGait = require(script.Parent:WaitForChild("CreatureGait"))
 local Rules = require(script.Parent:WaitForChild("MapRules"))
 local CombatVisibility = require(script.Parent:WaitForChild("CombatVisibility"))
 local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
@@ -360,7 +361,8 @@ function Animals.create(world, mapSize)
                             end
                         end
                     end
-                    if dir.Magnitude > 0.1 and (nextPos - pos).Magnitude > .01 then
+                    local moving=dir.Magnitude > 0.1 and (nextPos-pos).Magnitude > .01
+                    if moving then
                         -- Pequena animação de caminhada, compatível com Parts e MeshParts,
                         -- sem publicar AnimationIds ou criar joints por animal.
                         local bob = math.abs(math.sin(now * moveSpeed * .72 + state.phase)) * .17
@@ -373,6 +375,7 @@ function Animals.create(world, mapSize)
                         model:PivotTo(CFrame.lookAt(raised, raised + state.facing) *
                             CFrame.Angles(lean, 0, 0))
                     end
+                    CreatureGait.animate(model,now,moveSpeed,if moving then 1 else 0)
                     if def.hostile and playerDelta and hum and hum.Health > 0
                         and distance < 7 and now - state.lastAttack > 1.5 then
                         local char = hum.Parent
