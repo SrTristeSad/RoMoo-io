@@ -114,6 +114,16 @@
 - [ ] Validar no servidor `tests/StudioCombatVisibilitySmokeTest.luau`.
 - [ ] Medir FPS e memoria em PC e emulador mobile.
 
+## Texturas e modelos cubicos (v0.895)
+- [ ] Importar tronco, folhas, pedra e ouro PNG; adicionar IDs em Config.VoxelTextureIds.
+- [ ] Verificar se as faces dos troncos/copa e da rocha aparecem no jogo.
+- [ ] Conferir que mineiracao de arvore/rocha continua infinita.
+- [ ] Importar animal-cow.glb e animal-pig.glb em ServerStorage/RoMooAnimalModels.
+- [ ] Verificar que Cow e Pig usam o GLB importado, sem alterar hitbox.
+- [ ] Rodar `tests/StudioVoxelMaterialsSmokeTest.luau` no Server Command Bar.
+- [ ] Verificar que imagens de baixa resolucao aparecem na resolucao correta.
+- [ ] Testar FPS em celular com 200+ arvores e decals.
+
 ## Avatar cubico e skins 64x64 (v0.89)
 - [ ] Personagem deve aparecer com cabeca, torso, bracos e pernas cubicos.
 - [ ] Clicar no botao SKIN deve alternar Explorador e Construtor.

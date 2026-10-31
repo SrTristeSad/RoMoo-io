@@ -10,6 +10,7 @@ local Config=require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Share
 local Rules=require(script.Parent:WaitForChild("MapRules"))
 local CombatVisibility=require(script.Parent:WaitForChild("CombatVisibility"))
 local CreatureGait=require(script.Parent:WaitForChild("CreatureGait"))
+local VoxelMaterials=require(script.Parent:WaitForChild("VoxelMaterials"))
 local Wolves={}
 local rng=Random.new(Config.Seed+42)
 local folder=nil
@@ -106,7 +107,7 @@ local function fallback(model,cf)
 end
 
 local function imported(model,cf)
-    if Config.VoxelThemeEnabled then return false end
+    if Config.VoxelThemeEnabled and not Config.VoxelImportedAnimalModels then return false end
     local library=ServerStorage:FindFirstChild("RoMooAnimalModels")
     local template=library and library:FindFirstChild("Wolf")
     if not template or not template:IsA("Model") then return false end
@@ -225,7 +226,12 @@ local function spawn()
     core.Transparency=1
     core.CanQuery=true
     model.PrimaryPart=core
-    if not imported(model,cf) then fallback(model,cf) end
+    if not imported(model,cf) then
+        fallback(model,cf)
+        if Config.VoxelThemeEnabled then
+            VoxelMaterials.animal(model,"Wolf",Config)
+        end
+    end
 
     local bar=Instance.new("BillboardGui")
     bar.Name="WolfHealth"

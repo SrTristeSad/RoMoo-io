@@ -1,5 +1,21 @@
 # RoMoo io — Moo-IO adaptado ao Roblox 3D
 
+## Pacote de skins e texturas voxel (CC0)
+
+**Novo:** os arquivos reais de texturas de arvores, folhas, pedra, ouro,
+grama, areia, neve, agua, javali e raposa e modelos GLB cubicos de
+vaca, porco, javali, cao e urso polar estao em
+[assets/voxel/kenney](assets/voxel/kenney).
+Sao assets CC0 criados por [Kenney](https://kenney.nl/), sem arquivos
+oficiais de Minecraft. O artefato GitHub
+`RoMoo-io-Modelos-3D` inclui a pasta completa.
+
+Para **aparecerem dentro do Roblox**, importe PNGs pelo Creator Hub,
+insira seus IDs em `Config.VoxelTextureIds` e, se desejar, importe
+os GLBs em `ServerStorage/RoMooAnimalModels`. Enquanto os IDs nao
+forem informados, os animais/arvores continuam cubos coloridos.
+Guia: [docs/TEXTURAS_VOXEL.md](docs/TEXTURAS_VOXEL.md).
+
 ## Atualizacao visual: personagens e natureza blocados
 O **tema voxel** esta ativo por padrao: avatar R15 cubico, arvores e rochas em
 blocos, lobos e demais animais de proporcoes quadradas. O mundo continua 3D

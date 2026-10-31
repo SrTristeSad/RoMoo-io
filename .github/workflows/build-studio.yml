@@ -219,6 +219,17 @@ jobs:
           assert 'VoxelSkins.Presets[1]' in skin_test
           assert 'if Config.VoxelThemeEnabled then return nil end' in world
           assert 'p.Shape = E.Block' in fauna_models
+          materials = Path('src/server/VoxelMaterials.luau').read_text()
+          material_test = Path('tests/StudioVoxelMaterialsSmokeTest.luau').read_text()
+          assert '"VoxelMaterials":' in project
+          assert 'function VoxelMaterials.resource(' in materials
+          assert 'function VoxelMaterials.animal(' in materials
+          assert 'VoxelMaterials.resource(model,kind,Config)' in world
+          assert 'VoxelMaterials.animal(model,kind,Config)' in fauna
+          assert 'VoxelMaterials.animal(model,"Wolf",Config)' in wolf
+          assert 'VoxelTextureIds = {' in cfg
+          assert 'VoxelImportedAnimalModels = true' in cfg
+          assert 'Mats.resource(tree,"Tree",fake)' in material_test
           nature = Path('src/server/NatureAssets.luau').read_text()
           assert '"NatureAssets":' in project
           assert 'NatureAssets.prepare(Config)' in game
@@ -241,7 +252,18 @@ jobs:
               assert data[:4] == b'glTF', f'Formato inesperado: {path}'
               assert struct.unpack_from('<I',data,4)[0] == 2, f'GLB v2 esperado: {path}'
               assert struct.unpack_from('<I',data,8)[0] == len(data)
-          print('10 GLBs genuinos e validos como contêiner GLB 2.0')
+          # Os GLBs opcionais de animais quadrados tambem precisam ser validos.
+          voxel_models=sorted(Path('assets/voxel/kenney/models').glob('*.glb'))
+          assert len(voxel_models)==5, f'Modelos 3D cubicos esperados: {len(voxel_models)}'
+          for path in voxel_models:
+              data=path.read_bytes()
+              assert data[:4]==b'glTF' and struct.unpack_from('<I',data,4)[0]==2
+              assert struct.unpack_from('<I',data,8)[0]==len(data)
+          pngs=sorted(Path('assets/voxel/kenney').rglob('*.png'))
+          assert len(pngs)>=40, f'Pacote PNG incompleto: {len(pngs)}'
+          for path in pngs:
+              assert path.read_bytes().startswith(bytes([137,80,78,71,13,10,26,10]))
+          print('10 GLBs originais, 5 GLBs de animais e',len(pngs),'PNGs CC0 validos')
           PY
 
       - name: Instalar Rojo 7.7.1
@@ -296,12 +318,13 @@ jobs:
           from zipfile import ZipFile, ZIP_DEFLATED
           out=Path('dist/RoMoo-io-Modelos-3D.zip')
           with ZipFile(out,'w',ZIP_DEFLATED,compresslevel=6) as z:
-              for folder in ('assets/nature','assets/animals'):
+              for folder in ('assets/nature','assets/animals','assets/voxel'):
                   for path in sorted(Path(folder).rglob('*')):
                       if path.is_file():
                           z.write(path)
               for path in ('docs/ASSETS_3D.md','docs/IMPORTAR_ANIMAIS_3D.md',
-                           'scripts/OrganizarModelosNatureza-Studio.luau'):
+                           'docs/TEXTURAS_VOXEL.md',
+                            'scripts/OrganizarModelosNatureza-Studio.luau'):
                   z.write(path)
           assert out.stat().st_size>50000
           print(out, out.stat().st_size)

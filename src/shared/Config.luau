@@ -5,6 +5,17 @@ return {
     -- Prefere modelos do Creator Store oficial; fallback nativo sem rede.
     NatureAssetsEnabled = false, -- No tema voxel, usar modelos cubicos locais.
     VoxelThemeEnabled = true,
+    -- Importacoes GLB CC0 ja inseridas em ServerStorage tem prioridade.
+    VoxelImportedAnimalModels = true,
+    VoxelFoliageBudget = 2,
+    -- 0 conserva os cubos coloridos ate a publicacao do PNG no Roblox.
+    VoxelTextureIds = {
+        TrunkSide=0, TrunkTop=0, Leaves=0, SnowLeaves=0,
+        Stone=0, GoldOre=0, Water=0, Grass=0, Sand=0, Snow=0,
+        CowFace=0, PigFace=0, BullFace=0, WolfFace=0, YetiFace=0,
+        BoarBody=0, BoarHead=0, BoarLeg=0, BoarTail=0,
+        FoxBody=0, FoxTail=0,
+    },
     TreeShadowPartBudget = 2,
     Seed = 20261030,
     StartingWood = 0, StartingStone = 0, StartingGold = 0, StartingFood = 0,

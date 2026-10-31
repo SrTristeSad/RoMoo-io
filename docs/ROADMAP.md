@@ -125,6 +125,18 @@
 - [ ] Testar imagem real publicada no Roblox, aparencia 3D e desempenho no mobile
 - [ ] Terreno integralmente em blocos, selecao de skin pessoal e arquivos 64x32 legados
 
+## 0.895 — Texturas e modelos animais voxel CC0 (código implementado; importação pendente)
+- [x] Incluir 27 PNGs de recursos e terreno da Kenney (tronco, folhas, grama, neve, areia, pedra e ouro)
+- [x] Incluir imagens do javali e raposa + rostos quadrados de 5 animais
+- [x] Incluir 5 GLBs do Kenney Cube Pets (vaca, porco, javali, cão e urso polar)
+- [x] Carregar texturas de faces em Parts quando o criador atribuir imageIds autorizados no Config
+- [x] Acrescentar os arquivos voxel ao pacote de modelos 3D do GitHub Actions
+- [x] Permitir malhas importadas em RoMooAnimalModels mesmo no tema voxel
+- [x] Conferir formatos binarios e recursos presentes na CI; smoke test para decals
+- [ ] Importar PNGs no Roblox Creator Hub e preencher imageIds reais
+- [ ] Importar GLBs no Roblox Studio e testar orientacao, tamanho e aparencia
+- [ ] Medir FPS e custo de texturas em dispositivo mobile
+
 ## 0.9 — Multiplayer robusto
 - [ ] Integração de chat com políticas do Roblox, proteção de spawn
 - [ ] Exploits, colisões, ping e resistência a ataques automatizados

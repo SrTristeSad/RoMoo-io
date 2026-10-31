@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local Rules = require(script.Parent:WaitForChild("MapRules"))
+local VoxelMaterials = require(script.Parent:WaitForChild("VoxelMaterials"))
 
 local World = {}
 local rng = Random.new(Config.Seed)
@@ -244,6 +245,9 @@ function World.spawnNode(kind, pos, parent)
             else createRock(model, pos, kind == "Gold")
     end
     model.PrimaryPart = core
+    if Config.VoxelThemeEnabled then
+        VoxelMaterials.resource(model,kind,Config)
+    end
 
     return model
 end

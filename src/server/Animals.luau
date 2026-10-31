@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local ServerStorage = game:GetService("ServerStorage")
 local AnimalModels = require(script.Parent:WaitForChild("AnimalModels"))
 local CreatureGait = require(script.Parent:WaitForChild("CreatureGait"))
+local VoxelMaterials = require(script.Parent:WaitForChild("VoxelMaterials"))
 local Rules = require(script.Parent:WaitForChild("MapRules"))
 local CombatVisibility = require(script.Parent:WaitForChild("CombatVisibility"))
 local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
@@ -77,7 +78,7 @@ end
 -- Substitui os protótipos pelas malhas do Roblox Studio se o usuário importar
 -- os arquivos CC0 para ServerStorage/RoMooAnimalModels/<Cow|Bull|Wolf|Sheep>.
 local function attachImportedVisual(model, core, kind)
-    if Config.VoxelThemeEnabled then return false end
+    if Config.VoxelThemeEnabled and not Config.VoxelImportedAnimalModels then return false end
     local library = ServerStorage:FindFirstChild("RoMooAnimalModels")
     local template = library and library:FindFirstChild(kind)
     if not template or not template:IsA("Model") then return false end
@@ -218,6 +219,9 @@ local function spawn(kind)
     core.CanQuery = true
     if not attachImportedVisual(model, core, kind) then
         AnimalModels.create(model, cf, kind, core)
+        if Config.VoxelThemeEnabled then
+            VoxelMaterials.animal(model,kind,Config)
+        end
     end
 
     local hpGui = Instance.new("BillboardGui")
