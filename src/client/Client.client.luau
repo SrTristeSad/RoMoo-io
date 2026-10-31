@@ -15,6 +15,7 @@ local strike = remotes:WaitForChild("Strike")
 local feedback = remotes:WaitForChild("Feedback")
 local build = remotes:WaitForChild("Build")
 local selectWeapon = remotes:WaitForChild("SelectWeapon")
+local chooseSkin = remotes:WaitForChild("ChooseSkin")
 local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local eat = remotes:WaitForChild("Eat")
 local world = workspace:WaitForChild("RoMooWorld")
@@ -77,6 +78,35 @@ local function rounded(parent, radius)
     corner.CornerRadius = UDim.new(0, radius)
     corner.Parent = parent
     return corner
+end
+
+-- Seletor de visual cubico. Config define quais texturas sao autorizadas.
+if Config.VoxelSkins and Config.VoxelSkins.Enabled then
+    local skins=Config.VoxelSkins.Presets
+    local skinButton=Instance.new("TextButton")
+    skinButton.Name="TrocarSkin"
+    skinButton.Size=UDim2.fromOffset(132,29)
+    skinButton.Position=UDim2.fromOffset(12,86)
+    skinButton.BackgroundColor3=Color3.fromRGB(51,78,61)
+    skinButton.TextColor3=Color3.new(1,1,1)
+    skinButton.Font=Enum.Font.GothamBold
+    skinButton.TextSize=12
+    skinButton.BorderSizePixel=0
+    skinButton.Parent=ui
+    rounded(skinButton,7)
+    local function refreshSkinButton()
+        local index=player:GetAttribute("SkinIndex") or 1
+        local preset=skins[index] or skins[1]
+        skinButton.Text="SKIN: "..(preset and preset.label or "PADRAO")
+    end
+    skinButton.Activated:Connect(function()
+        if #skins>0 then
+            local index=player:GetAttribute("SkinIndex") or 1
+            chooseSkin:FireServer(index % #skins + 1)
+        end
+    end)
+    player:GetAttributeChangedSignal("SkinIndex"):Connect(refreshSkinButton)
+    refreshSkinButton()
 end
 
 local top = Instance.new("Frame")

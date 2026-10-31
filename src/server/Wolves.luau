@@ -54,7 +54,8 @@ local function part(model,name,size,offset,color,shape)
     p.Size=size
     p.CFrame=offset
     p.Color=color
-    p.Shape=shape or Enum.PartType.Block
+    p.Shape=if Config.VoxelThemeEnabled then Enum.PartType.Block
+        else shape or Enum.PartType.Block
     p.Material=Enum.Material.SmoothPlastic
     p.Anchored=true
     p.CanCollide=false
@@ -105,6 +106,7 @@ local function fallback(model,cf)
 end
 
 local function imported(model,cf)
+    if Config.VoxelThemeEnabled then return false end
     local library=ServerStorage:FindFirstChild("RoMooAnimalModels")
     local template=library and library:FindFirstChild("Wolf")
     if not template or not template:IsA("Model") then return false end

@@ -113,6 +113,18 @@
 - [x] Adicionar smoke test de seguranca para espinhos e integracao na CI
 - [ ] Validar interacao real de espinhos, fauna e multiplayer no Roblox Studio
 
+## 0.89 — Tema voxel e PNG 64x64 (codigo implementado; teste visual pendente)
+- [x] Modelo cubico R15, 6 partes com WeldConstraint e animacao Roblox preservada
+- [x] UV por face do atlas PNG 64x64 classico e variante slim de 3 pixels
+- [x] Camada adicional opcional de roupa/cabelo para imagem com transparencia
+- [x] Botao SKIN para alternar paletas originais e skins autorizadas cadastradas no Config
+- [x] Servidor valida somente indice de skin permitido; evita ID e URL arbitrarios de clientes
+- [x] Recursos naturais, fauna e lobos passam a usar geometrias cubicas no modo voxel
+- [x] Tema pode voltar a usar malhas importadas ao desligar VoxelThemeEnabled
+- [x] Teste de UV, forma e hitboxes criado para Studio e checagem de CI
+- [ ] Testar imagem real publicada no Roblox, aparencia 3D e desempenho no mobile
+- [ ] Terreno integralmente em blocos, selecao de skin pessoal e arquivos 64x32 legados
+
 ## 0.9 — Multiplayer robusto
 - [ ] Integração de chat com políticas do Roblox, proteção de spawn
 - [ ] Exploits, colisões, ping e resistência a ataques automatizados

@@ -1,5 +1,27 @@
 # RoMoo io — Moo-IO adaptado ao Roblox 3D
 
+## Atualizacao visual: personagens e natureza blocados
+O **tema voxel** esta ativo por padrao: avatar R15 cubico, arvores e rochas em
+blocos, lobos e demais animais de proporcoes quadradas. O mundo continua 3D
+com agua/biomas Terrain nativos; ainda **nao** e um terreno feito de cubos
+individuais. Todas as regras de coleta, luta e construcao permanecem ativas.
+
+O botao **SKIN** muda entre `Explorador`, `Construtor` e dois slots para
+PNGs 64x64 compatíveis com a distribuicao de UV de skins de blocos.
+Nenhum PNG de Minecraft vem incluido. Para testar sua arte, envie-a como
+imagem no Roblox Creator Hub e substitua `imageId=0` no
+`Config.VoxelSkins.Presets` pelo ID permitido para a experiencia.
+Suporta o modelo classico (4 px de braco), slim (3 px) e segunda camada;
+o formato antigo 64x32 nao esta implementado. Consulte
+[guia de skins](docs/VOXEL_SKINS.md).
+
+**Nao e produto oficial de Minecraft/Mojang**, e os arquivos de jogo ou skins
+oficiais nao sao redistribuidos. O tema voxel pode ser desativado em
+`Config.VoxelThemeEnabled`, recuperando as malhas externas se estiverem
+importadas.
+
+
+
 **Revisão atual:** mundo gerado usando como referência o servidor [Moo-IO Lua](https://github.com/SrTristeSad/Moo-IO) e sua implementação em [ToonRoyale-Assets/android/server-lua](https://github.com/SrTristeSad/ToonRoyale-Assets/tree/main/android/server-lua). A referência inclui o mundo, colisões, biomas, corrente do rio e ID original do lobo (4). O núcleo da geração é adaptado para studs e Terrain do Roblox, **não é um port integral de todos os sistemas originais**.
 
 ## O que funciona nesta versão

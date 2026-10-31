@@ -11,13 +11,13 @@ local rng = Random.new(Config.Seed)
 
 local function makePart(parent, name, size, cf, color, material, opts)
     opts = opts or {}
-    local p = Instance.new(opts.wedge and "WedgePart" or "Part")
+    local p = Instance.new(if Config.VoxelThemeEnabled then "Part" else if opts.wedge then "WedgePart" else "Part")
     p.Name = name
     p.Size = size
     p.CFrame = cf
     p.Color = color
     p.Material = material
-    if opts.shape then p.Shape = opts.shape end
+    if opts.shape and not Config.VoxelThemeEnabled then p.Shape = opts.shape end
     p.Anchored = true
     p.CanCollide = opts.collide == true
     p.CanTouch = false
@@ -157,6 +157,7 @@ local function createRock(model, pos, gold)
 end
 
 local function importedResource(kind, model, pos)
+    if Config.VoxelThemeEnabled then return nil end
     local library = ServerStorage:FindFirstChild("RoMooResourceModels")
     local entry = library and library:FindFirstChild(kind)
     if not entry then return nil end

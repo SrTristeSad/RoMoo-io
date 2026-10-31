@@ -3,7 +3,8 @@
 return {
     MapSize = 520,
     -- Prefere modelos do Creator Store oficial; fallback nativo sem rede.
-    NatureAssetsEnabled = true,
+    NatureAssetsEnabled = false, -- No tema voxel, usar modelos cubicos locais.
+    VoxelThemeEnabled = true,
     TreeShadowPartBudget = 2,
     Seed = 20261030,
     StartingWood = 0, StartingStone = 0, StartingGold = 0, StartingFood = 0,

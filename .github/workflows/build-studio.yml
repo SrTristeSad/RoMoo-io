@@ -203,6 +203,22 @@ jobs:
           assert 'Models.create(' in fauna_models
           assert 'world:WaitForChild("Animals")' in client
           assert 'FAUNA' in fauna_test
+          skin = Path('src/server/VoxelSkins.luau').read_text()
+          skin_test = Path('tests/StudioVoxelSkinsSmokeTest.luau').read_text()
+          assert '"VoxelSkins":' in project
+          assert 'VoxelThemeEnabled = true' in cfg
+          assert 'NatureAssetsEnabled = false' in cfg
+          assert 'function Skin.faceRect(' in skin and 'function Skin.apply(' in skin
+          assert 'Enum.ResamplerMode.Pixelated' in skin
+          assert 'ImageRectOffset=offset' in skin and 'ImageRectSize=size' in skin
+          assert 'RoMooVoxelVisual' in skin
+          assert 'chooseSkin.OnServerEvent:Connect' in game
+          assert 'VoxelSkins.apply(character,preset)' in game
+          assert 'chooseSkin:FireServer(' in client
+          assert 'SkinIndex' in client
+          assert 'VoxelSkins.Presets[1]' in skin_test
+          assert 'if Config.VoxelThemeEnabled then return nil end' in world
+          assert 'p.Shape = E.Block' in fauna_models
           nature = Path('src/server/NatureAssets.luau').read_text()
           assert '"NatureAssets":' in project
           assert 'NatureAssets.prepare(Config)' in game

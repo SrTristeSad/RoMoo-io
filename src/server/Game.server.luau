@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("RoMoo"):WaitForChild("Shared"):WaitForChild("Config"))
 local World = require(script.Parent:WaitForChild("World"))
 local Avatar = require(script.Parent:WaitForChild("Avatar"))
+local VoxelSkins = require(script.Parent:WaitForChild("VoxelSkins"))
 local Wolves = require(script.Parent:WaitForChild("Wolves"))
 local Animals = require(script.Parent:WaitForChild("Animals"))
 local RiverFlow = require(script.Parent:WaitForChild("RiverFlow"))
@@ -43,9 +44,33 @@ build.Parent = remotes
 local selectWeapon = Instance.new("RemoteEvent")
 selectWeapon.Name = "SelectWeapon"
 selectWeapon.Parent = remotes
+local chooseSkin=Instance.new("RemoteEvent")
+chooseSkin.Name="ChooseSkin"
+chooseSkin.Parent=remotes
 
 -- Cura somente no servidor: o cliente não pode inventar comida nem vida.
 local profiles = {}
+
+local function applyPlayerSkin(player,character)
+    if not Config.VoxelSkins.Enabled or player.Character~=character then return end
+    local index=player:GetAttribute("SkinIndex") or 1
+    local preset=Config.VoxelSkins.Presets[index]
+    if preset then VoxelSkins.apply(character,preset) end
+end
+
+-- So indices presentes na lista do servidor. O cliente nao envia imagens.
+chooseSkin.OnServerEvent:Connect(function(player,index)
+    local profile=profiles[player]
+    if not profile or not Config.VoxelSkins.Enabled
+        or typeof(index)~="number" or index~=math.floor(index) then return end
+    if not Config.VoxelSkins.Presets[index] then return end
+    local now=os.clock()
+    if now-(profile.lastSkinChange or -1e8)<.5 then return end
+    profile.lastSkinChange=now
+    player:SetAttribute("SkinIndex",index)
+    local char=player.Character
+    if char then applyPlayerSkin(player,char) end
+end)
 
 -- Apenas o servidor escolhe dano, alcance e tempo de recarga.
 selectWeapon.OnServerEvent:Connect(function(player,id)
@@ -252,6 +277,7 @@ local function characterReady(player, character)
     if humanoid and humanoid:IsA("Humanoid") and player.Character==character then
         local profile=profiles[player]
         Avatar.equip(player,character,humanoid,profile and profile.weapon or "Hammer")
+        applyPlayerSkin(player,character)
         humanoid.Died:Connect(function()
             local current=profiles[player]
             if current and player.Character==character then
@@ -268,6 +294,10 @@ end
 
 local function playerAdded(player)
     profiles[player] = SessionState.create(player,Config)
+    player:SetAttribute("SkinIndex",1)
+    player.CharacterAppearanceLoaded:Connect(function(character)
+        applyPlayerSkin(player,character)
+    end)
     player.CharacterAdded:Connect(function(character)
         task.spawn(characterReady, player, character)
     end)

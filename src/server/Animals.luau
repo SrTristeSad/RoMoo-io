@@ -77,6 +77,7 @@ end
 -- Substitui os protótipos pelas malhas do Roblox Studio se o usuário importar
 -- os arquivos CC0 para ServerStorage/RoMooAnimalModels/<Cow|Bull|Wolf|Sheep>.
 local function attachImportedVisual(model, core, kind)
+    if Config.VoxelThemeEnabled then return false end
     local library = ServerStorage:FindFirstChild("RoMooAnimalModels")
     local template = library and library:FindFirstChild(kind)
     if not template or not template:IsA("Model") then return false end

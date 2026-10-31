@@ -10,7 +10,8 @@ local function create(model, anchor, name, size, offset, color, shape, material,
     p.Name = name
     p.Size = size
     p.CFrame = anchor * CFrame.new(offset) * (rotate or CFrame.identity)
-    p.Shape = shape or E.Block
+    -- Tema cubico: todas as especies usam caixas de proporcoes variadas.
+    p.Shape = E.Block
     p.Color = color
     p.Material = material or Enum.Material.SmoothPlastic
     p.Anchored = true

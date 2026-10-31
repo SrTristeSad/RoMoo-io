@@ -114,6 +114,18 @@
 - [ ] Validar no servidor `tests/StudioCombatVisibilitySmokeTest.luau`.
 - [ ] Medir FPS e memoria em PC e emulador mobile.
 
+## Avatar cubico e skins 64x64 (v0.89)
+- [ ] Personagem deve aparecer com cabeca, torso, bracos e pernas cubicos.
+- [ ] Clicar no botao SKIN deve alternar Explorador e Construtor.
+- [ ] Equipar marreta, machado e espada continua funcionando; a arma nao desaparece.
+- [ ] Aplicar textura PNG 64x64 autorizada em Config.VoxelSkins.Presets[3].imageId.
+- [ ] Conferir faces frente/costas/cima/lados sem costuras trocadas.
+- [ ] Ativar camada externa para testar roupa e chapeu de skin 64x64.
+- [ ] Conferir personagem slim, respiracao e caminhada R15 sem impacto na hitbox.
+- [ ] Jogador novo ou renascido recebe a skin selecionada.
+- [ ] Testar multiplayer com dois estilos de skin e conferir latencia, FPS e carga.
+- [ ] Testar `tests/StudioVoxelSkinsSmokeTest.luau` no Server Command Bar.
+
 ## Armadilhas e fauna (v0.88)
 - [ ] Colocar espinhos perto de vacas e touros: criatura perde vida e abate concede comida/XP ao dono.
 - [ ] Espinhos continuam atacando lobos, sem alterar o sistema original de dano.

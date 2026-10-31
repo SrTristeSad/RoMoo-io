@@ -17,6 +17,7 @@
         "World": {"$path": "src/server/World.luau"},
         "NatureAssets": {"$path": "src/server/NatureAssets.luau"},
         "Avatar": {"$path": "src/server/Avatar.luau"},
+        "VoxelSkins": {"$path": "src/server/VoxelSkins.luau"},
         "MapRules": {"$path": "src/server/MapRules.luau"},
         "RiverFlow": {"$path": "src/server/RiverFlow.luau"},
         "Boundaries": {"$path": "src/server/Boundaries.luau"},
